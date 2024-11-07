@@ -9,6 +9,8 @@ from django.http import JsonResponse, HttpResponseRedirect
 from user.forms import UserForm
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import IntegrityError
+from django.views.generic import UpdateView
+
 # Create your views here.
 
 class UserListView(ValidatePermissionRequiredMixin, ListView):
@@ -100,3 +102,41 @@ class UserDeleteView(DeleteView):
 class TestView(TemplateView):
     template_name="emails/new-email.html"
 
+
+class UserEditView(ValidatePermissionRequiredMixin, UpdateView):
+    model = User
+    form_class = UserForm
+    template_name = 'users/edit.html'
+    success_url = reverse_lazy('user:userlist')
+    url_redirect = success_url
+    permission_required = 'user.change_user'
+
+    def get_object(self, queryset=None):
+        # Obtiene el objeto del usuario que se está editando
+        return self.model.objects.get(pk=self.kwargs['pk'])
+
+    def form_valid(self, form):
+        # Guarda la instancia del usuario editado
+        self.object = form.save()
+
+        # Redirige a success_url
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        # Renderiza la plantilla con los errores del formulario
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            try:
+                # Usa form_valid para manejar el guardado y redirección
+                return self.form_valid(form)
+            except Exception as e:
+                form.add_error(None, str(e))
+        else:
+            form.add_error(None, 'Formulario no válido.')
+
+        # Renderiza la misma plantilla con errores si el formulario no es válido
+        return self.render_to_response(self.get_context_data(form=form))

@@ -1,0 +1,133 @@
+{% extends 'base/base.html' %}
+
+{% load static %}
+
+{% block head_list %}
+<script src="{% static 'users/js/list.js' %}"></script>
+{% endblock head_list %}
+
+{% block page_content %}
+    <div class="card">
+        <!--begin::Card header-->
+        <div class="card-header border-0 pt-6">
+            <div class="card-title">
+                <h3 class="card-title">
+                    <i class="fas fa-user-edit"></i> Editar Usuario
+                </h3>
+            </div>
+        </div>
+        <!--end::Card header-->
+
+        <!-- Separador -->
+        <hr style="border: 1px solid #ddd; margin: 20px 0;">
+
+        <form id="Edit" action="." method="post" enctype="multipart/form-data" class="form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="id" value="{{ user.id }}">
+
+            <div class="card-body">
+                <!-- Estructura de cuadrícula en dos columnas -->
+                <div class="row">
+                    <!-- Columna izquierda -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Código SAP:</label>
+                            <input type="text" name="SAP_Code" class="form-control form-control-solid" placeholder="Ingrese un Código SAP" id="idCodigoSAP" value="{{ user.SAP_Code }}"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Username:</label>
+                            <input type="text" name="username" class="form-control form-control-solid" placeholder="Ingrese el nombre de usuario" id="idUsername" required value="{{ user.username }}"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña:</label>
+                            <input type="password" name="password" class="form-control form-control-solid" placeholder="Ingrese la contraseña" id="idPassword" required value="{{ user.password }}"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre:</label>
+                            <input type="text" name="first_name" class="form-control form-control-solid" placeholder="Ingrese el nombre" id="idNombre" required value="{{ user.first_name }}"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellido:</label>
+                            <input type="text" name="last_name" class="form-control form-control-solid" placeholder="Ingrese el apellido" id="idApellido" value="{{ user.last_name }}"/>
+                        </div>
+                    </div>
+
+                    <!-- Columna derecha -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>E-mail:</label>
+                            <input type="text" name="email" class="form-control form-control-solid" placeholder="Ingrese el correo electrónico" id="idEmail" required value="{{ user.email }}"/>
+                            <span class="form-text text-muted">Ingrese un correo válido</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Usuario:</label>
+                            <select class="form-control form-control-solid select" name="UserType" data-placeholder="Ingrese el tipo de usuario" id="idTipoUsuario" required>
+                                <option value=""></option>
+                                <option value="171" {% if user.UserType == 171 %}selected{% endif %}>Empleado</option>
+                                <option value="12" {% if user.UserType == 12 %}selected{% endif %}>Usuario</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Imagen:</label>
+                            <input type="file" name="image" accept="image/*" id="idImage" class="form-control form-control-solid"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Grupos:</label>
+                            {{ form.groups }}
+                        </div>
+                        <div class="form-group" name="departamento" id="departamento">
+                            <label>Departamento:</label>
+                            {{ form.departamento }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary"><span class="fa fa-save"></span> Guardar</button>
+                <a href="{% url 'user:userlist' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Inicialmente oculta el campo de departamento
+            $('#departamento').hide();
+
+            // Función para obtener el texto de la opción seleccionada
+            function getSelectedOptionText(selectElement) {
+                var selectedOption = $(selectElement).find('option:selected');
+                return selectedOption.text(); // Obtiene el texto de la opción seleccionada
+            }
+
+            // Función para mostrar/ocultar el campo de departamento basado en la selección de grupos
+            function toggleDepartamentoField() {
+                var selectedText = getSelectedOptionText('#id-groups');
+                console.log(selectedText);  // Para depuración
+                if (selectedText === 'Jefe_De_Area') {
+                    $('#departamento').show();
+                } else {
+                    $('#departamento').hide();
+                }
+            }
+
+            // Llama a la función cuando la página carga
+            toggleDepartamentoField();
+
+            // Llama a la función cuando cambia el valor del campo 'groups'
+            $('#id-groups').change(function() {
+                toggleDepartamentoField();
+            });
+
+            // Configura select2 para el campo 'UserType'
+            $('#idTipoUsuario').select2({
+                placeholder: function () {
+                    return $(this).data('placeholder');
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -39,7 +39,7 @@ $(function(){
                 class: "text-center",
                 orderable: false,
                 render: function(data, type, row){
-                    return '<a rel="edit" type="button" class="btn btn-warning btn-xs btn-flat"><i class="fas fa-pen"></i></a>';
+                    return '<a href="/users/edit/'+row.id +'/"" type="button" class="btn btn-warning btn-xs btn-flat"><i class="fas fa-pen"></i></a>';
                 },
             },
             {
