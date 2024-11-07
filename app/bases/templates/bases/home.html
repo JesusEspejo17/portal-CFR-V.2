@@ -1,0 +1,175 @@
+{% extends 'base/base.html' %}
+{% block page_content %}
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+  <h1 class="h3 mb-4 text-gray-800" style="margin-left: 12px;">Bienvenido, {{user.username}} {{user.last_name}}</h1>
+  {% if es_empleado%}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card border-left-info shadow mb-4" style="height:90%;">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              {% if tiene_solicitudes %}
+              <div class="col mr-2">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">{{title_ultima}}</div>
+                    <div class="h5 mb-2 font-weight-bold text-gray-800">{{ultima_solicitud.DocDate}}</div>
+                    <div class="row">
+                      <div class="col">
+                        <div class="h5 mb-2 text-gray-800"> Número de Selecciones: {{cant_ultima_solicitud}} / Tipo: {{tipoDoc}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="h5 mb-2  text-gray-800">Estado: <span class="badge badge-{{tipo}}">{{estado}}</span></div>
+                  </div>
+                </div>
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                      <div class="h5 mb-2 text-gray-800">Moneda: {{ultima_solicitud.moneda.MonedaAbrev}}</div>
+                  </div>
+                  <div class="col mr-2"  style="text-align: right;">
+                    <div class="h5 mb-2 font-weight-bold text-gray-800">Total: S/. {{ultima_solicitud.TotalImp}}</div>
+                  </div>
+                </div>
+              </div>
+              {% else %}
+              <div class="col mr-2">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">{{title_ultima}}</div>
+                    <div class="h5 mb-2 font-weight-bold text-gray-800">No se ha registrado una última solicitud.</div>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              <div class="col-auto">
+                <i class="fas fa-clipboard fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card text-white bg-primary mb-4" style="height:90%;">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <h5 class="card-title">{{title_totales}}</h5>
+                <h2 class="card-text">{{solicitudes_totales}}</h2>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-pen fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> 
+    </div>
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card text-white bg-info mb-4">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <h5 class="card-title">{{title_contabilizados}}</h5>
+                <h2 class="card-text">{{solicitudes_contabilizadas}}</h2>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-check fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card text-white bg-warning mb-4">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <h5 class="card-title">{{title}}</h5>
+                <h2 class="card-text">{{solicitudes_pendientes_usuario}}</h2>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-calendar fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card text-white bg-success mb-4">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <h5 class="card-title">{{title_aprobadas}}</h5>
+                <h2 class="card-text">{{solicitudes_aprobadas}}</h2>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-check fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card text-white bg-danger mb-4">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <h5 class="card-title">{{title_rechazadas}}</h5>
+                <h2 class="card-text">{{solicitudes_rechazadas}}</h2>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-trash fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="container-fluid">
+    <div class="row-xl-12 align-items-center">
+      <div class="card border-left-info shadow mb-4" style="height:60%;">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">{{title_ultima}}</div>
+                  <div class="h5 mb-2 font-weight-bold text-gray-800">{{ultima_solicitud.DocDate}}</div>
+                  <div class="row">
+                    <div class="col">
+                      <div class="h5 mb-2 text-gray-800"> Número de Selecciones: {{cant_ultima_solicitud}} / Tipo: {{tipoDoc}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="h5 mb-2  text-gray-800">Estado: <span class="badge badge-{{tipo}}">{{estado}}</span></div>
+                </div>
+              </div>
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="h5 mb-2 text-gray-800">Moneda: {{ultima_solicitud.moneda.MonedaAbrev}}</div>
+                </div>
+                <div class="col mr-2"  style="text-align: right;">
+                  <div class="h5 mb-2 font-weight-bold text-gray-800">Total: S/. {{ultima_solicitud.TotalImp}}</div>
+              </div>
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-clipboard fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock page_content %}

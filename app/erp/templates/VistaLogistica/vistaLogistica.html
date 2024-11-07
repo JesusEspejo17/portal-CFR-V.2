@@ -1,0 +1,375 @@
+{% extends 'base/base.html'%}
+{% load static %}
+{% block head_list %}
+<script src="{% static 'VistaLogistica/js/list.js' %}"></script>
+{% endblock head_list %}
+{% block page_content %}
+<style>
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .table {
+        min-width: 600px;
+        /* Ajusta el ancho mínimo según tus necesidades */
+    }
+</style>
+<form id="Solicitudes" method="post">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <div class="row col-sm-12 mt-3">
+                            <div class="col col-sm-6 mt-3">
+                                <h3 class="card-title">
+                                    {% if user.is_head_of_area %}
+                                    <i class="fas fa-boxes"></i> {{title}}: {{user.departamento}}
+                                    {% else %}
+                                    <i class="fas fa-boxes"></i> {{title}}
+                                    {% endif %}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="form-group col-sm-7" style="padding-right: 0%;">
+                        <div class="card card-secondary">
+                            <div class="card card-body">
+                                <table class="table table-bordered" id="tblContabilizados">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 5%;">#</th>
+                                            <th style="width: 5%;">Nro.</th>
+                                            <th style="width: 20%;">Serie</th>
+                                            <th style="width: 25%;">Solicitante</th>
+                                            <th style="width: 20%;">Monto</th>
+                                            <th style="width: 10%;">Seleccionar</th>
+                                            <th style="width: 15%;">Detalle</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-5" style="padding-left: 0.5%;">
+                        <div class="card card-secondary">
+                            <div class="card-header">
+                                <div class="row col-sm-12 mt-3">
+                                    <div class="col col-sm-12 mt-0">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-boxes"></i> Nueva Orden Productos:
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card card-body">
+                                <div class="form-group row">
+                                    <div class="col-sm-5">Nombre del Solicitante: </div>
+                                    <div class="col-sm-7">
+                                        <input type="text" readonly="true" class="form-control form-control-user"
+                                            value="{{user.first_name}}" id="NombreSolicitante">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-5">Selección de Proveedor: </div>
+                                    <div class="col-sm-7">
+                                        <select class="form-control select" name="SelectProveedor" style="width: 100%;"
+                                            id="SelectProveedor" data-placeholder="Seleccione un Proveedor"
+                                            style="width: 100%;" required>
+                                            <option></option>
+                                            {% for socio in socio_negocio %}
+                                            <option>{{socio.CardCode}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <table class="table table-bordered" id="tblOrdenProd">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 10%;">Eliminar</th>
+                                            <th style="width: 20%;">Cod. Item</th>
+                                            <th style="width: 20%;">LineVendor</th>
+                                            <th style="width: 20%;">Descripción</th>
+                                            <th style="width: 15%;">Cantidad</th>
+                                            <th style="width: 15%;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="card card-footer">
+                                <button type="submit" class="btn btn-success btn-flat">
+                                    <i class="fas fa-save"></i> Guardar registro
+                                </button>
+                            </div>
+                        </div>
+
+                        <br>
+                        <div class="card card-secondary">
+                            <div class="card-header">
+                                <div class="row col-sm-12 mt-3">
+                                    <div class="col col-sm-12 mt-0">
+                                        <h3 class="card-title">
+                                            <i class="fas fa-toolbox"></i> Nueva Orden Servicios:
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card card-body">
+                                <div class="form-group row">
+                                    <div class="col-sm-5">Nro. Correlativo: </div>
+                                    <div class="col-sm-7">
+                                        <input type="text" readonly="true" class="form-control form-control-user"
+                                            value="1" id="nroCorrelativo" name="nroCorrelativo">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-5">Nombre del Solicitante: </div>
+                                    <div class="col-sm-7">
+                                        <input type="text" readonly="true" class="form-control form-control-user"
+                                            value="{{user.first_name}}" id="NombreSolicitante">
+                                    </div>
+                                </div>
+                                <table class="table table-bordered" id="tblOrdenServ">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 10%;">Eliminar</th>
+                                            <th style="width: 20%;">Cod. Item</th>
+                                            <th style="width: 20%;">LineVendor</th>
+                                            <th style="width: 20%;">Descripción</th>
+                                            <th style="width: 15%;">Cantidad</th>
+                                            <th style="width: 15%;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="card card-footer">
+                                <button type="submit" class="btn btn-success btn-flat">
+                                    <i class="fas fa-save"></i> Guardar registro
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" id="modalDetallesContabilizados" tabindex="-1" role="dialog"
+    aria-labelledby="modalDetallesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 90%;" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetallesLabel">Detalles de Solicitud: <span class="text"
+                        id="idSolicitud"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                <div class="card card-default">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-header">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Detalle de Solicitud
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <br>
+                            <div class="form-group row">
+                                <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                    <div class="row">
+                                        <label type="text" aria-readonly="true" id="InputDocEntry"
+                                            class="form-control form-control-user" style="text-align:right;"
+                                            hidden></label>
+                                        <label for="detallesDocNum" class="col-sm-3 col-form-label">Número de
+                                            Documento:</label>
+                                        <div class="col-sm-3">
+                                            <label type="text" aria-readonly="true" id="detallesDocNum"
+                                                class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                        <div id="url-nomSerie" data-url="{% url 'erp:obtener_nombre_serie' %}"></div>
+                                        <label for="detalleSerie" class="col-sm-1 col-form-label">Serie:</label>
+                                        <div class="col-sm-5">
+                                            <label type="text" aria-readonly="true" id="detalleSerie"
+                                                class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                    <div class="row">
+                                        <label for="detallesDocStatus" class="col-sm-3 col-form-label">Estado de
+                                            Documento:</label>
+                                        <div class="col-sm-9">
+                                            <label type="text" aria-readonly="true" id="detallesDocStatus"
+                                                class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                    <div class="row">
+                                        <label for="detallesDocDate" class="col-sm-3 col-form-label">Fecha del
+                                            Documento:</label>
+                                        <div class="col-sm-9">
+                                            <label type="text" aria-readonly="true" id="detallesDocDate"
+                                                class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                    <div class="row">
+                                        <label for="detallesDocDueDate" class="col-sm-3 col-form-label">Fecha de
+                                            vencimiento:</label>
+                                        <div class="col-sm-9">
+                                            <label type="text" aria-readonly="true" id="detallesDocDueDate"
+                                                class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row" style="text-align: center;">
+                                <div class="form-group col-sm-4 mb-0 mb-sm-3" style="text-align: right;">
+                                    <div class="row">
+                                        <label for="detallesDocNum" class="col-sm-3 col-form-label">Moneda:</label>
+                                        <div class="col-sm-6">
+                                            <label type="text" aria-readonly="true" id="detallesMoneda"
+                                                class="form-control form-control-user" style="text-align:left;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-4 mb-0 mb-sm-3" style="text-align: center;">
+                                    <div class="row">
+                                        <label for="detallesDocNum" class="col-sm-3 col-form-label">Impuesto:</label>
+                                        <div class="col-sm-6">
+                                            <label type="text" aria-readonly="true" id="detallesTaxCode"
+                                                class="form-control form-control-user" style="text-align:left;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-4 mb-0 mb-sm-3" style="text-align: left;">
+                                    <div class="row">
+                                        <label for="detallesDocNum" class="col-sm-3 col-form-label">Tipo:</label>
+                                        <div class="col-sm-6">
+                                            <label type="text" aria-readonly="true" id="detallesDocType"
+                                                class="form-control form-control-user" style="text-align:left;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                </div>
+                                <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                    <div class="row">
+                                        <label for="detallesTotal" class="col-sm-5 col-form-label">Total:</label>
+                                        <div class="col-sm-7">
+                                            <label type="text" aria-readonly="true" id="detallesTotal"
+                                                class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <label for="detallesTotalImp" class="col-sm-5 col-form-label">Total con
+                                            impuestos:</label>
+                                        <div class="col-sm-7">
+                                            <label type="text" aria-readonly="true" id="detallesTotalImp"
+                                                class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Usuario Solicitante
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="form-group row">
+                                <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                    <div class="row">
+                                        <label for="detallesReqIdUser" class="col-sm-3 col-form-label">Usuario:</label>
+                                        <div class="col-sm-9">
+                                            <label type="text" aria-readonly="true" name="detallesReqIdUser"
+                                                id="detallesReqIdUser" class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                    <div class="row">
+                                        <label for="departmentUser"
+                                            class="col-sm-3 col-form-label">Departamento:</label>
+                                        <div class="col-sm-9">
+                                            <label type="text" aria-readonly="true" id="departmentUser"
+                                                class="form-control form-control-user"
+                                                style="text-align:right;"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card card-secondary">
+                            <div class="card-body">
+                                <table class="table table-bordered" id="tblDetallesProd" display="table;"
+                                    style="width: 100%;">
+                                    <thead>
+                                        <th>Cod. Item</th>
+                                        <th>LineVendor</th>
+                                        <th>Descripción</th>
+                                        <th>Cantidad</th>
+                                        <th>Unidad Medida</th>
+                                        <th>Almacén</th>
+                                        <th>Total</th>
+                                        <th>Seleccionar</th>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                                <table class="table table-striped table-hover dt-responsive nowrap" id="tblDetallesServ"
+                                    display="none;" style="width: 100%;">
+                                    <thead>
+                                        <th>Cod. Item</th>
+                                        <th>LineVendor</th>
+                                        <th>Descripción</th>
+                                        <th>Cantidad</th>
+                                        <th>Cuenta Mayor</th>
+                                        <th>Total</th>
+                                        <th>Seleccionar</th>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; column-gap: 10px; justify-content: center;">
+                <button type="button" class="btn btn-warning" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $('#SelectProveedor').select2({
+            placeholder: function () {
+                $(this).data('placeholder');
+            },
+        });
+    });
+</script>
+{% endblock %}

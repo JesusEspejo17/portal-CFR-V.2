@@ -1,0 +1,997 @@
+{% extends 'base/base.html'%}
+{% load static %}
+
+{% block head_list %}
+{% endblock head_list %}
+
+{% block page_content %}
+<div class="card">
+    <!--begin::Card header-->
+    <div class="card-header border-0 pt-6">
+        <div class="card-title">
+            <h3 class="card-title">
+                <i class="fas fa-boxes"></i> {{title}}
+            </h3>
+        </div>
+    </div>
+    <!--end::Card header-->
+
+    <!-- Separador -->
+    <hr style="border: 1px solid #ddd; margin: 20px 0;">
+
+    <form id="Cliente1" method="POST" action="{% url 'erp:solicitudcompra' %}">
+        {% csrf_token %}
+        <div class="card-body">
+            {% if success_message %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ success_message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <script>
+                $(document).ready(function () {
+                    alertaExitosa("{{ success_message }}");
+                });
+            </script>
+            {% endif %}
+            {% if error_message %}
+            <script>
+                $(document).ready(function () {
+                    alertaError("{{ error_message }}");
+                });
+            </script>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Solicitante:</label>
+                        <input type="text" readonly="true" name="ReqIdUser" class="form-control form-control-solid" value="{{user.username}}" id="idsolicitante">
+                        <input type="hidden" readonly="true" name="idUser" class="form-control form-control-solid" value="{{user.id}}" id="idUser">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre del Solicitante:</label>
+                        <input type="text" readonly="true" class="form-control form-control-solid" value="{{user.first_name}}" id="NombreSolicitante">
+                    </div>
+                    <div class="form-group">
+                        <label>Departamento / Área:</label>
+                        <select class="form-control form-control-solid select" name="Department" data-placeholder="Seleccione un departamento" id="selectDepartamento">
+                            <option></option>
+                            {% for dep in Departamento %}
+                            <option>{{dep.Name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de documento:</label>
+                        <div class="input-group">
+                            <input type="text" name="DocDate" class="form-control form-control-solid" readonly=true id="fechaDocumento" value="{{fecha}}">
+                            {% comment %} <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <i class="fas fa-table"></i>
+                                </span>
+                            </div> {% endcomment %}
+                        </div>
+                    </div>
+                
+                    <div class="form-group">
+                        <label>Moneda:</label>
+                        <select class="form-control form-control-solid select" name="moneda" id="selecMoneda" data-placeholder="Seleccione una moneda" required>
+                            <option></option>
+                            {% for mon in moneda %}
+                            <option>{{mon.MonedaAbrev}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Impuestos:</label>
+                        <div id="url-data" data-url="{% url 'erp:obtener_impuesto' %}"></div>
+                        <select class="form-control form-control-solid select" id="idImpuestos" name="TaxCode" data-placeholder="Seleccione un impuesto" required>
+                            <option></option>
+                            {% for imp in OSTA %}
+                            <option>{{imp.get_impuesto_name}}</option>
+                            {% endfor%}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Total: (S/.)</label>
+                        <input type="text" readonly="true" name="Total" class="form-control form-control-solid text-right" id="idTotal" value="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Total con Impuesto: (S/.)</label>
+                        <input type="text" readonly="true" name="TotalImp" class="form-control form-control-solid text-right" id="idTotalConImpuesto" value="0.00 (Seleccione un impuesto)" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Detalle:</label>
+                        <select class="form-control form-control-solid select mb-2" name="selecDetalle" id="selectDetalle" data-control="select2" data-hide-search="true">
+                            <option value="0">Servicio</option>
+                            <option value="1">Artículo</option>
+                        </select>
+                        <button type="button" class="btn btn-success" id="btnAgregar">
+                            <i class="fas fa-check"></i> Agregar
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Nro. de Documento:</label>
+                        <input type="text" readonly="true" name="DocNum" class="form-control form-control-solid" id="NroDoc" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Serie:</label>
+                        <div id="url-serie" data-url="{% url 'erp:obtener_numero_serie' %}"></div>
+                        <select class="form-control form-control-solid select" id="serie" name="serie" data-placeholder="Seleccione un impuesto" required>
+                            <option></option>
+                            {% for s in serie %}
+                            <option>{{s.Nombre}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha sistema:</label>
+                        <div class="input-group">
+                            <input type="text" readonly="true" name="SystemDate" class="form-control form-control-solid" id="fechaSistema" value="{{fecha}}" required>
+                            {% comment %} <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <i class="fas fa-table"></i>
+                                </span>
+                            </div> {% endcomment %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Válido hasta:</label>
+                        <div class="input-group" >
+                            <input type="text" name="DocDueDate" class="form-control form-control-solidS" id="fechaValida" value="{{fecha}}" required>
+                            {% comment %} <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <i class="fas fa-table"></i>
+                                </span>
+                            </div> {% endcomment %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha necesaria:</label>
+                        <div class="input-group">
+                            <input type="text" name="ReqDate" class="form-control form-control-solidS" id="fechaNecesaria" value="{{fecha}}" required>
+                            {% comment %} <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <i class="fas fa-table"></i>
+                                </span>
+                            </div> {% endcomment %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Comentarios:</label>
+                        <textarea class="form-control form-control-solid" name="Comments" id="Comentarios" rows="3"></textarea>
+                    </div>
+
+            </div> <!-- Cierre de la fila principal -->
+
+            <div class="card-body">
+                <table class="table table-bordered table-hover" id="tblProducts" style="display: none;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="width: 1%;">Eliminar</th>
+                            <th style="width: 3%;">#</th>
+                            <th style="width: 5%;">Tipo</th>
+                            <th style="width: 3%;">Código</th>
+                            <th style="width: 17%;">Descripción</th>
+                            <th style="width: 15%;">Almacén</th>
+                            <th style="width: 10%;">Medida</th>
+                            <th style="width: 10%;">Precio Unitario</th>
+                            <th style="width: 6%;">Cantidad</th>
+                            <th style="width: 7%;">Precio Total</th>
+                            <th style="width: 13%;">Proveedor</th>
+                            <th style="width: 10%;">Dimensión</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+
+                <table class="table table-bordered table-hover" id="tblServicios" style="display: none;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Eliminar</th>
+                            <th>#</th>
+                            <th>Tipo</th>
+                            <th>Código</th>
+                            <th>Descripción</th>
+                            <th>Cuenta Contable</th>
+                            <th>Precio Unitario</th>
+                            <th>Proveedor</th>
+                            <th>Precio Total</th>
+                            <th>Dimensión</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+
+                <!-- Campos ocultos para enviar datos de vents y servs -->
+                <input type="hidden" name="vents_data" id="id_vents_data">
+                <input type="hidden" name="servs_data" id="id_servs_data">
+            </div>
+
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fas fa-save"></i> Guardar registro
+                        </button>
+                        <a href="{% url 'erp:listar_solicitudes' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>   
+    </form>
+
+    <!--begin::Modal - Loading-->
+        <div class="modal fade" id="modalCarga" tabindex="-1" aria-hidden="true">
+            <!--begin::Modal dialog-->
+            <div class="modal-dialog modal-dialog-centered mw-300px">
+                <!--begin::Modal content-->
+                <div class="modal-content">
+                    <!--begin::Modal body-->
+                    <div class="modal-body text-center py-8">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="mt-4 fw-bold">Generando Solicitud...</div>
+                    </div>
+                    <!--end::Modal body-->
+                </div>
+                <!--end::Modal content-->
+            </div>
+            <!--end::Modal dialog-->
+        </div>
+    <!--end::Modal - Loading-->
+
+</div>
+</div>
+
+<script>
+    function abrir_modal_cargar() {
+        $('#modalCarga').modal('show');
+    }
+
+    //se agrego window.onload para que detecte funcion, se cambio datetimepicker a daterangepicker para que sea con el de metronic
+    window.onload = function () {
+    $("#fechaValida, #fechaNecesaria").daterangepicker({
+        singleDatePicker: true,
+        timepicker: false,
+        locale: {
+            format: "DD-M-Y"
+        }
+    });
+    };
+
+    var almacenes = JSON.parse('{{ almacen|escapejs }}');
+    console.log(almacenes); // Puedes verificar en consola que almacenes esté correctamente cargado.
+
+
+    $('select').select2({
+        minimumResultsForSearch: Infinity,
+        placeholder: function () {
+            return $(this).data('placeholder');  // Asegúrate de devolver el valor.
+        }
+    });
+
+    function alertaExitosa(mensaje) {
+        $('#modalCarga').modal('hide');
+        $.alert({
+            title: 'Éxito',
+            icon: 'fa fa-check-circle',
+            theme: 'modern',
+            type: 'green',
+            content: mensaje,
+            buttons: {
+                ok: {
+                    text: 'OK',
+                    btnClass: 'btn-success',
+                    action: function () {
+                        window.location.href = "{% url 'erp:listar_solicitudes' %}" // Redirecciona al URL especificado
+                    }
+                }
+            }
+        });
+    }
+
+    function alertaError(mensaje) {
+        $.alert({
+            title: 'Error',
+            icon: 'fa fa-times-circle',
+            theme: 'modern',
+            type: 'red',
+            content: mensaje,
+            buttons: {
+                ok: function () {
+                    text: 'OK';
+                    btnClass: 'btn-danger'
+                }
+            }
+        });
+    }
+    function actualizarDatosFormulario() {
+        document.getElementById("id_vents_data").value = JSON.stringify(vents.items.products);
+        document.getElementById("id_servs_data").value = JSON.stringify(servs.items.servicios);
+    }
+
+
+    $('#Cliente1').submit(function (event) {
+        if (vents.items.products.length === 0 && servs.items.servicios.length === 0) {
+            alertaError('ERROR: No se ha ingresado ningún producto o servicio.');
+            event.preventDefault();
+        } else {
+            abrir_modal_cargar();
+            actualizarDatosFormulario();           
+        }
+    });
+
+
+    function verificar_datos_tabla(tabla) {
+        if (tabla === "tblProducts") {
+            if (vents.items.products.length > 0) return true;
+            else return false;
+
+        } else if (tabla === "tblServicios") {
+            if (servs.items.servicios.length > 0) return true;
+            else return false;
+        }
+    };
+
+    function setTotales(valor) {
+        var subtotal = parseFloat($("#idTotal").val());
+        if (isNaN(subtotal)) {
+            subtotal = 0;
+        }
+        subtotal += parseFloat(valor);
+        $("#idTotal").val(subtotal.toFixed(2));
+    }
+
+    function restartTotales() {
+        subtotal = 0.00;
+        $("#idTotal").val(subtotal.toFixed(2));
+    }
+
+    function reducirTotales(valor) {
+        var subtotal = parseFloat($("#idTotal").val());
+        if (isNaN(subtotal)) {
+            subtotal = 0;
+        }
+        subtotal -= valor;
+        $("#idTotal").val(subtotal.toFixed(2));
+    }
+
+
+    $("#btnAgregar").click(function (e) {
+        var option = document.getElementById("selectDetalle").value;
+        if (option === "0") {
+            if (verificar_datos_tabla("tblProducts")) {
+                $.confirm({
+                    theme: 'modern',
+                    title: 'Aviso',
+                    columnClass: 'medium',
+                    icon: 'fas fa-trash',
+                    type: 'orange',
+                    content: 'Si cambia el tipo de detalle, sus selecciones previas desaparecerán. ¿Desea continuar?',
+                    "language": {
+                        "sProcessing": "Procesando...",
+                        "sLengthMenu": "Mostrar _MENU_ registros",
+                        "sZeroRecords": "No se encontraron resultados",
+                        "sEmptyTable": "Ningún dato disponible en esta tabla",
+                        "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                        "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                        "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                        "sInfoPostFix": "",
+                        "sSearch": "Buscar:",
+                        "sUrl": "",
+                        "sInfoThousands": ",",
+                        "sLoadingRecords": "Cargando...",
+                        "oPaginate": {
+                            "sFirst": "Primero",
+                            "sLast": "Último",
+                            "sNext": "Siguiente",
+                            "sPrevious": "Anterior"
+                        },
+                        "oAria": {
+                            "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                            "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                        }
+                    },
+                    buttons: {
+                        confirm: function () {
+                            vents.delete();
+                            $("#tblProducts").hide();
+                            $("#tblProducts_wrapper").hide();
+                            $("#tblServicios").show();
+                            abrir_modal("{% url 'erp:listar_serv' %}");
+
+                        },
+                        cancel: function () {
+                        },
+                    }
+                });
+            } else {
+                $("#tblProducts").hide();
+                $("#tblProducts_wrapper").hide();
+                $("#tblServicios").show();
+                abrir_modal("{% url 'erp:listar_serv' %}");
+            }
+        } else if (option === "1") {
+            if (verificar_datos_tabla("tblServicios")) {
+                $.confirm({
+                    theme: 'modern',
+                    title: 'Aviso',
+                    columnClass: 'medium',
+                    icon: 'fas fa-trash',
+                    type: 'orange',
+                    content: 'Si cambia el tipo de detalle, sus selecciones previas desaparecerán. ¿Desea continuar?',
+                    buttons: {
+                        confirm: function () {
+                            servs.delete();
+                            $("#tblServicios").hide();
+                            $("#tblServicios_wrapper").hide();
+                            $("#tblProducts").show();
+                            abrir_modal("{% url 'erp:listar_prod' %}");
+                        },
+                        cancel: function () {
+                        },
+                    }
+                });
+            } else {
+                $("#tblServicios").hide();
+                $("#tblServicios_wrapper").hide();
+                $("#tblProducts").show();
+                abrir_modal("{% url 'erp:listar_prod' %}");
+            }
+        }
+    });    
+
+    
+    var tblProducts;
+    var vents = {
+        items: {
+            cli: '',
+            date_joined: '',
+            subtotal: 0.00,
+            iva: 0.00,
+            total: 0.00,
+            products: []
+        },
+        add: function (item) {
+            setTotales(item.precio_total);
+            if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
+            this.items.products.push(item);
+        },
+        validarDatos: function (item) {
+            if (this.items.products.some(p => p.code === item.code)) {
+                var index = this.items.products.findIndex(p => p.code === item.code);
+                if (this.items.products[index].almacen === item.almacen && this.items.products[index].medida === item.medida && this.items.products[index].proveedor === item.proveedor) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        },
+        list: function () {
+            if ($.fn.DataTable.isDataTable('#tblProducts')) {
+                tblProducts = $('#tblProducts').DataTable();
+                tblProducts.clear().destroy();
+            }
+            tblProducts = $('#tblProducts').DataTable({
+                bDestroy: true,
+                responsive: true,
+                autoWidth: false,
+                destroy: true,
+                deferRender: true,
+                data: this.items.products,
+                columns: [
+                    { "data": null },
+                    { "data": null },
+                    { "data": "tipo" },
+                    { "data": "code" },
+                    { "data": "description" },
+                    { "data": "almacen" },
+                    { "data": "medida" },
+                    { "data": "price" },
+                    { "data": "cant" },
+                    { "data": "precio_total" },
+                    { "data": "proveedor" },
+                    { "data": "dimension" },
+                ],
+                columnDefs: [
+                    {
+                        targets: [9],
+                        render: function (data, type, row) {
+                            return parseFloat(data).toFixed(2);
+                        }
+                    },
+                    {
+                        targets: [-1],
+                        render: function (data, type, row) {
+                            var dimensiones = JSON.parse('{{ dimension|escapejs }}');
+                            var options = '<select class="form-control select" data-type="dimension" name="iddimension" id="iddimension" style="width: 100%;">';
+                            for (var i = 0; i < dimensiones.length; i++) {
+                                var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
+                                options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [-2],
+                        render: function (data, type, row) {
+                            var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
+                            var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
+                            for (var i = 0; i < socios_de_negocio.length; i++) {
+                                var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
+                                options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [5],
+                        render: function (data, type, row) {
+                            var almacenes = JSON.parse('{{ almacen|escapejs }}');
+                            var options = '<select class="form-control select" data-type="almacen" name="idAlmacen" id="idAlmacen" style="width: 100%;">';
+                            for (var i = 0; i < almacenes.length; i++) {
+                                var selected = (almacenes[i].WhsName === data) ? 'selected' : '';
+                                options += '<option value="' + almacenes[i].WhsName + '" ' + selected + '>' + almacenes[i].WhsName + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [6],
+                        render: function (data, type, row) {
+                            var medidas = JSON.parse('{{ medida|escapejs }}');
+                            var options = '<select class="form-control select" data-type="medida" name="idMedida" id="idMedida" style="width: 100%;">';
+                            for (var i = 0; i < medidas.length; i++) {
+                                var selected = (medidas[i].Code === data) ? 'selected' : '';
+                                options += '<option value="' + medidas[i].Code + '" ' + selected + '>' + medidas[i].Code + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [7],
+                        render: function (data, type, row) {
+                            return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
+                        }
+                    },
+                    {
+                        targets: [8],
+                        render: function (data, type, row) {
+                            return '<input type="number" class="form-control editable-input" data-type="cant" id="cantidad" value="' + data + '">';
+                        }
+                    },
+                    {
+                        targets: [0],
+                        class: "text-center",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
+                        },
+                    },
+                    {
+                        targets: [1],
+                        class: "text-center",
+                        orderable: false,
+                        render: function (data, type, row, meta) {
+                            return meta.row + 1;
+                        },
+                    },
+                    {
+                        targets: [-1],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "dimension",
+                        editable: true,
+                    },
+                    {
+                        targets: [-2],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "proveedor",
+                        editable: true,
+                    },
+                    {
+                        targets: [5],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "almacen",
+                        editable: true,
+                    },
+                    {
+                        targets: [6],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "medida",
+                        editable: true,
+                    },
+                    {
+                        targets: [7],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "price",
+                        editable: true,
+                    },
+                    {
+                        targets: [8],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "cant",
+                        editable: true,
+                    },
+                ],
+                initComplete: function (settings, json) {
+                }
+            });
+        },
+        delete: function () {
+            restartTotales();
+            actualizarTotalConImpuesto();
+            tblProducts.clear().draw();
+            vents.items.products = [];
+            vents.list();
+        }
+    };
+
+    
+    {% comment %} SI DE ACA PARA ABAJO EMPIEZO A ENCAPSULAR, YA NO ME DEJA, EL ERROR ESTUVO EN INICIALIZAR $ {% endcomment %}
+
+    $('#tblProducts tbody').on('change', '.editable-cell select', function () {
+        var type = $(this).attr('data-type');
+        var rowIndex = tblProducts.cell($(this).closest('td, th')).index().row;
+        var newValue = $(this).val();
+        switch (type) {
+            case 'almacen':
+                vents.items.products[rowIndex].almacen = newValue;
+                break;
+            case 'medida':
+                vents.items.products[rowIndex].medida = newValue;
+                break;
+            case 'proveedor':
+                vents.items.products[rowIndex].proveedor = newValue;
+                break;
+            case 'dimension':
+                vents.items.products[rowIndex].dimension = newValue;
+                break;
+            default:
+                break;
+        }
+    });
+
+    $('#tblProducts tbody').on('change', '.editable-cell input[type="number"]', function () {
+        var type = $(this).attr('data-type');
+        var rowIndex = tblProducts.cell($(this).closest('td, th')).index().row;
+        var newValue = $(this).val();
+        if (type === 'cant') {
+            vents.items.products[rowIndex].cant = newValue;
+            vents.items.products[rowIndex].precio_total = (newValue * parseFloat(vents.items.products[rowIndex].price)).toFixed(2);
+            setTotalesIterativo(1);
+        } else if (type === 'price') {
+            vents.items.products[rowIndex].price = newValue;
+            vents.items.products[rowIndex].precio_total = (newValue * parseFloat(vents.items.products[rowIndex].cant)).toFixed(2);
+            setTotalesIterativo(1);
+        }
+        vents.list();
+    });
+
+    $('#tblServicios tbody').on('change', '.editable-cell input[type="number"]', function () {
+        var type = $(this).attr('data-type');
+        var rowIndex = tblServicios.cell($(this).closest('td, th')).index().row;
+        var newValue = $(this).val();
+        servs.items.servicios[rowIndex].price = newValue;
+        servs.items.servicios[rowIndex].precio_total = (newValue * parseFloat(servs.items.servicios[rowIndex].cant)).toFixed(2);
+        setTotalesIterativo(2);
+        servs.list();
+    });
+
+    $('#tblServicios tbody').on('change', '.editable-cell select', function () {
+        var type = $(this).attr('data-type');
+        var rowIndex = tblServicios.cell($(this).closest('td, th')).index().row;
+        var newValue = $(this).val();
+        switch (type) {
+            case 'cuenta_contable':
+                servs.items.servicios[rowIndex].cuenta_contable = newValue;
+                break;
+            case 'socio_negocio':
+                servs.items.servicios[rowIndex].proveedor = newValue;
+                break;
+            case 'dimension':
+                servs.items.servicios[rowIndex].dimension = newValue;
+                break;
+            default:
+                break;
+        }
+    });
+
+    function setTotalesIterativo(tipo) {
+        var total = 0;
+        if (tipo === 1) {
+            for (i = 0; i < vents.items.products.length; i++) {
+                total = total + parseFloat(vents.items.products[i].precio_total);
+            }
+        } else if (tipo === 2) {
+            for (i = 0; i < servs.items.servicios.length; i++) {
+                total = total + parseFloat(servs.items.servicios[i].precio_total);
+            }
+        }
+        $("#idTotal").val(total.toFixed(2));
+        if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
+    }
+
+    var servs = {
+        items: {
+            cli: '',
+            date_joined: '',
+            subtotal: 0.00,
+            iva: 0.00,
+            total: 0.00,
+            servicios: []
+        },
+        add: function (item) {
+            setTotales(item.precio_total);
+            if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
+            this.items.servicios.push(item);
+        },
+        validarDatos: function (item) {
+            if (this.items.servicios.some(p => p.code === item.code)) {
+                return false;
+            }
+            return true;
+        },
+        list: function () {
+            tblServicios = $('#tblServicios').DataTable({
+                bDestroy: true,
+                responsive: true,
+                autoWidth: false,
+                destroy: true,
+                deferRender: true,
+                data: this.items.servicios,
+                columns: [
+                    { "data": null },
+                    { "data": null },
+                    { "data": "tipo" },
+                    { "data": "code" },
+                    { "data": "description" },
+                    { "data": "cuenta_contable" },
+                    { "data": "price" },
+                    { "data": "proveedor" },
+                    { "data": "precio_total" },
+                    { "data": "dimension" }
+                ],
+                columnDefs: [
+                    {
+                        targets: [6],
+                        render: function (data, type, row) {
+                            return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
+                        }
+                    },
+                    {
+                        targets: [6],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "price",
+                        editable: true,
+                    },
+                    {
+                        targets: [5],
+                        render: function (data, type, row) {
+                            var cuenta_contable = JSON.parse('{{ cuenta_contable|escapejs }}');
+                            var options = '<select class="form-control select" data-type="cuenta_contable" name="idCC" id="idCC" style="width: 100%;">';
+                            for (var i = 0; i < cuenta_contable.length; i++) {
+                                var selected = (cuenta_contable[i].AcctName === data) ? 'selected' : '';
+                                options += '<option value="' + cuenta_contable[i].AcctName + '" ' + selected + '>' + cuenta_contable[i].AcctName + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [5],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "cuenta_contable",
+                        editable: true,
+                    },
+                    {
+                        targets: [-3],
+                        render: function (data, type, row) {
+                            var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
+                            var options = '<select class="form-control select" data-type="socio_negocio" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
+                            for (var i = 0; i < socios_de_negocio.length; i++) {
+                                var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
+                                options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [-3],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "proveedor",
+                        editable: true,
+                    },
+                    {
+                        targets: [-1],
+                        render: function (data, type, row) {
+                            var dimensiones = JSON.parse('{{ dimension|escapejs }}');
+                            var options = '<select class="form-control select" data-type="dimension" name="iddimension" id="iddimension" style="width: 100%;">';
+                            for (var i = 0; i < dimensiones.length; i++) {
+                                var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
+                                options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [-1],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "dimension",
+                        editable: true,
+                    },
+                    {
+                        targets: [0],
+                        class: "text-center",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
+                        },
+                    },
+                    {
+                        targets: [1],
+                        class: "text-center",
+                        orderable: false,
+                        render: function (data, type, row, meta) {
+                            return meta.row + 1;
+                        },
+                    },
+                    {
+                        targets: [5],
+                        render: function (data, type, row) {
+                            return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
+                        }
+                    },
+                ],
+                initComplete: function (settings, json) {
+
+                }
+            });
+        },
+        delete: function () {
+            restartTotales();
+            actualizarTotalConImpuesto();
+            tblServicios.clear().draw();
+            servs.items.servicios = [];
+            servs.list();
+        }
+    };
+
+
+    $('#tblProducts tbody')
+        .on('click', 'a[rel="remove"]', function () {
+            var tr = $(this).closest('tr');
+            var precioTotal = parseFloat(tr.find('td:eq(9)').text().trim());
+            reducirTotales(precioTotal);
+            var tr = tblProducts.cell($(this).closest('td, li')).index();
+            vents.items.products.splice(tr.row, 1);
+            if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
+            vents.list();
+        })
+
+    $('#tblServicios tbody')
+        .on('click', 'a[rel="remove"]', function () {
+            var tr = $(this).closest('tr');
+            var precioTotal = parseFloat(tr.find('td:eq(8)').text().trim());
+            reducirTotales(precioTotal);
+            var tr = tblServicios.cell($(this).closest('td, li')).index();
+            servs.items.servicios.splice(tr.row, 1);
+            if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
+            servs.list();
+        })
+
+    $('#tblProducts tbody')
+        .on('click', 'a[rel="edit"]', function () {
+            abrir_modal("{% url 'erp:listar_serv' %}");
+        })
+
+
+    function actualizarTotalConImpuesto() {
+        var impuestoSeleccionado = $("#idImpuestos").val();
+        var nombreImpuesto = impuestoSeleccionado.split(" - ")[0].trim();
+        var url_obtener_impuesto = $("#url-data").data("url");
+        $.ajax({
+            url: url_obtener_impuesto,
+            type: 'GET',
+            data: {
+                nombre_impuesto: nombreImpuesto
+            },
+            success: function (response) {
+                var porcentajeImpuesto = parseFloat(response.rate);
+                var subtotal = parseFloat($("#idTotal").val());
+                var totalConImpuesto = subtotal * (1 + (porcentajeImpuesto));
+                $("#idTotalConImpuesto").val(totalConImpuesto.toFixed(2));
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al obtener el porcentaje del impuesto:', error);
+            }
+        });
+    }
+
+    function actualizarDocNum() {
+        var serie = $("#serie").val();
+        var urlserie = $("#url-serie").data("url");
+        $.ajax({
+            url: urlserie,
+            type: 'GET',
+            data: {
+                numSerie: serie
+            },
+            success: function (response) {
+                var docnum = response.docNum
+                $("#NroDoc").val(docnum);
+            },
+            error: function (xhr, status, erroBr) {
+                console.error('Error al obtener el número de esa serie:', error);
+            }
+        });
+    }
+    $(document).ready(function () {
+        $("#serie").change(function () {
+            actualizarDocNum();
+        });
+    });
+    $(document).ready(function () {
+        $("#idImpuestos").change(function () {
+            actualizarTotalConImpuesto();
+        });
+    });
+</script>
+{% endblock page_content %}

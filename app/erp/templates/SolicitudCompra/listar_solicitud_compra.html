@@ -1,0 +1,849 @@
+{% extends 'base/base.html'%}
+{% load static %}
+{% block head_list %}
+<script src="{% static 'SolicitudCompra/js/list.js' %}"></script>
+<style>
+    .disabled-row {
+        background-color: #f5f5f5;
+        /* Color gris claro */
+        color: #a0a0a0;
+        /* Color de texto gris */
+        pointer-events: none;
+        /* Deshabilitar interacciones con la fila */
+    }
+</style>
+{% endblock head_list %}
+
+{% block page_content %}
+
+<form id="Solicitudes" method="post">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <div class="row col-sm-12 mt-3">
+                            <div class="col col-sm-6 mt-3">
+                                <h3 class="card-title">
+                                    {% if user.is_head_of_area %}
+                                    <i class="fas fa-boxes"></i> {{title}}: {{user.departamento}}
+                                    {% else %}
+                                    <i class="fas fa-boxes"></i> {{title}}
+                                    {% endif %}
+                                </h3>
+                            </div>
+                            {% for group in request.user.groups.all %}
+                            {% if group.name != 'Jefe_de_Presupuestos' %}
+                            <div class="col col-sm-6 mt-3" style="text-align: left; display: flex; align-items: center;">
+                                <label for="filtrarEstado" class="col-sm-3 col-form-label" style="margin-left: 30%">Filtrar por estado:</label>
+                                <select class="col-sm-6 col-form-label" style="text-align: left;" id="filtrarEstado">
+                                    <option value="0">Todos</option>
+                                    <option value="A">Aprobado</option>
+                                    <option value="P">Pendiente</option>
+                                    <option value="R">Rechazado</option>
+                                    <option value="C">Contabilizado</option>
+                                </select>
+                            </div>
+                            {% else %}
+                            <div class="col col-sm-6 mt-3" style="text-align: left;" hidden>
+                                <label for="filtrarEstado" class="col-sm-3 col-form-label"
+                                    style="margin-left: 45%">Filtrar por estado:</label>
+                                <select class="col-sm-3 col-form-label" style="text-align: left;" id="filtrarEstado">
+                                    <option value="0">Todos</option>
+                                </select>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card card-secondary">
+            <div class="card-body">
+                <table class="table table-bordered" id="tblSolicitudes" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 3%;">#</th>
+                            <th scope="col" style="width: 5%;">Num. Documento</th>
+                            <th scope="col" style="width: 13%;">Solicitante</th>
+                            <th scope="col" style="width: 8%;">Tipo de Solicitud</th>
+                            <th scope="col" style="width: 5%;">Moneda</th>
+                            <th scope="col" style="width: 5%;">Impuesto adjunto</th>
+                            <th scope="col" style="width: 10%;">Fecha de registro</th>
+                            <th scope="col" style="width: 10%;">Fecha de vencimiento</th>
+                            <th scope="col" style="width: 10%;">Estado</th>
+                            <th scope="col" style="width: 11%;">Total</th>
+                            <th scope="col" style="width: 11%;">Total con impuestos</th>
+                            <th scope="col" style="width: 4%;">Seleccionar</th>
+                            <th scope="col" style="width: 5%;">Procesar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            {% for group in request.user.groups.all %}
+            {% if group.name != 'Jefe_de_Presupuestos' %}
+            <div class="card-body" style="display: flex; column-gap: 10px; justify-content: center;">
+                {% if edition_permissions %}
+                <button type="button" id="btnAprobarMasivo" class="btn btn-success" onclick=aprobarMasivo()>Aprobar
+                    Elementos Selec.</button>
+                <button type="button" id="btnRechazarMasivo" class="btn btn-danger" onclick=rechazarMasivo()>Rechazar
+                    Elementos Selec.</button>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="card-body" style="display: flex; column-gap: 10px; justify-content: center;">
+                {% if edition_permissions %}
+                <button type="button" id="btnContabilizarMasivo" class="btn btn-success"
+                    onclick=contabilizarMasivo()>Contabilizar
+                    Elementos Selec.</button>
+                <button type="button" id="btnRechazarMasivo" class="btn btn-danger" onclick=rechazarMasivo()>Rechazar
+                    Elementos Selec.</button>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</form>
+<div class="modal fade" id="modalDetalles" tabindex="-1" role="dialog" aria-labelledby="modalDetallesLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 90%;" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetallesLabel">Detalles de Solicitud: <span class="text"
+                        id="idSolicitud"></span></h5>
+                {% comment %} CON ESTE CODIGO "X" NO FUNCIONABA {% endcomment %}
+                {% comment %} <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button> {% endcomment %}
+
+                {% comment %} REEMPLAZO DE "X" {% endcomment %}
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                <div class="card shadow-sm">
+                    
+                    <div id="kt_card_detalle_solicitud" class="collapse show">
+                        <div class="card-body">
+                            <div class="row g-5 g-xl-8">
+                                <!-- Campo oculto -->
+                                <label type="text" aria-readonly="true" id="InputDocEntry"
+                                    class="form-control form-control-user" style="text-align:right;"
+                                    hidden></label>
+            
+                                <!-- Primera fila -->
+                                <div class="row mb-5" style="margin-top: 15px;">
+                                    <div class="col-sm-4">
+                                      <label for="detallesDocNum" id="lblDetDocNum" class="col-sm-3 col-form-label d-inline-block" style="width: 170px;">Número de Documento:</label>
+                                      <label type="text" aria-readonly="true" id="detallesDocNum" class="form-control form-control-solid d-inline-block" style="text-align:right;"></label>
+                                    </div>
+                                    <div class="col-sm-4">
+                                      <label for="detalleSerie" class="col-sm-3 col-form-label d-inline-block">Serie:</label>
+                                      <label type="text" aria-readonly="true" id="detalleSerie" class="form-control form-control-solid d-inline-block" style="text-align:right;"></label>
+                                    </div>
+                                    <div class="col-sm-4">
+                                      <label for="detallesDocStatus" id="lblDocStatus" class="col-sm-3 col-form-label d-inline-block" style="width: 170px;">Estado de Documento:</label>
+                                      <label type="text" aria-readonly="true" id="detallesDocStatus" class="form-control form-control-solid d-inline-block" style="text-align:right;width: 387.6px;"></label>
+                                    </div>
+                                </div>
+
+                                <!-- Tercera fila -->
+                                <div class="col-sm-6" style="margin-top: 30px">
+                                    <div class="row mb-5">
+                                        <label for="detallesDocDate" id="lblDocDate"
+                                            class="col-sm-3 col-form-label d-inline-block" style="width: 167.5px;">Fecha del Documento:</label>
+                                        {% comment %} <div class="col-sm-9"> {% endcomment %}
+                                            <label type="text" aria-readonly="true" id="detallesDocDate"
+                                                class="form-control form-control-solid"
+                                                style="text-align:right;width: 427.6px;"></label>
+                                        {% comment %} </div> {% endcomment %}
+                                    </div>
+                                </div>
+
+                                <!-- Cuarta fila -->
+                                <div class="col-sm-6"  style="margin-top: 27px">
+                                    <div class="row mb-5">
+                                        <label for="detallesDocDueDate" id="lblDueDate"
+                                            class="col-sm-3 col-form-label d-inline-block" style="width: 167.5px;">Fecha de vencimiento:</label>
+                                        {% comment %} <div class="col-sm-9"> {% endcomment %}
+                                            <label type="text" aria-readonly="true" id="detallesDocDueDate"
+                                                class="form-control form-control-solid"
+                                                style="text-align:right;width: 427.6px;"></label>
+                                        {% comment %} </div> {% endcomment %}
+                                    </div>
+                                </div>
+
+                                <!-- Quinta fila -->
+                                <div class="row g-5 g-xl-8" style="margin-top: 1px">
+                                    <div class="col-sm-4">
+                                        <div class="row mb-5">
+                                            <label for="detallesMoneda" id="lblMoneda"
+                                                class="col-sm-3 col-form-label">Moneda:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" id="detallesMoneda"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:left;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+                                        <div class="row mb-5">
+                                            <label for="detallesTaxCode" id="lblTaxCode"
+                                                class="col-sm-3 col-form-label">Impuesto:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" id="detallesTaxCode"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:left;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+                                        <div class="row mb-5">
+                                            <label for="detallesDocType" id="lblDocType"
+                                                class="col-sm-3 col-form-label">Tipo:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" id="detallesDocType"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:left;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sexta fila - Totales -->
+                                <div class="row g-5 g-xl-8"  style="margin-top: 1px">
+                                    <div class="col-sm-6">
+                                        <!-- Columna vacía -->
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="row mb-5">
+                                            <label for="detallesTotal" id="lblTotal"
+                                                class="col-sm-5 col-form-label">Total:</label>
+                                            <div class="col-sm-7">
+                                                <label type="text" aria-readonly="true" id="detallesTotal"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:right;"></label>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-5">
+                                            <label for="detallesTotalImp" id="lblTotalImp"
+                                                class="col-sm-5 col-form-label">Total con impuestos:</label>
+                                            <div class="col-sm-7">
+                                                <label type="text" aria-readonly="true" id="detallesTotalImp"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:right;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+                                <!-- Usuario Solicitante -->
+                                <h3 class="card-title align-items-start flex-column mb-5" style="margin-top: 1px">
+                                    <span class="card-label fw-bold text-dark">Usuario Solicitante</span>
+                                </h3>
+
+                                <div class="row g-5 g-xl-8" style="margin-top: 1px">
+                                    <div class="col-sm-6">
+                                        <div class="row mb-5">
+                                            <label for="detallesReqIdUser" id="lblReqIdUser"
+                                                class="col-sm-3 col-form-label">Usuario:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" name="detallesReqIdUser"
+                                                    id="detallesReqIdUser" class="form-control form-control-solid"
+                                                    style="text-align:right;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="row mb-5">
+                                            <label for="departmentUser" id="lblDepartmentUser"
+                                                class="col-sm-3 col-form-label">Departamento:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" id="departmentUser"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:right;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tabla de detalles -->
+                                <div class="card card-flush mt-6">
+                                    <div class="card-body">
+                                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3" 
+                                            id="tblDetallesProd" style="width: 100%;">
+                                            <thead>
+                                                <tr class="fw-bold text-muted">
+                                                    <th>Cod. Item</th>
+                                                    <th>LineVendor</th>
+                                                    <th>Descripción</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Unidad Medida</th>
+                                                    <th>Almacén</th>
+                                                    <th>Total</th>
+                                                    <th>Seleccionar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+
+                                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3" 
+                                            id="tblDetallesServ" style="width: 100%; display: none;">
+                                            <thead>
+                                                <tr class="fw-bold text-muted">
+                                                    <th>Cod. Item</th>
+                                                    <th>LineVendor</th>
+                                                    <th>Descripción</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Cuenta Mayor</th>
+                                                    <th>Total</th>
+                                                    <th>Seleccionar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Cerrar todos los divs pendientes -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer del Modal -->
+                {% for group in request.user.groups.all %}
+                {% if group.name != 'Jefe_de_Presupuestos' %}
+                    <div class="modal-footer">
+                        <div class="d-flex justify-content-center gap-2">
+                            {% if edition_permissions %}
+                            <button type="button" id="btnAprobar" class="btn btn-success" onclick="aprobar()">Aprobar</button>
+                            <button type="button" id="btnRechazar" class="btn btn-danger" onclick="rechazar()">Rechazar</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="modal-footer">
+                        <div class="d-flex justify-content-center gap-2">
+                            {% if edition_permissions %}
+                            <button type="button" id="btnContabilizar" class="btn btn-success" onclick="contabilizar()">Contabilizar</button>
+                            <button type="button" id="btnRechazar" class="btn btn-danger" onclick="rechazar()">Rechazar</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+    <div class="modal fade" id="modalCarga" tabindex="-1" role="dialog"
+        style="padding-top: 340px; padding-left: 150px; text-align: center;" aria-labelledby="modalDetallesLabel"
+        aria-hidden="true" style="vertical-align: center;">
+        <div class="modal-dialog modal-sm" style="max-width: 300px; max-height: 350px;" role="document">
+            <div class="modal-content">
+                <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                    <div class="lds-ring">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <p>Generando Solicitud...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+<script>
+    function abrir_modal_cargar() {
+        $('#modalCarga').modal('show');
+    }
+
+    function aprobar() {
+        var id = $("#InputDocEntry").html();
+        var user = $("#detallesReqIdUser").text().trim();
+        var data = { id: id, usuario: user, arrcheckedProd: checkedProd};
+        data = JSON.stringify(data);
+        var token = '{{csrf_token}}';
+        $.confirm({
+            theme: 'modern',
+            title: 'Aviso',
+            columnClass: 'medium',
+            icon: 'fas fa-check',
+            type: 'green',
+            content: '¿Desea aprobar la Solicitud de Compra N°: ' + id + '?',
+            buttons: {
+                confirm: function () {
+                    abrir_modal_cargar();
+                    $.ajax({
+                        headers: { "X-CSRFToken": token },
+                        type: "POST",
+                        url: "/erp/solicitud/aprobar/" + id,
+                        data: data,
+                        contentType: "application/json; charset=utf-8",
+                        success: function (response) {
+                            if (response.error) {
+                                $.confirm({
+                                    title: 'Error',
+                                    content: response.error,
+                                    type: 'red',
+                                    theme: 'modern',
+                                    buttons: {
+                                        confirm: function () {
+                                            location.reload(true);
+                                        },
+                                    }
+                                });
+                            } else {
+                                $.confirm({
+                                    title: 'Éxito',
+                                    content: 'La solicitud ha sido aprobada exitosamente.',
+                                    type: 'green',
+                                    theme: 'modern',
+                                    buttons: {
+                                        confirm: function () {
+                                            location.reload(true);
+                                        },
+                                    }
+                                });
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            var errorResponse = jqXHR.responseJSON || {};
+                            var errorMessage = errorResponse.error || 'Error desconocido';
+                            $('#modalCarga').modal('hide');
+                            $.alert({
+                                title: 'Error',
+                                content: 'Error: ' + errorMessage,
+                                type: 'red',
+                                theme: 'modern',
+                                buttons: {
+                                    ok: function (){
+                                        $('#modalCarga').modal('hide');
+                                    }
+                                }
+                            });
+                        }
+                    });
+                },
+                cancel: function () {
+                },
+            }
+        });
+    }
+    $(function () {
+        $('#filtrarEstado').select2({
+            minimumResultsForSearch: Infinity,
+            placeholder: function () {
+                $(this).data('placeholder');
+            },
+        });
+    });
+
+    function rechazar() {
+        var id = $("#InputDocEntry").html();
+        var user = $("#detallesReqIdUser").text().trim();
+        var data = { id: id, usuario: user};
+        data = JSON.stringify(data);
+        var token = '{{csrf_token}}';
+        $.confirm({
+            theme: 'modern',
+            title: 'Aviso',
+            columnClass: 'medium',
+            icon: 'fas fa-trash',
+            type: 'red',
+            content: '¿Desea rechazar la Solicitud de Compra N°: ' + id + '?',
+            buttons: {
+                confirm: function () {
+                    abrir_modal_cargar();
+                    $.ajax({
+                        headers: { "X-CSRFToken": token },
+                        type: "POST",
+                        url: "/erp/solicitud/rechazar/" + id,
+                        data: data,
+                        success: function (response) {
+                            if (response === "OK") {
+                                $.confirm({
+                                    title: 'Éxito',
+                                    content: 'La solicitud ha sido rechazada exitosamente.',
+                                    type: 'red',
+                                    theme: 'modern',
+                                    buttons: {
+                                        confirm: function () {
+                                            $('#modalCarga').modal('hide');
+                                            location.reload(true);
+                                        },
+                                    }
+                                });
+                            }
+                            else {
+                                $('#modalCarga').modal('hide');
+                                $.alert({
+                                    title: 'Error',
+                                    icon: 'fa fa-times-circle',
+                                    theme: 'modern',
+                                    type: 'red',
+                                    content: "Error Intentado Cambiar Estado a Cliente",
+                                    buttons: {
+                                        ok: function () {
+                                            text: 'OK';
+                                            btnClass: 'btn-danger'
+                                            $('#modalCarga').modal('hide');
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrow) {
+                            $('#modalCarga').modal('hide');
+                            console.log(textStatus, errorThrow, jqXHR);
+                        }
+                    });
+                },
+                cancel: function () {
+                },
+            }
+        });
+    }
+
+    function aprobarMasivo() {
+        var table = $('#tblSolicitudes').DataTable();
+        var selectedIds = [];
+        table.rows().every(function () {
+            var row = this.node();
+            var checkbox = $(row).find('input[type="checkbox"]');
+            if (checkbox.prop('checked')) {
+                selectedIds.push(checkbox.val());
+            }
+        });
+        console.log(selectedIds);
+        if (selectedIds.length === 0) {
+            $.alert({
+                title: 'Aviso',
+                content: 'No se han seleccionado solicitudes de compras.',
+                type: 'red',
+                theme: 'modern',
+                buttons: {
+                    confirm: function () {
+
+                    },
+                }
+            });
+            return;
+        } else {
+            var token = '{{csrf_token}}';
+            $.confirm({
+                theme: 'modern',
+                title: 'Aviso',
+                columnClass: 'medium',
+                icon: 'fas fa-check',
+                type: 'green',
+                content: '¿Desea aprobar las solicitudes seleccionadas?',
+                buttons: {
+                    confirm: function () {
+                        abrir_modal_cargar();
+                        $.ajax({
+                            headers: { "X-CSRFToken": token },
+                            type: "POST",
+                            url: '/erp/aprobar_masivo/',
+                            data: JSON.stringify({ ids: selectedIds,  arrcheckedProd: checkedProd}),
+                            contentType: "application/json; charset=utf-8",
+                            success: function (response) {
+                                if (response.error) {
+                                    $.confirm({
+                                        title: 'Error',
+                                        content: response.error,
+                                        type: 'red',
+                                        theme: 'modern',
+                                        buttons: {
+                                            confirm: function () {
+                                                $('#modalCarga').modal('hide');
+                                                location.reload(true);
+                                            },
+                                        }
+                                    });
+                                } else {
+                                    $.confirm({
+                                        title: 'Éxito',
+                                        content: 'La solicitud ha sido aprobada exitosamente.',
+                                        type: 'green',
+                                        theme: 'modern',
+                                        buttons: {
+                                            confirm: function () {
+                                                $('#modalCarga').modal('hide');
+                                                location.reload(true);
+                                            },
+                                        }
+                                    });
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                var errorResponse = jqXHR.responseJSON || {};
+                                var errorMessage = errorResponse.error || 'Error desconocido';
+                                $('#modalCarga').modal('hide');
+                                $.alert({
+                                    title: 'Error',
+                                    content: 'Error: ' + errorMessage,
+                                    type: 'red',
+                                    theme: 'modern'
+                                });
+                            }
+                        });
+                    },
+                    cancel: function () {
+                    },
+                }
+            });
+            return;
+        }
+    }
+    function rechazarMasivo() {
+        var table = $('#tblSolicitudes').DataTable();
+        var selectedIds = [];
+        table.rows().every(function () {
+            var row = this.node();
+            var checkbox = $(row).find('input[type="checkbox"]');
+
+            // Si el checkbox está marcado, agrega el ID a la lista
+            if (checkbox.prop('checked')) {
+                selectedIds.push(checkbox.val());
+            }
+        });
+        if (selectedIds.length === 0) {
+            $.alert({
+                title: 'Aviso',
+                content: 'No se han seleccionado solicitudes de compras.',
+                type: 'red',
+                theme: 'modern',
+                buttons: {
+                    confirm: function () {
+
+                    },
+                }
+            });
+            return;
+        } else {
+            var token = '{{csrf_token}}';
+            $.confirm({
+                theme: 'modern',
+                title: 'Aviso',
+                columnClass: 'medium',
+                icon: 'fas fa-check',
+                type: 'red',
+                content: '¿Desea rechazar las solicitudes seleccionadas?',
+                buttons: {
+                    confirm: function () {
+                        abrir_modal_cargar();
+                        $.ajax({
+                            headers: { "X-CSRFToken": token },
+                            type: "POST",
+                            url: '/erp/rechazar_masivo/',
+                            data: JSON.stringify({ ids: selectedIds }),
+                            contentType: "application/json; charset=utf-8",
+                            success: function (response) {
+                                if (response === "OK") {
+                                    $.confirm({
+                                        title: 'Éxito',
+                                        content: 'Las solicitudes han sido rechazadas exitosamente.',
+                                        type: 'red',
+                                        theme: 'modern',
+                                        buttons: {
+                                            confirm: function () {
+                                                $('#modalCarga').modal('hide');
+                                                location.reload(true);
+                                            },
+                                        }
+                                    });
+                                }
+                                else {
+                                    $.alert({
+                                        title: 'Error',
+                                        icon: 'fa fa-times-circle',
+                                        theme: 'modern',
+                                        type: 'red',
+                                        content: "Error Intentado Cambiar Estado a Cliente",
+                                        buttons: {
+                                            ok: function () {
+                                                text: 'OK';
+                                                btnClass: 'btn-danger'
+                                                $('#modalCarga').modal('hide');
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrow) {
+                                console.log(textStatus, errorThrow, jqXHR);
+                            }
+                        });
+                    },
+                    cancel: function () {
+                    },
+                }
+            });
+            return;
+        }
+    }
+
+    function contabilizarMasivo() {
+        var table = $('#tblSolicitudes').DataTable();
+        var selectedIds = [];
+        table.rows().every(function () {
+            var row = this.node();
+            var checkbox = $(row).find('input[type="checkbox"]');
+            if (checkbox.prop('checked')) {
+                selectedIds.push(checkbox.val());
+            }
+        });
+        if (selectedIds.length === 0) {
+            $.alert({
+                title: 'Aviso',
+                content: 'No se han seleccionado solicitudes de compras.',
+                type: 'red',
+                theme: 'modern',
+                buttons: {
+                    confirm: function () {
+
+                    },
+                }
+            });
+            return;
+        } else {
+            var token = '{{csrf_token}}';
+            $.confirm({
+                theme: 'modern',
+                title: 'Aviso',
+                columnClass: 'medium',
+                icon: 'fas fa-check',
+                type: 'green',
+                content: '¿Desea contabilizar las solicitudes seleccionadas?',
+                buttons: {
+                    confirmar: function () {
+                        abrir_modal_cargar();
+                        $.ajax({
+                            headers: { "X-CSRFToken": token },
+                            type: "POST",
+                            url: '/erp/contabilizar_masivo/',
+                            data: JSON.stringify({ ids: selectedIds }),
+                            contentType: "application/json; charset=utf-8",
+                            success: function (response) {
+                                if (response === "OK") {
+                                    $.confirm({
+                                        title: 'Éxito',
+                                        content: 'Las solicitudes han sido contabilizadas exitosamente.',
+                                        type: 'green',
+                                        theme: 'modern',
+                                        buttons: {
+                                            confirm: function () {
+                                                $('#modalCarga').modal('hide');
+                                                location.reload(true);
+                                            },
+                                        }
+                                    });
+                                }
+                                else {
+                                    $.alert({
+                                        title: 'Error',
+                                        icon: 'fa fa-times-circle',
+                                        theme: 'modern',
+                                        type: 'red',
+                                        content: "Error Intentado Cambiar Estado a Cliente",
+                                        buttons: {
+                                            ok: function () {
+                                                text: 'OK';
+                                                btnClass: 'btn-danger'
+                                                $('#modalCarga').modal('hide');
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrow) {
+                                console.log(textStatus, errorThrow, jqXHR);
+                            }
+                        });
+                    },
+                    cancelar: function () {
+                    },
+                }
+            });
+            return;
+        }
+    }
+
+    function contabilizar() {
+        var id = $("#InputDocEntry").html();
+        var user = $("#detallesReqIdUser").text().trim();
+        var data = { id: id, usuario: user };
+        data = JSON.stringify(data);
+        var token = '{{csrf_token}}';
+        $.confirm({
+            theme: 'modern',
+            title: 'Confirmación',
+            columnClass: 'medium',
+            icon: 'fas fa-check',
+            type: 'green',
+            content: '¿Desea contabilizar la Solicitud de Compra N°: ' + id + '?',
+            buttons: {
+                confirm: function () {
+                    abrir_modal_cargar();
+                    $.ajax({
+                        headers: { "X-CSRFToken": token },
+                        type: "POST",
+                        url: "/erp/solicitud/contabilizar/" + id,
+                        data: data,
+                        success: function (response) {
+                            if (response === "OK") {
+                                $.confirm({
+                                    title: 'Éxito',
+                                    content: 'La solicitud ha sido contabilizada exitosamente.',
+                                    type: 'green',
+                                    theme: 'modern',
+                                    buttons: {
+                                        confirm: function () {
+                                            $('#modalCarga').modal('hide');
+                                            location.reload(true);
+                                        },
+                                    }
+                                });
+                            }
+                            else {
+                                $.alert({
+                                    title: 'Error',
+                                    icon: 'fa fa-times-circle',
+                                    theme: 'modern',
+                                    type: 'red',
+                                    content: "Error Intentado Cambiar Estado a Cliente",
+                                    buttons: {
+                                        ok: function () {
+                                            text: 'OK';
+                                            btnClass: 'btn-danger'
+                                            $('#modalCarga').modal('hide');
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrow) {
+                            console.log(textStatus, errorThrow, jqXHR);
+                        }
+                    });
+                },
+                cancel: function () {
+                },
+            }
+        });
+    }
+    
+</script>
+{% endblock %}

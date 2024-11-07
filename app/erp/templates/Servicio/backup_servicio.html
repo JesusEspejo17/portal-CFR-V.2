@@ -1,0 +1,182 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="col-xl-12 col-md-12 mb-12">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Buscar Servicio
+                        </div>
+                        <div class="row">
+                            
+                        </div>
+                        <div class="card-body">
+                            <div class="card card-secondary">
+                                <div class="card-body">
+                                    <div class="form-group row">
+                                        <div class="form-group col-sm-12 mb-sm-3">
+                                            <table class="table table-striped table-hover dt-responsive nowrap" id="tblServ">
+                                                <thead>
+                                                    <th>Código</th>           
+                                                    <th>Nombre</th>
+                                                    <th>Precio Unitario</th>
+                                                    <th>Agregar</th>
+                                                </thead>
+                                                <tbody>
+                                                    {% for serv in Servicio %}
+                                                    <tr>
+                                                        <td>{{ serv.ItemCode }}</td>
+                                                        <td>{{ serv.ItemName }}</td>
+                                                        <td>{{ serv.PriceUnit }}</td>
+                                                        <td>
+                                                            <button class="btn btn-warning btn-circle" id="btnSelect"
+                                                            onclick="seleccionarServicio('{{serv.ItemCode}}','{{serv.ItemName}}','{{serv.PriceUnit}}')">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="form-group col-sm-6 mb-sm-3">
+                                            <div class="row">
+                                                <label for="cLbl" class="col-sm-3 col-form-label">Código: </label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" readonly class="form-control-plaintext" name="cLbl" id="cLbl" value="-------" required>
+                                                    </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                            <div class="row">
+                                                <label for="pLbl" class="col-sm-3 col-form-label">Precio:</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" readonly class="form-control-plaintext" name="pLbl" id="pLbl" value="-------" required>
+                                                    </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="srLbl" class="col-sm-3 col-form-label">Servicio:</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" readonly class="form-control-plaintext" name="srLbl" id="srLbl" value="-------" required>
+                                            </div>
+                                    </div>
+                                    <br>
+                                    <div class="form-group row">
+                                        <label for="ccLbl" class="col-sm-3 col-form-label">Cuenta Cont.:</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control select" name="ccLbl" id="ccLbl" style="width: 100%;" >
+                                                {% for cuentaCont in cuentaContable_serv %}
+                                                    <option>{{cuentaCont.AcctName}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="form-group row">
+                                        <label for="idPr" class="col-sm-3 col-form-label">Proveedor:</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control select" name="idPr" id="idPr" style="width: 100%;" >
+                                                {% for sN in socioNegocio_serv %}
+                                                    <option>{{sN.CardName}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="form-group row">
+                                        <label for="cant" class="col-sm-3 col-form-label">Cant.:</label>
+                                        <div class="col-sm-3">
+                                            <input type="number" min="1" max="1" value="1" class="form-control" name="cant" id="cant" required>
+                                        </div>                                        
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col" style="text-align:right;">
+                                            <button class="btn btn-success" id="btnPrintServ"
+                                                onclick="pintarServicio()"><i class="fas fa-check"></i>
+                                                Seleccionar
+                                            </button>
+                                            <button type="button" id="btnCancelar" class="btn btn-danger">
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
+<script>
+    $('#tblServ').DataTable({
+        width: '100%',
+        bDestroy: true,
+        responsive: true,
+        autoWidth: true,
+        destroy: true,
+        deferRender: true,
+    });
+
+    function seleccionarServicio(codigo,descripcion,precio){
+        $("#cLbl").val(codigo);
+        $("#srLbl").val(descripcion);
+        $("#pLbl").val(precio);
+        $("#cantTxt").focus();
+    }
+
+
+    $(function () {
+        $("#btnCancelar").click(function(e){
+            e.preventDefault();
+            cerrar_modal();
+        });
+    });
+
+    function calcularTotal(precio, cantidad){
+        return precio*cantidad;
+    };
+
+    function pintarServicio(){
+        total = calcularTotal(document.getElementById("pLbl").value, document.getElementById("cant").value);
+
+        context = {'tipo':"Servicio", 
+        'code': document.getElementById("cLbl").value, 
+        'description':document.getElementById("srLbl").value, 
+        'cuenta_contable': document.getElementById("ccLbl").value,
+        'price':parseFloat(document.getElementById("pLbl").value).toFixed(2), 
+        'cant': document.getElementById("cant").value, 
+        'precio_total': total.toFixed(2), 
+        'proveedor':document.getElementById("idPr").value};
+        
+        if(document.getElementById("srLbl").value.trim() === "" || document.getElementById("srLbl").value === "-------"){
+            $.alert({
+                title:'Servicio no seleccionado',
+                icon: 'fa fa-exclamation',
+                theme:'material',
+                type:'orange',
+                content:'No se ha ingresado un servicio.'
+            });
+        } else {
+            if(servs.validarDatos(context)){
+                servs.add(context);
+                cerrar_modal();
+            } else {
+                $.alert({
+                title:'Servicio ya existente',
+                icon: 'fa fa-exclamation',
+                theme:'material',
+                type:'orange',
+                columnClass: 'medium',
+                content:'El servicio ya se encuentra en la solicitud de compra actual.'
+            });
+            }
+        }
+    }
+</script>

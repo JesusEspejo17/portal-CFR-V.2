@@ -1,0 +1,350 @@
+{% load static %}
+{% load template_tags %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Portal Solicitudes De Compra - CFR</title>
+  <link rel="icon" type="image/x-icon" href="{% static 'base/img/Logo CFR_Malabarte-RGB.png' %}">
+  <link href="{% static 'base/css/preloader.css' %}" rel="stylesheet">
+  
+  <!-- Custom fonts for this template-->
+  <link href="{% static 'base/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+  <link
+    href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+    rel="stylesheet">
+
+  <!-- Custom styles for this template-->
+  <link href="{% static 'base/css/sb-admin-2.min.css' %}" rel="stylesheet">
+
+  <!-- jQuery Confirm -->
+  <link rel="stylesheet" href="{% static 'base/vendor/jquery_confirm/jquery-confirm.min.css' %}">
+
+  <!-- Select2 -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+  <!-- XDSoft DateTimePicker -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css"
+    integrity="sha256-DOS9W6NR+NFe1fUhEE0PGKY/fubbUCnOfTje2JMDw3Y=" crossorigin="anonymous" />
+
+  <link href="{% static 'base/vendor/datatables/dataTables.bootstrap4.min.css'%}" rel="stylesheet">
+
+  <!-- Scripts -->
+
+  <!-- Bootstrap core JavaScript-->
+  <script src="{% static 'base/vendor/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'base/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+  <!-- Datatables-->
+
+  <script src="{% static 'base/vendor/datatables/jquery.dataTables.min.js'%}"></script>
+  <script src="{% static 'base/vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+  <!-- Core plugin JavaScript-->
+  <script src="{% static 'base/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+
+  <!-- Custom scripts for all pages-->
+  <script src="{% static 'base/js/sb-admin-2.min.js' %}"></script>
+
+  <!-- JQuery Confirm-->
+  <script src="{% static 'base/vendor/jquery_confirm/jquery-confirm.min.js' %}"></script>
+
+  <!-- JQuery.DatePicker-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"
+    integrity="sha256-FEqEelWI3WouFOo2VWP/uJfs1y8KJ++FLh2Lbqc8SJk=" crossorigin="anonymous"></script>
+  <script>
+    $(document).ready(function () {
+      jQuery.datetimepicker.setLocale('es');
+    });
+  </script>
+  <!-- Select2-->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  {% block head_list %}
+  {%endblock head_list %}
+</head>
+
+<body id="page-top">
+  {% block side_bar %}
+  <!-- Page Wrapper -->
+  <div id="wrapper">
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" style="background: #162043;"
+      id="accordionSidebar">
+
+      <!-- Sidebar - Brand -->
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'bases:home' %}">
+        <div class="sidebar-brand-icon">
+          <img src="{% static 'base/img/Logo-CFR_Malabarte_RGB (1).png' %}" alt="CFR Logo"
+            style="width: 145px;height:50px">
+        </div>
+      </a>
+
+      <!-- Divider -->
+      <hr class="sidebar-divider my-0">
+
+      <!-- Nav Item - Dashboard -->
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'bases:home' %}">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Inicio</span></a>
+      </li>
+
+      <!-- Divider -->
+      <hr class="sidebar-divider">
+
+      <!-- Heading -->
+      <div class="sidebar-heading">
+        Validaciones
+      </div>
+
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true"
+          aria-controls="collapseOne">
+          <i class="fas fa-fw fa-bars"></i>
+          <span>Panel de aprobación</span>
+        </a>
+        <div id="collapseOne" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Compras:</h6>
+            <a class="collapse-item" href="{% url 'erp:listar_solicitudes' %}"><i class="fas fa-fw fa-boxes"></i>
+              Validar Solicitudes</a>
+            {% for group in request.user.groups.all %}
+            {% if group.name == 'Jefe_Logistica' %}
+            <a class="collapse-item" href="{% url 'erp:listar_logistica' %}"><i class="fas fa-fw fa-file"></i>
+              Validar Logística</a>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </li>
+
+
+      <!-- Divider -->
+      <hr class="sidebar-divider">
+
+      <!-- Heading -->
+      <div class="sidebar-heading">
+        Solicitudes
+      </div>
+
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true"
+          aria-controls="collapseOne">
+          <i class="fas fa-fw fa-bars"></i>
+          <span>Nueva Solicitud</span>
+        </a>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Compras:</h6>
+            <a class="collapse-item" href="{% url 'erp:solicitudcompra' %}"><i class="fas fa-fw fa-boxes"></i> Solicitud
+              de Compra</a>
+            <a class="collapse-item" href="{% url 'erp:solicitudcompra' %}"><i class="fas fa-fw fa-list"></i> Entregas a
+              Rendir</a>
+          </div>
+        </div>
+      </li>
+      {% for group in request.user.groups.all %}
+      {% if group.name == 'Administrador' %}
+      <!-- Divider -->
+      <hr class="sidebar-divider">
+      <!-- Heading -->
+      <div class="sidebar-heading">
+        Panel de Usuarios
+      </div>
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages" aria-expanded="true"
+          aria-controls="collapseTwo">
+          <i class="fas fa-fw fa-folder"></i>
+          <span>Usuarios</span>
+        </a>
+        <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Manejo de Usuarios:</h6>
+            <a class="collapse-item" href="{% url 'user:userlist' %}"><i class="fas fa-fw fa-boxes"></i> Listar
+              Usuarios</a>
+            <a class="collapse-item" href="{% url 'user:usercreate' %}"><i class="fas fa-fw fa-list"></i> Nuevo
+              Usuario</a>
+          </div>
+        </div>
+      </li>
+      <!-- Divider -->
+      <hr class="sidebar-divider d-none d-md-block">
+      {% endif %}
+      {% endfor %}
+      <!-- Sidebar Toggler (Sidebar) -->
+      <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+      </div>
+    </ul>
+    <!-- End of Sidebar -->
+    {% endblock side_bar %}
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+      <!-- Main Content -->
+      <div id="content">
+
+        <!-- Topbar -->
+        {% block top_bar %}
+        <nav class="navbar navbar-expand bg-white navbar-light topbar mb-4 static-top shadow">
+
+          <!-- Sidebar Toggle (Topbar) -->
+          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <!-- Topbar Navbar -->
+          <ul class="navbar-nav ml-auto">
+            <div class="topbar-divider d-none d-sm-inline-block"></div>
+
+            <!-- Nav Item - User Information -->
+            <li class="nav-item dropdown no-arrow">
+              <a class="d-flex align-items-center nav-link dropdown-toggle dropdown-toggle-nocaret" href="#"
+                id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <div class="user-info ps-3">
+                  <span class="user-name mb-1 small" style="color: black;"> {{ user.username }} </span>
+                  <p class="designattion mb-0 small">{{ user.email }}</p>
+                </div>
+                <div class="col-lg-6">
+                  <img width="40" height="40" class="img-circle elevation-2" src="{{ request.user.get_image }}"
+                    alt="profileImage">
+                </div>
+              </a>
+              <!-- Dropdown - User Information -->
+              <div class="dropdown-menu dropdown-menu-center shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item  d-flex justify-content-center" href="#">
+                  <div class="row">
+                    <img width="100" height="100" class="img-circle elevation-2" src="{{ request.user.get_image }}"
+                      alt="profileImage">
+                  </div>
+                </a>
+                <a class="dropdown-item  d-flex justify-content-center" href="#">
+                  <div class="col text-center">
+                    <div class="row-xl-12">
+                      <span class="user-name mb-1" style="color: black;"> {{ request.user.username }}</span>
+                    </div>
+                    <div class="row-xl-12">
+                      {% for group in request.user.groups.all %}
+                      <p class="designattion mb-0 ">Rol: {{ group.name|replace_underscore}}</p>
+                      {% endfor %}
+
+                    </div>
+                  </div>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="{% url 'bases:home' %}">
+                  <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Perfil
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+
+          </ul>
+
+        </nav>
+        <!-- End of Topbar -->
+        {% endblock top_bar%}
+
+        <!-- Begin Page Content -->
+        {% block page_content %}
+        <div class="container-fluid">
+
+          <!-- Page Heading -->
+          <h1 class="h3 mb-4 text-gray-800">Blank Page</h1>
+        </div>
+        {% endblock page_content %}
+        <!-- /.container-fluid -->
+
+        {% block footer %}
+      </div>
+
+      <!-- End of Main Content -->
+
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Copyright &copy; CFR Business & Solutions 2024</span>
+          </div>
+        </div>
+      </footer>
+      <!-- End of Footer -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+  </div>
+  <!-- End of Page Wrapper -->
+  {% endblock footer %}
+
+  {% block login %}{% endblock login %}
+  <!-- Scroll to Top Button-->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <!-- Logout Modal-->
+  <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">¿Seguro que quiere cerrar sesión?</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">Selecciona "Salir" para cerrar la sesión actual.</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+          <form action="{% url 'bases:logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Salir</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="popup"></div>
+
+  {% block control_modal%}
+  <script>
+    function abrir_modal(url) {
+      $("#popup").load(url, function () {
+        $(this).modal({
+          backdrop: 'static',
+          keyboard: false
+        })
+        $(this).modal('show');
+      });
+      return false;
+    }
+
+    function cerrar_modal() {
+      $('#popup').modal('hide');
+      return false;
+    }
+
+  </script>
+  {% endblock %}
+
+  {% block js_page %}{% endblock js_page %}
+</body>
+
+</html>

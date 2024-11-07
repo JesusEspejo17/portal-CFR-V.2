@@ -1,0 +1,352 @@
+<div class="modal-dialog modal-xl" style="max-width: 90%;" role="document">
+    <div class="modal-content">
+        <div class="col-xl-12 col-md-12 mb-12">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Buscar Servicio
+                            </div>
+                            <div class="card-body" style="max-height: 80vh; overflow-y: auto;">
+                                <div class="card card-secondary">
+                                    <div class="card-body">
+                                        <div class="form-group row">
+                                            <div class="form-group col-sm-12 mb-sm-3">
+                                                <table class="table table-striped table-hover dt-responsive nowrap"
+                                                    id="tblServ">
+                                                    <thead>
+                                                        <th>Código</th>
+                                                        <th>Nombre</th>
+                                                        <th>Precio Unitario</th>
+                                                        <th>Agregar</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for serv in Servicio %}
+                                                        <tr>
+                                                            <td>{{ serv.ItemCode }}</td>
+                                                            <td>{{ serv.ItemName }}</td>
+                                                            <td>{{ serv.PriceUnit }}</td>
+                                                            <td>
+                                                                <button class="btn btn-warning btn-circle"
+                                                                    id="btnSelect"
+                                                                    onclick="seleccionarServicio('{{serv.ItemCode}}','{{serv.ItemName}}','{{serv.PriceUnit}}', this)">
+                                                                    <i class="fas fa-check"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <div class="form-group col-sm-12 mb-sm-3">
+                                                <table class="table table-bordered" id="tblServSeleccionados"
+                                                    display="table;" style="width: 100%;">
+                                                    <thead>
+                                                        <td style="width: 5%;">Código</td>
+                                                        <td style="width: 25%;">Descripción</td>
+                                                        <td style="width: 10%;">Precio</td>
+                                                        <td style="width: 20%;">Cuenta Cont.</td>
+                                                        <td style="width: 20%;">Proveedor</td>
+                                                        <td style="width: 15%;">Dimensión</td>
+                                                        <td style="width: 5%;">Eliminar</td>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="form-group row">
+                        <div class="col" style="text-align:right;">
+                            <button class="btn btn-success" id="btnPrintServ" onclick="pintarServicio()"><i
+                                    class="fas fa-check"></i>
+                                Seleccionar
+                            </button>
+                            <button type="button" id="btnCancelar" class="btn btn-danger">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var tblSlctServices;
+    var selectedSrv = {
+        items: {
+            serv: []
+        },
+        add: function (item) {
+            this.items.serv.push(item);
+            this.list();
+        },
+        list: function () {
+            tblSlctServices = $('#tblServSeleccionados').DataTable({
+                responsive: true,
+                autoWidth: false,
+                destroy: true,
+                deferRender: true,
+                data: selectedSrv.items.serv,
+                columns: [
+                    { "data": "codigo" },
+                    { "data": "descripcion" },
+                    { "data": "precio" },
+                    { "data": "cuenta_contable", "defaultContent": "" },
+                    { "data": "proveedor", "defaultContent": "" },
+                    { "data": "dimension", "defaultContent": "" },
+                    { "data": null }
+                ],
+                columnDefs: [
+                    {
+                        targets: [2],
+                        render: function (data, type, row) {
+                            return '<input type="number" class="form-control editable-input" data-type="precioSlt" name="precio" id="precio" value="' + data + '">';
+                        }
+                    },
+                    {
+                        targets: [-1],
+                        class: "text-center",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
+                        }
+                    },
+                    {
+                        targets: [-2],
+                        render: function (data, type, row) {
+                            //Pasamos todos los almacenes a elementos HTML
+                            var dimensiones = JSON.parse('{{ dimension_json|escapejs }}');
+                            var options = '<select class="form-control select" data-type="dimensionSlt" name="iddimension" id="iddimension" style="width: 100%;">';
+                            for (var i = 0; i < dimensiones.length; i++) {
+                                var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
+                                options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [-3],
+                        render: function (data, type, row) {
+                            //Pasamos todos los almacenes a elementos HTML
+                            var socios_de_negocio = JSON.parse('{{ socioNegocio_json|escapejs }}');
+                            var options = '<select class="form-control select" data-type="proveedorSlt" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
+                            for (var i = 0; i < socios_de_negocio.length; i++) {
+                                var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
+                                options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [-4],
+                        render: function (data, type, row) {
+                            var cuenta_contable = JSON.parse('{{ cuenta_contable_json|escapejs }}');
+                            var options = '<select class="form-control select" data-type="cuenta_contableSlt" name="idCC" id="idCC" style="width: 100%;">';
+                            for (var i = 0; i < cuenta_contable.length; i++) {
+                                var selected = (cuenta_contable[i].AcctName === data) ? 'selected' : '';
+                                options += '<option value="' + cuenta_contable[i].AcctName + '" ' + selected + '>' + cuenta_contable[i].AcctName + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    {
+                        targets: [-2],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "dimension",
+                        editable: true,
+                    },
+                    {
+                        targets: [-3],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "proveedor",
+                        editable: true,
+                    },
+                    {
+                        targets: [-4],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "cuenta_contable",
+                        editable: true,
+                    },
+                    {
+                        targets: [2],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "precio",
+                        editable: true,
+                    },
+                ],
+                initComplete: function (settings, json) {
+                    $(function () {
+                        $('#tblServSeleccionados').find('select').select2();
+                    });
+                },
+                drawBackcalldrawCallback: function (settings) {
+                    $('#tblServSeleccionados').find('select').select2();
+                },
+                rowCallback: function (row, data, index) {
+                    // Asignar select2 a los select dentro de la fila actual
+                    $(row).find('select').each(function () {
+                        $(this).attr('id', $(this).attr('id') + '-' + index);
+                        $(this).select2();
+                    });
+                }
+            });
+        },
+        remove: function (index) {
+            this.items.serv.splice(index, 1);
+            this.list();
+        },
+    }
+
+    $('#tblServSeleccionados').on('change', '.editable-cell select', function () {
+        var type = $(this).attr('data-type');
+        var rowIndex = tblSlctServices.cell($(this).closest('td')).index().row;
+        var newValue = $(this).val();
+        switch (type) {
+            case 'dimensionSlt':
+                selectedSrv.items.serv[rowIndex].dimension = newValue;
+                break;
+            case 'proveedorSlt':
+                selectedSrv.items.serv[rowIndex].proveedor = newValue;
+                break;
+            case 'cuenta_contableSlt':
+                selectedSrv.items.serv[rowIndex].cuenta_contable = newValue;
+                break;
+            default:
+                break;
+        }
+
+    });
+
+    $('#tblServSeleccionados').on('change', '.editable-cell input[type="number"]', function () {
+        var type = $(this).attr('data-type');
+        console.log('Entra');
+        var rowIndex = tblSlctServices.cell($(this).closest('td')).index().row;
+        var newValue = $(this).val();
+        selectedSrv.items.serv[rowIndex].precio = newValue;
+    });
+
+    $('#tblServ').DataTable({
+        width: '100%',
+        bDestroy: true,
+        responsive: true,
+        autoWidth: true,
+        destroy: true,
+        deferRender: true,
+    });
+
+    function seleccionarServicio(codigo, descripcion, precio, button) {
+        button.classList.replace("btn-warning", "btn-success");
+        context = {
+            'codigo': codigo,
+            'descripcion': descripcion,
+            'precio': precio,
+            'cuenta_contable': '', // Inicializamos vacío
+            'proveedor': '',      // Inicializamos vacío
+            'dimension': ''       // Inicializamos vacío
+        }
+        selectedSrv.add(context);
+    }
+    
+
+    $(function () {
+        $("#btnCancelar").click(function (e) {
+            e.preventDefault();
+            cerrar_modal();
+        });
+    });
+
+    function calcularTotal(precio, cantidad) {
+        return precio * cantidad;
+    };
+
+    function pintarServicio() {
+        if (selectedSrv.items.serv.length > 0) {
+            $('#tblServSeleccionados tbody tr').each(function () {
+                var codigo = $(this).find('td:eq(0)').text().trim();
+                var descripcion = $(this).find('td:eq(1)').text().trim();
+                var precio = $(this).find('input[name="precio"]').val();
+                var cuenta_contable = $(this).find('select[name="idCC"]').val();
+                var proveedor = $(this).find('select[name="idSocioNegocios"]').val();
+                var cantidad = parseInt('1');
+                var dimension = $(this).find('select[name="iddimension"]').val();
+                var precio_total = (parseFloat(precio)).toFixed(2);
+
+                // Construir el objeto de producto
+                var servicio = {
+                    tipo: "Servicio",
+                    code: codigo,
+                    description: descripcion,
+                    price: precio,
+                    proveedor: proveedor,
+                    cant: cantidad,
+                    cuenta_contable: cuenta_contable,
+                    precio_total: precio_total,
+                    dimension: dimension,
+                };
+                servs.add(servicio);
+            });
+            servs.list();
+            cerrar_modal();
+        } else {
+            $.alert({
+                title: 'Servicio no seleccionado',
+                icon: 'fa fa-exclamation',
+                theme: 'material',
+                type: 'orange',
+                content: 'Por favor ingresa al menos un servicio'
+            });
+        }
+    }
+
+    $('#tblServSeleccionados')
+        .on('click', 'a[rel="remove"]', function () {
+            var tr = $(this).closest('tr');
+            var index = tblSlctServices.row(tr).index();
+            var table = $('#tblServ').DataTable();
+            var cont = 0;
+            for (var i = 0; i < selectedSrv.items.serv.length; i++) {
+                if (selectedSrv.items.serv[i].descripcion == selectedSrv.items.serv[index].descripcion) cont++;
+            }
+            if (cont == 1 || cont == 0) {
+                table.rows().every(function () {
+                    var data = this.data(); // Obtén los datos de la fila de la tabla de búsqueda
+                    var rowNode = this.node(); // Obtén el nodo de la fila
+                    if (data[1] == selectedSrv.items.serv[index].descripcion) {
+                        $(rowNode).find('button').removeClass('btn-success').addClass('btn-warning');
+                    }
+                });
+                selectedSrv.remove(index);
+            } else {
+                selectedSrv.remove(index);
+            }
+        })
+
+</script>

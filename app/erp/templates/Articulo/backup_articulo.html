@@ -1,0 +1,216 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="col-xl-12 col-md-12 mb-12">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Buscar Producto
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="card-body">
+                            <div class="card card-secondary">
+                                <div class="card-body">
+                                    <div class="form-group row">
+                                        <div class="form-group col-sm-12 mb-sm-3">
+                                            <table class="table table-striped table-hover dt-responsive nowrap" id="tblBuscarProd" style="width: 100%;">
+                                                <thead>
+                                                  <th>Código</th>           
+                                                  <th>Nombre</th>
+                                                  <th>Precio Unitario</th>
+                                                  <th>Agregar</th>
+                                                </thead>
+                                                <tbody>
+                                                  {% for item in Articulo %}
+                                                  <tr>
+                                                    <td>{{ item.ItemCode }}</td>
+                                                    <td>{{ item.ItemName }}</td>
+                                                    <td>{{ item.PriceUnit }}</td>
+                                                    <td>
+                                                        <button class="btn btn-warning btn-circle" id="btnSelect"
+                                                        onclick="seleccionarProducto('{{item.ItemCode}}','{{item.ItemName}}','{{item.PriceUnit}}')">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </td>
+                                                  </tr>
+                                                  {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="form-group col-sm-6 mb-sm-3">
+                                            <div class="row">
+                                                <label for="codeLbl" class="col-sm-3 col-form-label">Código: </label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" readonly class="form-control-plaintext" name="codeLbl" id="codeLbl" value="--------" required>
+                                                    </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group col-sm-6 mb-0 mb-sm-3">
+                                            <div class="row">
+                                                <label for="priceLbl" class="col-sm-3 col-form-label">Precio:</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" readonly class="form-control-plaintext" name="priceLbl" id="priceLbl" value="--------" required>
+                                                    </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="productLbl" class="col-sm-3 col-form-label">Producto:</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" readonly class="form-control-plaintext" name="productLbl" id="productLbl" value="--------" required>
+                                            </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="id_cantidad_detalle" class="col-sm-3 col-form-label">Almacén:</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control select" name="idMedida" id="idAlmacen" style="width: 100%;" >
+                                                {% for alm in almacen %}
+                                                    <option>{{alm.WhsName}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="idProveedor" class="col-sm-3 col-form-label">Proveedor:</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control select" name="idProveedor" id="idProveedor" style="width: 100%;" >
+                                                {% for sN in socioNegocio %}
+                                                    <option>{{sN.CardName}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <div class="form-group row">
+                                        <label for="cantTxt" class="col-sm-3 col-form-label">Cant.:</label>
+                                        <div class="col-sm-3">
+                                            <input type="number" min="1" value="1" class="form-control" name="cantTxt" id="cantTxt" required>
+                                        </div>
+                                        <label for="idMedida" class="col-sm-2 col-form-label">Medida:</label>
+                                        <div class="col-sm-4">
+                                            <select class="form-control select" name="idMedida" id="idMedida" style="width: 100%;" >
+                                                {% for med in unidadMedida %}
+                                                    <option>{{med.Code}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col" style="text-align:right;">
+                                            <button class="btn btn-success" id="btnPrint"
+                                                onclick="pintarProducto()">
+                                                    <i class="fas fa-check"></i>
+                                                Seleccionar
+                                            </button>
+                                            <!-- <button type="submit" class="btn btn-danger"><span class="fa fa-save"></span> Guardar</button> -->
+                                            <button type="button" id="btnCancelar" class="btn btn-danger">
+                                            <!-- onclick="return cerrar_modal()" -->
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
+
+{% block js_page %}
+<script>
+    $('#tblBuscarProd').DataTable({
+        width: '100%',
+        bDestroy: true,
+        responsive: true,
+        autoWidth: true,
+        destroy: true,
+        deferRender: true,
+    });
+
+    $(function () {
+
+        $("#btnCancelar").click(function(e){
+            e.preventDefault();
+            cerrar_modal();
+
+        });
+    });
+
+
+    $(function () {
+            $('#idMedida').select2({
+                placeholder:'Seleccione una Unidad de Medida'
+                
+        });
+    });
+    $(function () {
+            $('#idAlmacen').select2({
+                placeholder:'Seleccione un Almacén'
+                
+        });
+    });
+
+    $(function () {
+            $('#idProveedor').select2({
+                placeholder:'Seleccione un Proveedor'
+                
+        });
+    });
+
+    function seleccionarProducto(codigo,descripcion,precio){
+        $("#codeLbl").val(codigo);
+        $("#productLbl").val(descripcion);
+        $("#priceLbl").val(precio);
+        $("#cantTxt").focus();
+    }
+
+    function calcularTotal(precio, cantidad){
+        return precio*cantidad;
+    }
+
+    function pintarProducto(){
+        total = calcularTotal(document.getElementById("priceLbl").value, document.getElementById("cantTxt").value);
+
+        context = {'tipo':"Artículo", 
+        'code': document.getElementById("codeLbl").value, 
+        'description':document.getElementById("productLbl").value, 
+        'price':parseFloat(document.getElementById("priceLbl").value).toFixed(2), 
+        'cant': document.getElementById("cantTxt").value, 
+        'almacen': document.getElementById("idAlmacen").value, 
+        'medida':document.getElementById("idMedida").value,
+        'precio_total': total.toFixed(2), 
+        'proveedor':document.getElementById("idProveedor").value};
+        
+        if(document.getElementById("productLbl").value.trim() === "" || document.getElementById("productLbl").value === "--------"){
+            $.alert({
+                title:'Producto no seleccionado',
+                icon: 'fa fa-exclamation',
+                theme:'material',
+                type:'orange',
+                content:'No se ha ingresado un producto.'
+            });
+        } else {
+            if(vents.validarDatos(context)){
+                vents.add(context);
+                cerrar_modal();
+            } else {
+                $.alert({
+                title:'Producto ya existente',
+                icon: 'fa fa-exclamation',
+                theme:'material',
+                type:'orange',
+                columnClass: 'medium',
+                content:'El producto ya ha sido ingresado con valores diferentes. Por favor, ingrese los mismos valores para aumentar la cantidad.'
+            });
+            }
+        }
+    }
+</script>
+{% endblock %}
