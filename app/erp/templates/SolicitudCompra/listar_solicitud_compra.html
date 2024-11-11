@@ -108,6 +108,7 @@
         </div>
     </div>
 </form>
+
 <div class="modal fade" id="modalDetalles" tabindex="-1" role="dialog" aria-labelledby="modalDetallesLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-xl" style="max-width: 90%;" role="document">
@@ -115,17 +116,12 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="modalDetallesLabel">Detalles de Solicitud: <span class="text"
                         id="idSolicitud"></span></h5>
-                {% comment %} CON ESTE CODIGO "X" NO FUNCIONABA {% endcomment %}
-                {% comment %} <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button> {% endcomment %}
-
                 {% comment %} REEMPLAZO DE "X" {% endcomment %}
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
                 <div class="card shadow-sm">
-                    
                     <div id="kt_card_detalle_solicitud" class="collapse show">
                         <div class="card-body">
                             <div class="row g-5 g-xl-8">
@@ -146,7 +142,7 @@
                                     </div>
                                     <div class="col-sm-4">
                                       <label for="detallesDocStatus" id="lblDocStatus" class="col-sm-3 col-form-label d-inline-block" style="width: 170px;">Estado de Documento:</label>
-                                      <label type="text" aria-readonly="true" id="detallesDocStatus" class="form-control form-control-solid d-inline-block" style="text-align:right;width: 387.6px;"></label>
+                                      <label type="text" aria-readonly="true" id="detallesDocStatus" class="form-control form-control-solid d-inline-block" style="text-align:right;"></label>
                                     </div>
                                 </div>
 

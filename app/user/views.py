@@ -1,15 +1,14 @@
 from django.shortcuts import render
-from django.views.generic import ListView, CreateView, DeleteView, TemplateView
+from django.views.generic import ListView, CreateView, DeleteView, TemplateView,UpdateView
 from user.models import User
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from app.mixins import ValidatePermissionRequiredMixin
 from django.http import JsonResponse, HttpResponseRedirect
-from user.forms import UserForm
+from user.forms import UserForm, UserEditForm
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import IntegrityError
-from django.views.generic import UpdateView
 
 # Create your views here.
 
@@ -101,42 +100,41 @@ class UserDeleteView(DeleteView):
 
 class TestView(TemplateView):
     template_name="emails/new-email.html"
-
+    
 
 class UserEditView(ValidatePermissionRequiredMixin, UpdateView):
     model = User
-    form_class = UserForm
+    form_class = UserEditForm  # Cambiado a UserEditForm
     template_name = 'users/edit.html'
     success_url = reverse_lazy('user:userlist')
-    url_redirect = success_url
     permission_required = 'user.change_user'
 
-    def get_object(self, queryset=None):
-        # Obtiene el objeto del usuario que se está editando
-        return self.model.objects.get(pk=self.kwargs['pk'])
-
     def form_valid(self, form):
-        # Guarda la instancia del usuario editado
+        # Guarda la instancia del usuario, incluyendo el campo `departamento` y `is_head_of_area` automáticamente
         self.object = form.save()
-
-        # Redirige a success_url
-        return HttpResponseRedirect(self.get_success_url())
-
+        return super().form_valid(form)
+    
     def form_invalid(self, form):
-        # Renderiza la plantilla con los errores del formulario
+        # Renderiza el formulario con errores
         return self.render_to_response(self.get_context_data(form=form))
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
         form = self.get_form()
         if form.is_valid():
             try:
-                # Usa form_valid para manejar el guardado y redirección
                 return self.form_valid(form)
             except Exception as e:
                 form.add_error(None, str(e))
-        else:
-            form.add_error(None, 'Formulario no válido.')
+        return self.form_invalid(form)
 
-        # Renderiza la misma plantilla con errores si el formulario no es válido
-        return self.render_to_response(self.get_context_data(form=form))
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['edit_url'] = reverse_lazy('user:userlist')  # Puedes modificar esto si deseas otro comportamiento
+        context['list_url'] = self.success_url
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        # Obtiene la instancia del usuario que se va a editar
+        self.object = self.get_object()
+        return super().dispatch(request, *args, **kwargs)
+

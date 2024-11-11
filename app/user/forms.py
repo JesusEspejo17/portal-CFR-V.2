@@ -71,4 +71,67 @@ class UserForm(ModelForm):
             data['error'] = str(e)
         return data
 
+# NUEVO FORM 
+class UserEditForm(forms.ModelForm):
+    departamento = forms.ModelChoiceField(
+        queryset=Departamento.objects.all(),
+        required=False,
+        empty_label="Seleccione un departamento",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
 
+    class Meta:
+        model = User
+        fields = ['SAP_Code', 'username', 'password', 'first_name', 'last_name', 
+                    'email', 'image', 'UserType', 'groups', 'departamento', 'is_head_of_area']
+        widgets = {
+            'groups': forms.SelectMultiple(attrs={
+                'id': 'id-groups',
+                'class': 'form-control select2',
+                'style': 'width: 100%;',
+            })
+        }
+        exclude = ['user_permissions', 'last_login', 'date_joined', 'is_superuser', 'is_active', 'is_staff']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Asegura que departamento tenga el valor guardado en base de datos
+        if self.instance.departamento:
+            self.fields['departamento'].initial = self.instance.departamento
+
+    def clean(self):
+        cleaned_data = super().clean()
+        groups = cleaned_data.get('groups')
+        departamento = cleaned_data.get('departamento')
+
+        # Verifica si el grupo `Jefe_De_Area` está seleccionado
+        is_jefe_de_area = any(group.name == 'Jefe_De_Area' for group in groups)
+        
+        if is_jefe_de_area and not departamento:
+            self.add_error('departamento', 'Debe seleccionar un departamento para el rol de Jefe De Area')
+        elif not is_jefe_de_area:
+            # Si no es `Jefe_De_Area`, departamento no es necesario ni debe persistir
+            cleaned_data['departamento'] = None
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        pwd = self.cleaned_data.get('password', '')
+
+        # Actualiza el campo is_head_of_area en base a los grupos
+        user.is_head_of_area = any(group.name == 'Jefe_De_Area' for group in self.cleaned_data.get('groups', []))
+        
+        # Borra departamento si no es Jefe de Área
+        if not user.is_head_of_area:
+            user.departamento = None  # Cambiado a None para borrar el valor del campo
+
+        # Actualiza la contraseña solo si es nueva
+        if user.pk is None or pwd != User.objects.get(pk=user.pk).password:
+            user.set_password(pwd)
+
+        if commit:
+            user.save()
+            self.save_m2m()
+
+        return user
