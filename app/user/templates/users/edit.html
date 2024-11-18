@@ -29,27 +29,22 @@
                     <div class="form-group">
                         <label for="idSAP_Code">Código SAP:</label>
                         <input type="text" name="SAP_Code" class="form-control form-control-solid" placeholder="Ingrese un Código SAP" id="idCodigoSAP" value="{{ user.SAP_Code }}"/>
-                        {% comment %} {{ form.SAP_Code }} {% endcomment %}
                     </div>
                     <div class="form-group">
                         <label for="idUsername">Username:</label>
                         <input type="text" name="username" class="form-control form-control-solid" placeholder="Ingrese el nombre de usuario" id="idUsername" required value="{{ user.username }}"/>
-                        {% comment %} {{ form.username }} {% endcomment %}
                     </div>
                     <div class="form-group">
                         <label for="idPassword">Contraseña:</label>
                         <input type="password" name="password" class="form-control form-control-solid" placeholder="Ingrese la contraseña" id="idPassword" required value="{{ user.password }}"/>
-                        {% comment %} {{ form.password }} {% endcomment %}
                     </div>
                     <div class="form-group">
                         <label for="idFirst_name">Nombre:</label>
                         <input type="text" name="first_name" class="form-control form-control-solid" placeholder="Ingrese el nombre" id="idNombre" required value="{{ user.first_name }}"/>
-                        {% comment %} {{ form.first_name }} {% endcomment %}
                     </div>
                     <div class="form-group">
                         <label for="idLast_name">Apellido:</label>
                         <input type="text" name="last_name" class="form-control form-control-solid" placeholder="Ingrese el apellido" id="idApellido" value="{{ user.last_name }}"/>
-                        {% comment %} {{ form.last_name }} {% endcomment %}
                     </div>
                 </div>
 
@@ -58,7 +53,6 @@
                     <div class="form-group">
                         <label for="idEmail">E-mail:</label>
                         <input type="text" name="email" class="form-control form-control-solid" placeholder="Ingrese el correo electrónico" id="idEmail" required value="{{ user.email }}"/>
-                        {% comment %} {{ form.email }} {% endcomment %}
                         <span class="form-text text-muted">Ingrese un correo válido</span>
                     </div>
                     <div class="form-group">
@@ -67,12 +61,10 @@
                             <option value="171" {% if user.UserType == 171 %}selected{% endif %}>Empleado</option>
                             <option value="12" {% if user.UserType == 12 %}selected{% endif %}>Usuario</option>
                         </select>
-                        {% comment %} {{ form.UserType }} {% endcomment %}
                     </div>
                     <div class="form-group">
                         <label for="idImage">Imagen:</label>
                         <input type="file" name="image" accept="image/*" id="idImage" class="form-control form-control-solid"/>
-                        {% comment %} {{ form.image }} {% endcomment %}
                     </div>
                     <div class="form-group">
                         <label for="idGroups">Grupos:</label>

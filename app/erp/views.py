@@ -530,6 +530,7 @@ def solicitudAprobar(request,id):
     if request.method=="POST":
         try:
             data = json.loads(request.body)
+            #print(f"Data recibida: {data}")
             checked_prod = data.get('arrcheckedProd', [])
             usuario = data.get('usuario', None)
             Solicitud = OPRQ.objects.filter(pk=id)
@@ -542,6 +543,7 @@ def solicitudAprobar(request,id):
                     checked_codes = {item.get('Code') for item in checked_prod}
                 else:
                     return JsonResponse({'error': 'Detalle no encontrado'}, status=404)
+                #print(f"Checked Codes: {checked_codes}")
                 for detalle in detalles:
                     if detalle.Code in checked_codes:
                         if detalle.LineStatus != 'A':
@@ -575,6 +577,7 @@ def solicitudAprobar(request,id):
             return JsonResponse({'error': msg}, status=500)
     return JsonResponse({'error': 'Metodo no permitido'}, status=405)
 
+
 def solicitudRechazar(request,id):
     if request.method=="POST":
         try:
@@ -607,6 +610,7 @@ def solicitudRechazar(request,id):
             return JsonResponse({'error': msg}, status=500)
     return JsonResponse({'error': 'Metodo no permitido'}, status=405)
 
+
 def export_data_as_json(id):
     solicitudes = OPRQ.objects.filter(pk=id)
     
@@ -631,6 +635,7 @@ def export_data_as_json(id):
         }
         detalle = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
         for det in detalle:
+            #print(f"Detalle Code: {det.Code}, LineStatus: {det.LineStatus}") 
             if det.LineStatus=='A':
                 detalle_list = {
                     'ItemCode': det.ItemCode.ItemCode,
@@ -643,6 +648,7 @@ def export_data_as_json(id):
                 oprq['DocumentLines'].append(detalle_list)
         data.append(oprq)
     json_data = json.dumps(data[0], indent=2, default=lambda o: o.isoformat() if isinstance(o, date) else None)
+    print(json_data)
     response = data_sender(json_data, id)
     if isinstance(response, JsonResponse):
         return response

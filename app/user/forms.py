@@ -73,12 +73,14 @@ class UserForm(ModelForm):
 
 # NUEVO FORM 
 class UserEditForm(forms.ModelForm):
-    departamento = forms.ModelChoiceField(
-        queryset=Departamento.objects.all(),
-        required=False,
-        empty_label="Seleccione un departamento",
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
+    DEPARTAMENTOS = [
+        ('General', 'General'),
+        ('Gestión', 'Gestión'),
+        ('Logística', 'Logística'),
+        ('Finanzas', 'Finanzas'),
+        ('Consultoría', 'Consultoría'),
+    ]
+    departamento = forms.ChoiceField(choices=DEPARTAMENTOS, required=False, widget=forms.Select(attrs={'class': 'form-control select2'}))
 
     class Meta:
         model = User
@@ -95,8 +97,8 @@ class UserEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Asegura que departamento tenga el valor guardado en base de datos
-        if self.instance.departamento:
+        if self.instance.pk and self.instance.departamento:
+            # Establece el valor inicial del ChoiceField
             self.fields['departamento'].initial = self.instance.departamento
 
     def clean(self):

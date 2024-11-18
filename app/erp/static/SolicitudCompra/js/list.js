@@ -55,6 +55,71 @@ function updateButtonStates() {
     }
 }
 
+// function setupCheckboxChangeListener() {
+//     $('#tblSolicitudes').on('change', 'input[type="checkbox"]', function () {
+//         updateButtonStates();
+//         var $checkbox = $(this);
+//         var docEntry = $(this).val();
+//         var table = $('#tblSolicitudes').DataTable();
+//         var rowDataC = table.row($checkbox.closest('tr')).data();
+
+//         if ($(this).is(':checked')) {
+//             $.ajax({
+//                 url: window.location.pathname,
+//                 type: 'POST',
+//                 data: {
+//                     'action': 'getDetails',
+//                     'code': rowDataC.DocEntry
+//                 },
+//                 dataSrc: "",
+//                 // success: function (response) {
+//                 //     for (var j = 0; j < response.length; j++) {
+//                 //         checkedProd.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
+//                 //     }  
+//                 // },
+//                 success: function (response) {
+//                     for (var j = 0; j < response.length; j++) {
+//                         if (rowDataC.DocType === 'S') {
+//                             checkedServ.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
+//                         } else {
+//                             checkedProd.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
+//                         }
+//                     }  
+//                 },
+//                 error: function (xhr, status, error) {
+//                     // Maneja cualquier error aquí
+//                     console.error('Error en la solicitud:', status, error);
+//                 }
+//             });
+//         } else {
+//             $.ajax({
+//                 url: window.location.pathname,
+//                 type: 'POST',
+//                 data: {
+//                     'action': 'getDetails',
+//                     'code': rowDataC.DocEntry
+//                 },
+//                 dataSrc: "",
+//                 success: function (response) {
+//                     for (var j = 0; j < response.length; j++) {
+//                         var index = checkedProd.findIndex(function (item) {
+//                             return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
+//                         });
+//                         if (index !== -1) {
+//                             checkedProd.splice(index, 1);
+//                         }
+//                     }
+//                 },
+//                 error: function (xhr, status, error) {
+//                     // Maneja cualquier error aquí
+//                     console.error('Error en la solicitud:', status, error);
+//                 }
+//             });
+//         }
+        
+//     });
+// }
+
 function setupCheckboxChangeListener() {
     $('#tblSolicitudes').on('change', 'input[type="checkbox"]', function () {
         updateButtonStates();
@@ -62,6 +127,7 @@ function setupCheckboxChangeListener() {
         var docEntry = $(this).val();
         var table = $('#tblSolicitudes').DataTable();
         var rowDataC = table.row($checkbox.closest('tr')).data();
+
         if ($(this).is(':checked')) {
             $.ajax({
                 url: window.location.pathname,
@@ -73,11 +139,33 @@ function setupCheckboxChangeListener() {
                 dataSrc: "",
                 success: function (response) {
                     for (var j = 0; j < response.length; j++) {
-                        checkedProd.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
-                    }  
+                        if (rowDataC.DocType === 'S') {
+                            // Para servicios
+                            if (!checkedServ.some(item => item.Code === response[j].Code)) {
+                                checkedServ.push({ 
+                                    Code: response[j].Code, 
+                                    ItemCode: response[j].ItemCode 
+                                });
+                            }
+                            // También agregar a checkedProd para mantener consistencia con el backend
+                            if (!checkedProd.some(item => item.Code === response[j].Code)) {
+                                checkedProd.push({ 
+                                    Code: response[j].Code, 
+                                    ItemCode: response[j].ItemCode 
+                                });
+                            }
+                        } else {
+                            // Para productos
+                            if (!checkedProd.some(item => item.Code === response[j].Code)) {
+                                checkedProd.push({ 
+                                    Code: response[j].Code, 
+                                    ItemCode: response[j].ItemCode 
+                                });
+                            }
+                        }
+                    }
                 },
                 error: function (xhr, status, error) {
-                    // Maneja cualquier error aquí
                     console.error('Error en la solicitud:', status, error);
                 }
             });
@@ -92,21 +180,30 @@ function setupCheckboxChangeListener() {
                 dataSrc: "",
                 success: function (response) {
                     for (var j = 0; j < response.length; j++) {
-                        var index = checkedProd.findIndex(function (item) {
+                        // Remover de checkedProd
+                        var indexProd = checkedProd.findIndex(function (item) {
                             return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
                         });
-                        if (index !== -1) {
-                            checkedProd.splice(index, 1);
+                        if (indexProd !== -1) {
+                            checkedProd.splice(indexProd, 1);
+                        }
+                        
+                        // Si es servicio, también remover de checkedServ
+                        if (rowDataC.DocType === 'S') {
+                            var indexServ = checkedServ.findIndex(function (item) {
+                                return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
+                            });
+                            if (indexServ !== -1) {
+                                checkedServ.splice(indexServ, 1);
+                            }
                         }
                     }
                 },
                 error: function (xhr, status, error) {
-                    // Maneja cualquier error aquí
                     console.error('Error en la solicitud:', status, error);
                 }
             });
         }
-        
     });
 }
 
@@ -393,7 +490,8 @@ function tablaDetalleServicio(docNum) {
     $("#tblDetallesProd").hide();
     $("#tblDetallesProd_wrapper").hide();
     $("#tblDetallesServ").show();
-    $('#tblDetallesServ').DataTable({
+    // $('#tblDetallesServ').DataTable({
+    var table = $('#tblDetallesServ').DataTable({
         destroy: true,
         responsive: true,
         autoWidth: false,
@@ -474,40 +572,47 @@ function tablaDetalleServicio(docNum) {
             }
         },
         initComplete: function (settings, json) {
-            $('#tblDetallesProd').off('change', 'input[type="checkbox"]').on('change', 'input[type="checkbox"]', function () {
+            $('#tblDetallesServ').off('change', 'input[type="checkbox"]').on('change', 'input[type="checkbox"]', function () {
                 var $checkbox = $(this);
                 var rowDataC = table.row($checkbox.closest('tr')).data();
                 var atLeastOne = false;
+                
                 if ($checkbox.is(':checked')) {
-                    // Agregar si no está ya en el arreglo
                     if (!checkedServ.some(item => item.Code === rowDataC.Code)) {
                         checkedServ.push({ Code: rowDataC.Code, ItemCode: rowDataC.ItemCode });
+                        // También agregar a checkedProd
+                        checkedProd.push({ Code: rowDataC.Code, ItemCode: rowDataC.ItemCode });
                     }
                     updateTableSolicitudes(docNum, true);
                 } else {
-                    var index = checkedServ.findIndex(function (item) {
-                        return item.Code === rowDataC.Code && item.ItemCode === rowDataC.ItemCode;
-                    });
-                    if (index !== -1) {
-                        checkedServ.splice(index, 1);
+                    // Remover de ambos arrays
+                    var indexServ = checkedServ.findIndex(item => 
+                        item.Code === rowDataC.Code && item.ItemCode === rowDataC.ItemCode
+                    );
+                    if (indexServ !== -1) {
+                        checkedServ.splice(indexServ, 1);
                     }
+                    
+                    var indexProd = checkedProd.findIndex(item => 
+                        item.Code === rowDataC.Code && item.ItemCode === rowDataC.ItemCode
+                    );
+                    if (indexProd !== -1) {
+                        checkedProd.splice(indexProd, 1);
+                    }
+                    
+                    // Verificar si queda algún item seleccionado
                     for (var k = 0; k < table.data().count(); k++) {
                         data = table.row(k).data();                
-                        var index = checkedServ.findIndex(function (item) {
-                            return item.Code === data.Code && item.ItemCode === data.ItemCode;
-                        });
-                        if (index !== -1) {
-                            atLeastOne=true;
+                        if (checkedServ.some(item => item.Code === data.Code)) {
+                            atLeastOne = true;
+                            break;
                         }
                     }
-                    if (!atLeastOne) {
-                        updateTableSolicitudes(docNum, false);
-                    } else {
-                        updateTableSolicitudes(docNum, true);
-                    }
+                    
+                    updateTableSolicitudes(docNum, atLeastOne);
                 }
                 updateButtonStates();
-                console.log(checkedProd);
+                console.log(checkedServ);
             });
         }
     });

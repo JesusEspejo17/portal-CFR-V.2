@@ -104,7 +104,7 @@ class TestView(TemplateView):
 
 class UserEditView(ValidatePermissionRequiredMixin, UpdateView):
     model = User
-    form_class = UserEditForm  # Cambiado a UserEditForm
+    form_class = UserEditForm
     template_name = 'users/edit.html'
     success_url = reverse_lazy('user:userlist')
     permission_required = 'user.change_user'
@@ -129,7 +129,8 @@ class UserEditView(ValidatePermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['edit_url'] = reverse_lazy('user:userlist')  # Puedes modificar esto si deseas otro comportamiento
+        context['departamentos'] = UserEditForm.DEPARTAMENTOS
+        context['edit_url'] = reverse_lazy('user:userlist')
         context['list_url'] = self.success_url
         return context
 
