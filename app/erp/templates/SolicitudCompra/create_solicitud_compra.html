@@ -23,24 +23,19 @@
         {% csrf_token %}
         <div class="card-body">
             {% if success_message %}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ success_message }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <script>
-                $(document).ready(function () {
-                    alertaExitosa("{{ success_message }}");
-                });
-            </script>
+                <script>
+                    $(document).ready(function () {
+                        alertaExitosa("{{ success_message }}");
+                    });
+                </script>
             {% endif %}
+
             {% if error_message %}
-            <script>
-                $(document).ready(function () {
-                    alertaError("{{ error_message }}");
-                });
-            </script>
+                <script>
+                    $(document).ready(function () {
+                        alertaError("{{ error_message }}");
+                    });
+                </script>
             {% endif %}
 
             <div class="row">
@@ -67,11 +62,6 @@
                         <label>Fecha de documento:</label>
                         <div class="input-group">
                             <input type="text" name="DocDate" class="form-control form-control-solid" readonly=true id="fechaDocumento" value="{{fecha}}">
-                            {% comment %} <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <i class="fas fa-table"></i>
-                                </span>
-                            </div> {% endcomment %}
                         </div>
                     </div>
                 
@@ -132,11 +122,6 @@
                         <label>Fecha sistema:</label>
                         <div class="input-group">
                             <input type="text" readonly="true" name="SystemDate" class="form-control form-control-solid" id="fechaSistema" value="{{fecha}}" required>
-                            {% comment %} <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <i class="fas fa-table"></i>
-                                </span>
-                            </div> {% endcomment %}
                         </div>
                     </div>
 
@@ -144,22 +129,12 @@
                         <label>Válido hasta:</label>
                         <div class="input-group" >
                             <input type="text" name="DocDueDate" class="form-control form-control-solidS" id="fechaValida" value="{{fecha}}" required>
-                            {% comment %} <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <i class="fas fa-table"></i>
-                                </span>
-                            </div> {% endcomment %}
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Fecha necesaria:</label>
                         <div class="input-group">
                             <input type="text" name="ReqDate" class="form-control form-control-solidS" id="fechaNecesaria" value="{{fecha}}" required>
-                            {% comment %} <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <i class="fas fa-table"></i>
-                                </span>
-                            </div> {% endcomment %}
                         </div>
                     </div>
                     <div class="form-group">
@@ -665,9 +640,6 @@
             vents.list();
         }
     };
-
-    
-    {% comment %} SI DE ACA PARA ABAJO EMPIEZO A ENCAPSULAR, YA NO ME DEJA, EL ERROR ESTUVO EN INICIALIZAR $ {% endcomment %}
 
     $('#tblProducts tbody').on('change', '.editable-cell select', function () {
         var type = $(this).attr('data-type');
