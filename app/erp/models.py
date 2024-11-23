@@ -254,6 +254,7 @@ class PRQ1(models.Model):
     total = models.FloatField(default=0.0, null=False)
     idDimension = models.ForeignKey(Dimensiones, on_delete=models.CASCADE, blank=True, null=True)
     LineStatus = models.CharField(max_length=1, default='P',null=True, blank=True)
+    Precio = models.FloatField(default=0.0, null=False)
     def __str__(self):
         return self.Code
 

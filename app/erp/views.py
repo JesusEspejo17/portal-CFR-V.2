@@ -121,7 +121,10 @@ def solicitudcompra(request):
 
                 vents_data = request.POST.get('vents_data', '{}')
                 servs_data = request.POST.get('servs_data', '{}')
-           
+                
+                # print("Datos de vents recibidos:", vents_data) 
+                # print("Datos de servs recibidos:", servs_data) 
+
                 # Procesa los datos JSON de vents_data y servs_data como necesites
                 vents = json.loads(vents_data)
                 servs = json.loads(servs_data)
@@ -204,6 +207,15 @@ def solicitudcompra(request):
                         detalle.Almacen = almacen
                         detalle.CuentaMayor = cuentaContable
                         detalle.total = i['precio_total']
+                        if 'price' in i:
+                            try:
+                                detalle.Precio = float(i['price'])
+                                print("Precio asignado:", detalle.Precio)
+                            except ValueError:
+                                detalle.Precio = 0.0 
+                        else:
+                            detalle.Precio = 0.0
+                            print("Advertencia: 'precio' no encontrado en item:", i)
                         detalle.idDimension = dimension
                         detalle.save()
                 #Si el arreglo de productos está vacío, se está agregando un servicio
@@ -226,6 +238,15 @@ def solicitudcompra(request):
                         detalle.Almacen = almacen
                         detalle.CuentaMayor = cuentaContable
                         detalle.total = i['precio_total']
+                        if 'price' in i:
+                            try:
+                                detalle.Precio = float(i['price'])
+                                print("Precio asignado:", detalle.Precio)
+                            except ValueError:
+                                detalle.Precio = 0.0  # O manejar de otra manera
+                        else:
+                            detalle.Precio = 0.0
+                            print("Advertencia: 'precio' no encontrado en item:", i)
                         detalle.idDimension = dimension
                         detalle.save()
                 #Actualizar modelo Series
@@ -237,8 +258,9 @@ def solicitudcompra(request):
                 return render(request, template_name, {'success_message': success_message})
                                                     
         except Exception as e:
-            msg = "Error al insertar datos maestros:" + {{str(e)}}
-            render(request, template_name, {'error message': msg})
+            msg = f"Error al insertar datos maestros: {str(e)}"  # Corregido
+            # Considera registrar el error en un archivo de log
+            render(request, template_name, {'error_message': msg})
         return redirect(success_url)
 
 def obtener_nombre_serie(request):
