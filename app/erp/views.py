@@ -330,7 +330,7 @@ class ListLogistica(ValidatePermissionRequiredMixin2, ListView):
             else:
                 data['error'] = 'Ha ocurrido un error'
         except Exception as e:
-            data['error'] = {{str(e)}}
+            data['error'] = str(e)
         return JsonResponse(data, safe=False)
     
     def get_context_data(self, **kwargs):
@@ -635,10 +635,10 @@ def solicitudRechazar(request,id):
 
 def export_data_as_json(id):
     solicitudes = OPRQ.objects.filter(pk=id)
-    
+
     if not solicitudes:
         return JsonResponse({'error': 'No se encontraron solicitudes'}, status=404)
-    
+
     data = []
     for solicitud in solicitudes:
         if not solicitudes:
@@ -657,13 +657,29 @@ def export_data_as_json(id):
         }
         detalle = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
         for det in detalle:
-            #print(f"Detalle Code: {det.Code}, LineStatus: {det.LineStatus}") 
-            if det.LineStatus=='A':
+            #print(f"Detalle Code: {det.Code}, LineStatus: {det.LineStatus}")
+            if det.LineStatus=='A' and solicitud.DocType == 'I':
                 detalle_list = {
                     'ItemCode': det.ItemCode.ItemCode,
                     'LineVendor': det.LineVendor.CardCode,
                     "TaxCode": solicitud.TaxCode.Code,
                     'Quantity': det.Quantity,
+                    'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
+                    'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
+                }
+                oprq['DocumentLines'].append(detalle_list)
+            elif det.LineStatus=='A' and solicitud.DocType == 'S' :
+                detalle_list = {
+                ##  'ItemCode': det.ItemCode.ItemCode,
+                    "ItemDescription":  det.ItemCode.ItemCode,
+                    'LineVendor': det.LineVendor.CardCode,
+                    "RequiredDate": solicitud.DocDate,
+                    "TaxCode": solicitud.TaxCode.Code,
+                    'Quantity': det.Quantity,
+                    "Price":det.Precio,
+                    "UnitPrice":det.Precio,
+                    "DocTotalFC":det.Precio*det.Quantity,
+                    "AccountCode": det.CuentaMayor.AcctCode,
                     'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
                     'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
                 }
@@ -675,6 +691,7 @@ def export_data_as_json(id):
     if isinstance(response, JsonResponse):
         return response
     return JsonResponse({'error': 'Error al enviar datos'}, status=500)
+
 
 def data_sender(json_data, id):
     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"

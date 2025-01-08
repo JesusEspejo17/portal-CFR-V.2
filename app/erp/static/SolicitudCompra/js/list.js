@@ -24,8 +24,8 @@ $(document).ready(function () {
 
 function disableAndMakeTransparentMasivo() {
     if (userGroups.includes('Jefe_de_Presupuestos')) {
-        document.getElementById("btnContabilizarMasivo").disabled = true;
-        document.getElementById("btnRechazarMasivo").disabled = true;
+        document.getElementById("btnContabilizarMasivo").disabled = false;
+        document.getElementById("btnRechazarMasivo").disabled = false;
     } else {
         document.getElementById("btnAprobarMasivo").disabled = true;
         document.getElementById("btnRechazarMasivo").disabled = true;
@@ -75,7 +75,7 @@ function updateButtonStates() {
 //                 // success: function (response) {
 //                 //     for (var j = 0; j < response.length; j++) {
 //                 //         checkedProd.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
-//                 //     }  
+//                 //     }
 //                 // },
 //                 success: function (response) {
 //                     for (var j = 0; j < response.length; j++) {
@@ -84,7 +84,7 @@ function updateButtonStates() {
 //                         } else {
 //                             checkedProd.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
 //                         }
-//                     }  
+//                     }
 //                 },
 //                 error: function (xhr, status, error) {
 //                     // Maneja cualquier error aquí
@@ -116,7 +116,7 @@ function updateButtonStates() {
 //                 }
 //             });
 //         }
-        
+
 //     });
 // }
 
@@ -142,24 +142,24 @@ function setupCheckboxChangeListener() {
                         if (rowDataC.DocType === 'S') {
                             // Para servicios
                             if (!checkedServ.some(item => item.Code === response[j].Code)) {
-                                checkedServ.push({ 
-                                    Code: response[j].Code, 
-                                    ItemCode: response[j].ItemCode 
+                                checkedServ.push({
+                                    Code: response[j].Code,
+                                    ItemCode: response[j].ItemCode
                                 });
                             }
                             // También agregar a checkedProd para mantener consistencia con el backend
                             if (!checkedProd.some(item => item.Code === response[j].Code)) {
-                                checkedProd.push({ 
-                                    Code: response[j].Code, 
-                                    ItemCode: response[j].ItemCode 
+                                checkedProd.push({
+                                    Code: response[j].Code,
+                                    ItemCode: response[j].ItemCode
                                 });
                             }
                         } else {
                             // Para productos
                             if (!checkedProd.some(item => item.Code === response[j].Code)) {
-                                checkedProd.push({ 
-                                    Code: response[j].Code, 
-                                    ItemCode: response[j].ItemCode 
+                                checkedProd.push({
+                                    Code: response[j].Code,
+                                    ItemCode: response[j].ItemCode
                                 });
                             }
                         }
@@ -187,7 +187,7 @@ function setupCheckboxChangeListener() {
                         if (indexProd !== -1) {
                             checkedProd.splice(indexProd, 1);
                         }
-                        
+
                         // Si es servicio, también remover de checkedServ
                         if (rowDataC.DocType === 'S') {
                             var indexServ = checkedServ.findIndex(function (item) {
@@ -548,12 +548,35 @@ function tablaDetalleServicio(docNum) {
                     return sol + value;
                 },
             },
+            // {
+            //     targets: [-1],
+            //     class: "text-center",
+            //     orderable: false,
+            //     render: function (data, type, row) {
+            //         var checked = '';
+            //         if (row.LineStatus === 'P') {
+            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
+            //         } else {
+            //             return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
+            //         }
+            //         return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+            //     }
+            // }
             {
                 targets: [-1],
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
                     var checked = '';
+                    var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
+
+                    // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
+                    if (isHeadofBudget) {
+                        checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
+                        return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+                    }
+
+                    // Para otros roles, mantener la lógica existente
                     if (row.LineStatus === 'P') {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
                     } else {
@@ -561,14 +584,14 @@ function tablaDetalleServicio(docNum) {
                     }
                     return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
                 }
-            },
+            }
         ],
         createdRow: function (row, data, dataIndex) {
             if (data.LineStatus != 'P') {
                 if(data.LineStatus == 'R'){
                     $(row).addClass('disabled-row');
                 }
-                
+
             }
         },
         initComplete: function (settings, json) {
@@ -576,7 +599,7 @@ function tablaDetalleServicio(docNum) {
                 var $checkbox = $(this);
                 var rowDataC = table.row($checkbox.closest('tr')).data();
                 var atLeastOne = false;
-                
+
                 if ($checkbox.is(':checked')) {
                     if (!checkedServ.some(item => item.Code === rowDataC.Code)) {
                         checkedServ.push({ Code: rowDataC.Code, ItemCode: rowDataC.ItemCode });
@@ -586,29 +609,29 @@ function tablaDetalleServicio(docNum) {
                     updateTableSolicitudes(docNum, true);
                 } else {
                     // Remover de ambos arrays
-                    var indexServ = checkedServ.findIndex(item => 
+                    var indexServ = checkedServ.findIndex(item =>
                         item.Code === rowDataC.Code && item.ItemCode === rowDataC.ItemCode
                     );
                     if (indexServ !== -1) {
                         checkedServ.splice(indexServ, 1);
                     }
-                    
-                    var indexProd = checkedProd.findIndex(item => 
+
+                    var indexProd = checkedProd.findIndex(item =>
                         item.Code === rowDataC.Code && item.ItemCode === rowDataC.ItemCode
                     );
                     if (indexProd !== -1) {
                         checkedProd.splice(indexProd, 1);
                     }
-                    
+
                     // Verificar si queda algún item seleccionado
                     for (var k = 0; k < table.data().count(); k++) {
-                        data = table.row(k).data();                
+                        data = table.row(k).data();
                         if (checkedServ.some(item => item.Code === data.Code)) {
                             atLeastOne = true;
                             break;
                         }
                     }
-                    
+
                     updateTableSolicitudes(docNum, atLeastOne);
                 }
                 updateButtonStates();
@@ -680,12 +703,35 @@ function tablaDetalleProducto(docNum) {
                     return sol + value;
                 },
             },
+            // {
+            //     targets: [-1],
+            //     class: "text-center",
+            //     orderable: false,
+            //     render: function (data, type, row) {
+            //         var checked = '';
+            //         if (row.LineStatus === 'P') {
+            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
+            //         } else {
+            //             return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
+            //         }
+            //         return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+            //     }
+            // }
             {
                 targets: [-1],
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
                     var checked = '';
+                    var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
+
+                    // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
+                    if (isHeadofBudget) {
+                        checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
+                        return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+                    }
+
+                    // Para otros roles, mantener la lógica existente
                     if (row.LineStatus === 'P') {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
                     } else {
@@ -693,14 +739,14 @@ function tablaDetalleProducto(docNum) {
                     }
                     return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
                 }
-            },
+            }
         ],
         createdRow: function (row, data, dataIndex) {
             if (data.LineStatus != 'P') {
                 if(data.LineStatus == 'R'){
                     $(row).addClass('disabled-row');
                 }
-                
+
             }
         },
         initComplete: function (settings, json) {
@@ -722,7 +768,7 @@ function tablaDetalleProducto(docNum) {
                         checkedProd.splice(index, 1);
                     }
                     for (var k = 0; k < table.data().count(); k++) {
-                        data = table.row(k).data();                
+                        data = table.row(k).data();
                         var index = checkedProd.findIndex(function (item) {
                             return item.Code === data.Code && item.ItemCode === data.ItemCode;
                         });

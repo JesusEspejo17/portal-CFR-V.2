@@ -353,7 +353,7 @@ var ordenServ = {
         this.items.item.push(item);
     },
     list: function (item) {
-        tblOrdenServ = $('#tblOrdenProd').DataTable({
+        tblOrdenServ = $('#tblOrdenServ').DataTable({
             destroy: true,
             responsive: true,
             autoWidth: false,
@@ -458,11 +458,15 @@ $(document).ready(function () {
 $(document).ready(function () {
     $('#tblOrdenServ tbody').on('click', 'a[rel="remove"]', function () {
         var trIndex = $('#tblOrdenServ').DataTable().cell($(this).closest('td')).index();
+
+        console.log("trIndex para Servicios:", trIndex); // Agrega esta línea
+
         var itemCodeToRemove = ordenServ.items.item[trIndex.row].ItemCode;
         var CodeToRemove = ordenServ.items.item[trIndex.row].Code;
         ordenServ.items.item.splice(trIndex.row, 1);
-        orden.list();
-        ordenServ = checkedSv.filter(function (item) {
+        ordenServ.list();
+        //ordenServ = checkedSv.filter(function (item) {
+        checkedSv = checkedSv.filter(function (item) {
             return item.ItemCode !== itemCodeToRemove;
         });
         var table = $('#tblContabilizados').DataTable();
@@ -495,6 +499,7 @@ $(document).ready(function () {
         }
     });
 });
+
 
 //Función para mostrar datos de detalle de una solicitud en un modal
 function mostrarDetallesContabilizados(docNum) {
@@ -807,11 +812,11 @@ function tablaDetalleServicio(docNum) {
             },
         ],
         initComplete: function (settings, json) {
-            $('#tblDetallesProd').on('change', 'input[type="checkbox"]', function () {
+            $('#tblDetallesServ').on('change', 'input[type="checkbox"]', function () {
                 var founded = false;
                 var atLeastOne = false;
                 var $checkbox = $(this);
-                var table = $('#tblDetallesProd').DataTable();
+                var table = $('#tblDetallesServ').DataTable();
                 var rowData = table.row($checkbox.closest('tr')).data();
                 if ($checkbox.is(':checked')) {
                     if (ordenServ.items.item.length > 0) {
@@ -873,5 +878,125 @@ function tablaDetalleServicio(docNum) {
                 }
             });
         }
+    });
+}
+
+
+//Funcionamiento de los botones de guardar para los nuevo form
+$(document).ready(function () {
+    $('#btnGuardarProductos').on('click', function () {
+        // Simula el envío del formulario
+        $.confirm({
+            theme: 'modern',
+            title: 'Confirmación',
+            content: '¿Desea guardar los productos seleccionados?',
+            icon: 'fas fa-check',
+            type: 'green',
+            buttons: {
+                confirm: function () {
+                    $.ajax({
+                        url: window.location.pathname,
+                        type: 'POST',
+                        data: {
+                            items: orden.items.item,  // Productos seleccionados
+                            action: 'guardarProducto'
+                        },
+                        success: function (response) {
+                            console.log("Respuesta del servidor:", response);
+                            $.alert({
+                                title: 'Éxito',
+                                content: 'Los productos se han guardado correctamente.',
+                                type: 'green',
+                                theme: 'modern',
+                                onClose: function () {
+                                    orden.delete(); // Limpia la tabla tras guardar
+                                    limpiarCheckboxesContabilizados();
+                                }
+                            });
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            var errorMessage = jqXHR.responseJSON?.error || textStatus || 'Error desconocido';
+                            console.error("Error al guardar productos:", errorMessage);
+                            $.alert({
+                                title: 'Error',
+                                content: 'Error al guardar productos: ' + errorMessage,
+                                type: 'red',
+                                theme: 'modern'
+                            });
+                        }
+                    });
+                },
+                cancel: function () {
+                    // Acción si el usuario cancela
+                }
+            }
+        });
+    });
+
+    $('#FormularioServicios').on('submit', function (e) {
+        e.preventDefault();
+        if (ordenServ.items.item.length === 0) {
+            $.alert({
+                title: 'Aviso',
+                content: 'No hay servicios seleccionados. Por favor, seleccione al menos un servicio.',
+                type: 'red',
+                theme: 'modern'
+            });
+            return false;
+        }
+        console.log("Enviando servicios:", ordenServ.items.item);  // Depuración para ver los servicios enviados
+        $.confirm({
+            theme: 'modern',
+            title: 'Confirmación',
+            content: '¿Desea guardar los servicios seleccionados?',
+            icon: 'fas fa-check',
+            type: 'green',
+            buttons: {
+                confirm: function () {
+                    $.ajax({
+                        url: window.location.pathname,
+                        type: 'POST',
+                        data: {
+                            items: ordenServ.items.item,
+                            action: 'guardarServicio'
+                        },
+                        success: function (response) {
+                            console.log("Respuesta del servidor:", response);  // Depuración de la respuesta
+                            $.alert({
+                                title: 'Éxito',
+                                content: 'Los servicios se han guardado correctamente.',
+                                type: 'green',
+                                theme: 'modern',
+                                onClose: function () {
+                                    ordenServ.delete(); // Limpia la tabla tras guardar
+                                    limpiarCheckboxesContabilizados();
+                                }
+                            });
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            var errorMessage = jqXHR.responseJSON?.error || 'Error desconocido';
+                            console.error("Error al guardar servicios:", errorMessage);  // Depuración del error
+                            $.alert({
+                                title: 'Error',
+                                content: 'Error al guardar servicios: ' + errorMessage,
+                                type: 'red',
+                                theme: 'modern'
+                            });
+                        }
+                    });
+                },
+                cancel: function () {
+                    // Acción si el usuario cancela
+                }
+            }
+        });
+    });
+});
+
+function limpiarCheckboxesContabilizados() {
+    var table = $('#tblContabilizados').DataTable();
+    table.rows().every(function () {
+        var rowNode = this.node();
+        $(rowNode).find('input[type="checkbox"]').prop('checked', false);
     });
 }
