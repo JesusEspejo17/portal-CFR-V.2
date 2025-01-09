@@ -885,6 +885,29 @@ function tablaDetalleServicio(docNum) {
 //Funcionamiento de los botones de guardar para los nuevo form
 $(document).ready(function () {
     $('#btnGuardarProductos').on('click', function () {
+        if (orden.items.item.length === 0) {
+            $.alert({
+                title: 'Aviso',
+                content: 'No hay productos seleccionados. Por favor, seleccione al menos un producto.',
+                type: 'red',
+                theme: 'modern'
+            });
+            return false;
+        }
+    
+        // Nueva validación para el proveedor
+        var proveedorSeleccionado = $('#SelectProveedorProductos').val();
+        if (!proveedorSeleccionado) { // Verifica si no hay un valor seleccionado (null o vacío)
+            $.alert({
+                title: 'Aviso',
+                content: 'Por favor, seleccione un proveedor.',
+                type: 'red',
+                theme: 'modern'
+            });
+            return false;
+        }
+    
+        console.log("Enviando productos:", orden.items.item);
         // Simula el envío del formulario
         $.confirm({
             theme: 'modern',
@@ -898,8 +921,9 @@ $(document).ready(function () {
                         url: window.location.pathname,
                         type: 'POST',
                         data: {
-                            items: orden.items.item,  // Productos seleccionados
-                            action: 'guardarProducto'
+                            items: orden.items.item,
+                            action: 'guardarProducto',
+                            proveedor: proveedorSeleccionado // Envía el proveedor seleccionado
                         },
                         success: function (response) {
                             console.log("Respuesta del servidor:", response);
@@ -909,7 +933,9 @@ $(document).ready(function () {
                                 type: 'green',
                                 theme: 'modern',
                                 onClose: function () {
-                                    orden.delete(); // Limpia la tabla tras guardar
+                                    orden.delete();
+                                    // Limpiar el select de proveedor
+                                    $('#SelectProveedorProductos').val('').trigger('change')
                                     limpiarCheckboxesContabilizados();
                                 }
                             });
