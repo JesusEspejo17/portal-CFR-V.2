@@ -746,4 +746,3 @@ def data_sender(json_data, id):
         
     return JsonResponse({'message': 'Data sent successfully'})
 
-
