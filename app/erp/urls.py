@@ -17,5 +17,7 @@ urlpatterns = [
     path('rechazar_masivo/', solicitudRechazarMasivo, name="rechazar_masivo"),
     path('contabilizar_masivo/', solicitudContabilizarMasivo, name="contabilizar_masivo"),
     path('getUserGroups/', get_user_groups, name='get_user_groups'),
-    path('procesar_logistica/',ListLogistica.as_view(), name="listar_logistica")
+    path('procesar_logistica/',ListLogistica.as_view(), name="listar_logistica"),
+    path('logistica/guardarProducto/', export_data_as_jsonProductos, name='guardar_producto'),
+    path('logistica/guardarServicio/', export_data_as_jsonServicios, name='guardar_servicio'),
 ]

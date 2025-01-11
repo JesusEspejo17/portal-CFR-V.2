@@ -652,7 +652,7 @@ def export_data_as_json(id):
             "Comments": solicitud.Comments,
             "TaxDate": solicitud.DocDate,
             "Series": solicitud.Serie,
-            "RequriedDate": solicitud.DocDate,
+            "RequriedDate": solicitud.ReqDate,
             "DocumentLines": []
         }
         detalle = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
@@ -673,7 +673,7 @@ def export_data_as_json(id):
                 ##  'ItemCode': det.ItemCode.ItemCode,
                     "ItemDescription":  det.ItemCode.ItemCode,
                     'LineVendor': det.LineVendor.CardCode,
-                    "RequiredDate": solicitud.DocDate,
+                    "RequiredDate": solicitud.ReqDate,
                     "TaxCode": solicitud.TaxCode.Code,
                     'Quantity': det.Quantity,
                     "Price":det.Precio,
@@ -745,4 +745,290 @@ def data_sender(json_data, id):
         print("La respuesta JSON está vacía.")
         
     return JsonResponse({'message': 'Data sent successfully'})
+
+
+# EXPORT DATA PARA CADA UNO 
+def export_data_as_jsonProductos(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            print("Datos recibidos en el servidor (Productos):", data)
+
+            items_data = data.get('items', [])  # Obtén la lista de diccionarios
+            proveedor = data.get('proveedor', None)
+
+            if not items_data:
+                return JsonResponse({'error': 'No se enviaron productos.'}, status=400)
+
+            if not proveedor:
+                return JsonResponse({'error': 'No se especificó un proveedor.'}, status=400)
+
+            # Extrae los valores de 'Code' de cada diccionario en items_data
+            items_codes = [item['Code'] for item in items_data]
+
+            # Ahora items_codes contiene una lista de enteros, que es lo que espera el filtro
+            detalles = PRQ1.objects.filter(Code__in=items_codes).select_related(
+                'NumDoc', 'ItemCode', 'Currency', 'UnidadMedida', 'Almacen', 'CuentaMayor', 'idDimension', 'NumDoc__moneda', 'NumDoc__TaxCode'
+            )
+
+            if not detalles:
+                return JsonResponse({'error': 'No se encontraron detalles para los códigos proporcionados.'}, status=400)
+
+            # Asumiendo que todos los items pertenecen a la misma solicitud (OPRQ)
+            # Si no es así, habría que reconsiderar la lógica para agrupar por OPRQ
+            primera_detalle = detalles.first()
+            solicitud = primera_detalle.NumDoc
+
+            oprq = {
+                "DocType": "dDocument_Items",
+                "DocDate": solicitud.DocDate.isoformat(),
+                "DocDueDate": solicitud.DocDueDate.isoformat(),
+                "TaxDate": solicitud.DocDate.isoformat(),
+                "CardCode": proveedor,
+                "DocCurrency": solicitud.moneda.MonedaAbrev,
+                "Series": solicitud.Serie,
+                #"Comments": solicitud.Comments if solicitud.Comments else "", # Añadido Comments desde OPRQ
+                "DocumentLines": []
+            }
+            for idx, detalle in enumerate(detalles):
+                detalle_list = {
+                    "LineNum": idx,
+                    "ItemCode": detalle.ItemCode.ItemCode,
+                    "ItemDescription": detalle.Description,
+                    "Quantity": detalle.Quantity,
+                    "Price": detalle.Precio,
+                    "Currency": detalle.Currency.MonedaAbrev,
+                    "WarehouseCode": detalle.Almacen.WhsCode, # Asumiendo que Almacen siempre tendrá un valor
+                    "TaxCode": solicitud.TaxCode.Code,
+                    "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
+                    #"CostingCode2": detalle.idDimension.descripcion if detalle.idDimension else None,
+                }
+                oprq["DocumentLines"].append(detalle_list)
+
+            # Generar el JSON para enviar
+            json_data = json.dumps(oprq, indent=2, default=lambda o: o.isoformat() if isinstance(o, date) else None)
+            print("JSON enviado a data_sender_productos:", json_data)
+
+            # Llamar a la función data_sender_productos
+            response = data_sender_productos(json_data)
+            return response
+
+        except Exception as e:
+            import traceback
+            print("Error completo en export_data_as_jsonProductos:")
+            traceback.print_exc()
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+def export_data_as_jsonServicios(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            print("Datos recibidos en el servidor (Servicios):", data)
+
+            items_data = data.get('items', [])
+            proveedor_frontend = data.get('proveedor', None) # Recibimos el proveedor, puede ser None
+
+            if not items_data:
+                return JsonResponse({'error': 'No se enviaron servicios.'}, status=400)
+
+            items_codes = [item['Code'] for item in items_data]
+
+            detalles = PRQ1.objects.filter(Code__in=items_codes).select_related(
+                'NumDoc', 'ItemCode', 'Currency', 'CuentaMayor', 'idDimension', 'NumDoc__moneda', 'NumDoc__TaxCode', 'LineVendor'
+            )
+
+            if not detalles:
+                return JsonResponse({'error': 'No se encontraron detalles para los códigos proporcionados.'}, status=400)
+
+            primera_detalle = detalles.first()
+            solicitud = primera_detalle.NumDoc
+
+            # Obtener el proveedor del primer detalle si no se proporcionó en el frontend
+            if proveedor_frontend:
+                proveedor = proveedor_frontend
+            elif primera_detalle.LineVendor:
+                proveedor = primera_detalle.LineVendor.CardCode
+            else:
+                return JsonResponse({'error': 'No se pudo determinar el proveedor para los servicios.'}, status=400)
+
+            oprq = {
+                "DocType": "dDocument_Service",
+                "DocDate": solicitud.DocDate.isoformat(),
+                "DocDueDate": solicitud.DocDueDate.isoformat(),
+                "TaxDate": solicitud.DocDate.isoformat(),
+                "CardCode": proveedor,
+                "DocCurrency": solicitud.moneda.MonedaAbrev,
+                "Series": solicitud.Serie,
+                #"Comments": solicitud.Comments if solicitud.Comments else "",
+                "DocumentLines": []
+            }
+            for idx, detalle in enumerate(detalles):
+                detalle_list = {
+                    "LineNum": idx,
+                    #"ItemCode": detalle.ItemCode.ItemCode,
+                    "ItemDescription": detalle.Description,
+                    "Quantity": detalle.Quantity,
+                    "Price": detalle.Precio,
+                    "Currency": detalle.Currency.MonedaAbrev,
+                    "TaxCode": solicitud.TaxCode.Code,
+                    "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
+                    #"CostingCode2": detalle.idDimension.descripcion if detalle.idDimension else None,
+                    
+                    # "RequiredDate": solicitud.ReqDate.isoformat(),
+                    # "UnitPrice": detalle.Precio,
+                    # "DocTotalFC": detalle.Precio * detalle.Quantity,
+                    # "AccountCode": detalle.CuentaMayor.AcctCode,
+                }
+                oprq["DocumentLines"].append(detalle_list)
+                
+            json_data = json.dumps(oprq, indent=2, default=lambda o: o.isoformat() if isinstance(o, date) else None)
+            print("JSON generado para Servicios para enviar:", json_data)
+            response = data_sender_servicios(json_data)
+            return response
+
+        except Exception as e:
+            import traceback
+            print("Error completo en export_data_as_jsonServicios:")
+            traceback.print_exc()
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+# #OBTENER SERIES DISPONIBLES
+# def get_series():
+#     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
+
+#     payload_session = json.dumps({
+#         "CompanyDB": "BDPRUEBASOCL",
+#         "Password": "m1r1",
+#         "UserName": "manager"
+#     })
+#     headers_session = {
+#         'Content-Type': 'application/json',
+#     }
+
+#     session = requests.Session()
+#     response_session = session.post(url_session, headers=headers_session, data=payload_session, verify=False)
+
+#     if response_session.status_code == 200:
+#         session_cookie = response_session.cookies.get('B1SESSION')
+#         route_id_cookie = response_session.cookies.get('ROUTEID')
+#         cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
+#     else:
+#         print(f"Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
+#         return
+
+#     url = "https://CFR-I7-1:50000/b1s/v1/SeriesService_GetSeries"  # Endpoint para obtener las series
+#     headers = {
+#         'Content-Type': 'application/json',
+#         'Cookie': cookie_string
+#     }
+#     response = session.get(url, headers=headers, verify=False)
+
+#     if response.status_code == 200:
+#         print("Series disponibles en SAP:", response.json())
+#     else:
+#         print(f"Error al obtener series: {response.status_code} - {response.text}")
+        
+
+# DATA SENDER PARA CADA UNO - GEM
+def data_sender_productos(json_data):
+    url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
+
+    payload_session = json.dumps({
+        "CompanyDB": "BDPRUEBASOCL",
+        "Password": "m1r1",
+        "UserName": "manager"
+    })
+    headers_session = {
+        'Content-Type': 'application/json',
+    }
+
+    session = requests.Session()
+    response_session = session.post(url_session, headers=headers_session, data=payload_session, verify=False)
+    
+    if response_session.status_code == 200:
+        session_cookie = response_session.cookies.get('B1SESSION')
+        route_id_cookie = response_session.cookies.get('ROUTEID')
+        cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
+        print("Inicio de sesión exitoso!")
+        print(f"Código de estado de la sesión: {response_session.status_code}")
+        print(f"Cookies de sesión: {cookie_string}")  # Imprime las cookies
+    else:
+        print(f"Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
+        return JsonResponse({'error': f"Error al iniciar sesión: {response_session.status_code}"}, status=500)
+    
+    # # Llama a get_series y almacena el resultado
+    # series_disponibles = get_series()
+    # if series_disponibles is not None:
+    #     print("Series disponibles:", series_disponibles)
+
+    url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"  # Probablemente quieras crear Purchase Orders
+    headers = {
+        'Content-Type': 'application/json',
+        'Cookie': cookie_string
+    }
+    response = session.post(url, headers=headers, data=json_data, verify=False)
+    
+    if response.status_code != 201:
+        try:
+            response_dict = response.json()
+            value_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
+        except json.JSONDecodeError:
+            value_message = f"Error al decodificar la respuesta: {response.text}"
+        error_message = f"Error en la solicitud de PurchaseOrders: {response.status_code} - {response.text}"
+        print("Error completo en la solicitud:", error_message)  # Muestra todo el error
+        return JsonResponse({'error': value_message}, status=response.status_code)
+
+    return JsonResponse({'message': 'Orden de compra creada exitosamente'})
+
+
+def data_sender_servicios(json_data):
+    url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
+
+    payload_session = json.dumps({
+        "CompanyDB": "BDPRUEBASOCL",
+        "Password": "m1r1",
+        "UserName": "manager"
+    })
+    headers_session = {
+        'Content-Type': 'application/json',
+    }
+
+    session = requests.Session()
+    response_session = session.post(url_session, headers=headers_session, data=payload_session, verify=False)
+
+    if response_session.status_code == 200:
+        session_cookie = response_session.cookies.get('B1SESSION')
+        route_id_cookie = response_session.cookies.get('ROUTEID')
+        cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
+        print("Inicio de sesión exitoso!")
+        print(f"Código de estado de la sesión: {response_session.status_code}")
+        print(f"Cookies de sesión: {cookie_string}")  # Imprime las cookies
+    else:
+        print(f"Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
+        return JsonResponse({'error': f"Error al iniciar sesión: {response_session.status_code}"}, status=500)
+
+    url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"  #  Podría ser el mismo endpoint o uno diferente según la necesidad
+    headers = {
+        'Content-Type': 'application/json',
+        'Cookie': cookie_string
+    }
+    response = session.post(url, headers=headers, data=json_data, verify=False)
+
+    if response.status_code != 201:
+        try:
+            response_dict = response.json()
+            value_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
+        except json.JSONDecodeError:
+            value_message = f"Error al decodificar la respuesta: {response.text}"
+        error_message = f"Error en la solicitud de PurchaseOrders: {response.status_code} - {response.text}"
+        print("Error completo en la solicitud:", error_message)  # Muestra todo el error
+        return JsonResponse({'error': value_message}, status=response.status_code)
+
+    return JsonResponse({'message': 'Orden de compra de servicio creada exitosamente'})
+
 

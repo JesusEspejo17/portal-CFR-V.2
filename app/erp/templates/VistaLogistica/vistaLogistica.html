@@ -146,7 +146,7 @@
                             </table>
                         </div>
                         <div class="card card-footer">
-                            <button type="submit" class="btn btn-success btn-flat">
+                            <button id="btnGuardarServicios" type="button" class="btn btn-success btn-flat">
                                 <i class="fas fa-save"></i> Guardar registro
                             </button>
                         </div>
@@ -367,6 +367,10 @@
     </div>
 </div>
 <script>
+    function abrir_modal_cargar() {
+        $('#modalCarga').modal('show');
+    }
+
     $(function () {
         $('#SelectProveedor').select2({
             minimumResultsForSearch: Infinity,
