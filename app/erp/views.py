@@ -746,6 +746,7 @@ def data_sender(json_data, id):
         
     return JsonResponse({'message': 'Data sent successfully'})
 
+#INGRESO A SAP LOGISTICA
 
 # EXPORT DATA PARA CADA UNO 
 def export_data_as_jsonProductos(request):
@@ -775,7 +776,6 @@ def export_data_as_jsonProductos(request):
                 return JsonResponse({'error': 'No se encontraron detalles para los códigos proporcionados.'}, status=400)
 
             # Asumiendo que todos los items pertenecen a la misma solicitud (OPRQ)
-            # Si no es así, habría que reconsiderar la lógica para agrupar por OPRQ
             primera_detalle = detalles.first()
             solicitud = primera_detalle.NumDoc
 
@@ -786,7 +786,8 @@ def export_data_as_jsonProductos(request):
                 "TaxDate": solicitud.DocDate.isoformat(),
                 "CardCode": proveedor,
                 "DocCurrency": solicitud.moneda.MonedaAbrev,
-                "Series": solicitud.Serie,
+                #"Series": solicitud.Serie,
+                "Series": 95,
                 #"Comments": solicitud.Comments if solicitud.Comments else "", # Añadido Comments desde OPRQ
                 "DocumentLines": []
             }
@@ -861,7 +862,8 @@ def export_data_as_jsonServicios(request):
                 "TaxDate": solicitud.DocDate.isoformat(),
                 "CardCode": proveedor,
                 "DocCurrency": solicitud.moneda.MonedaAbrev,
-                "Series": solicitud.Serie,
+                #"Series": solicitud.Serie,
+                "Series": 95,
                 #"Comments": solicitud.Comments if solicitud.Comments else "",
                 "DocumentLines": []
             }
@@ -875,6 +877,8 @@ def export_data_as_jsonServicios(request):
                     "Currency": detalle.Currency.MonedaAbrev,
                     "TaxCode": solicitud.TaxCode.Code,
                     "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
+                    "UnitPrice":detalle.Precio,
+                    "DocTotal":detalle.Precio*detalle.Quantity,
                     #"CostingCode2": detalle.idDimension.descripcion if detalle.idDimension else None,
                     
                     # "RequiredDate": solicitud.ReqDate.isoformat(),
@@ -896,42 +900,6 @@ def export_data_as_jsonServicios(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
-
-# #OBTENER SERIES DISPONIBLES
-# def get_series():
-#     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
-
-#     payload_session = json.dumps({
-#         "CompanyDB": "BDPRUEBASOCL",
-#         "Password": "m1r1",
-#         "UserName": "manager"
-#     })
-#     headers_session = {
-#         'Content-Type': 'application/json',
-#     }
-
-#     session = requests.Session()
-#     response_session = session.post(url_session, headers=headers_session, data=payload_session, verify=False)
-
-#     if response_session.status_code == 200:
-#         session_cookie = response_session.cookies.get('B1SESSION')
-#         route_id_cookie = response_session.cookies.get('ROUTEID')
-#         cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
-#     else:
-#         print(f"Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
-#         return
-
-#     url = "https://CFR-I7-1:50000/b1s/v1/SeriesService_GetSeries"  # Endpoint para obtener las series
-#     headers = {
-#         'Content-Type': 'application/json',
-#         'Cookie': cookie_string
-#     }
-#     response = session.get(url, headers=headers, verify=False)
-
-#     if response.status_code == 200:
-#         print("Series disponibles en SAP:", response.json())
-#     else:
-#         print(f"Error al obtener series: {response.status_code} - {response.text}")
         
 
 # DATA SENDER PARA CADA UNO - GEM
@@ -961,12 +929,7 @@ def data_sender_productos(json_data):
         print(f"Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
         return JsonResponse({'error': f"Error al iniciar sesión: {response_session.status_code}"}, status=500)
     
-    # # Llama a get_series y almacena el resultado
-    # series_disponibles = get_series()
-    # if series_disponibles is not None:
-    #     print("Series disponibles:", series_disponibles)
-
-    url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"  # Probablemente quieras crear Purchase Orders
+    url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"  # Crear Purchase Orders
     headers = {
         'Content-Type': 'application/json',
         'Cookie': cookie_string
@@ -983,7 +946,8 @@ def data_sender_productos(json_data):
         print("Error completo en la solicitud:", error_message)  # Muestra todo el error
         return JsonResponse({'error': value_message}, status=response.status_code)
 
-    return JsonResponse({'message': 'Orden de compra creada exitosamente'})
+    # return JsonResponse({'message': 'Orden de compra creada exitosamente'})
+    return JsonResponse("OK", safe=False)
 
 
 def data_sender_servicios(json_data):
@@ -1007,12 +971,12 @@ def data_sender_servicios(json_data):
         cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
         print("Inicio de sesión exitoso!")
         print(f"Código de estado de la sesión: {response_session.status_code}")
-        print(f"Cookies de sesión: {cookie_string}")  # Imprime las cookies
+        print(f"Cookies de sesión: {cookie_string}")
     else:
         print(f"Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
         return JsonResponse({'error': f"Error al iniciar sesión: {response_session.status_code}"}, status=500)
 
-    url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"  #  Podría ser el mismo endpoint o uno diferente según la necesidad
+    url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"  #  Mismo endpoint o uno diferente según la necesidad
     headers = {
         'Content-Type': 'application/json',
         'Cookie': cookie_string
@@ -1029,6 +993,7 @@ def data_sender_servicios(json_data):
         print("Error completo en la solicitud:", error_message)  # Muestra todo el error
         return JsonResponse({'error': value_message}, status=response.status_code)
 
-    return JsonResponse({'message': 'Orden de compra de servicio creada exitosamente'})
+    # return JsonResponse({'message': 'Orden de compra de servicio creada exitosamente'})
+    return JsonResponse("OK", safe=False)
 
 

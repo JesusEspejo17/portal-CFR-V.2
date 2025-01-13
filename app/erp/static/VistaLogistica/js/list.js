@@ -881,142 +881,7 @@ function tablaDetalleServicio(docNum) {
     });
 }
 
-
-//Funcionamiento de los botones de guardar para los nuevo form
-// $(document).ready(function () {
-//     $('#btnGuardarProductos').on('click', function () {
-//         if (orden.items.item.length === 0) {
-//             $.alert({
-//                 title: 'Aviso',
-//                 content: 'No hay productos seleccionados. Por favor, seleccione al menos un producto.',
-//                 type: 'red',
-//                 theme: 'modern'
-//             });
-//             return false;
-//         }
-    
-//         // Nueva validación para el proveedor
-//         var proveedorSeleccionado = $('#SelectProveedorProductos').val();
-//         if (!proveedorSeleccionado) { // Verifica si no hay un valor seleccionado (null o vacío)
-//             $.alert({
-//                 title: 'Aviso',
-//                 content: 'Por favor, seleccione un proveedor.',
-//                 type: 'red',
-//                 theme: 'modern'
-//             });
-//             return false;
-//         }
-    
-//         console.log("Enviando productos:", orden.items.item);
-//         // Simula el envío del formulario
-//         $.confirm({
-//             theme: 'modern',
-//             title: 'Confirmación',
-//             content: '¿Desea guardar los productos seleccionados?',
-//             icon: 'fas fa-check',
-//             type: 'green',
-//             buttons: {
-//                 confirm: function () {
-//                     $.ajax({
-//                         url: window.location.pathname,
-//                         type: 'POST',
-//                         data: {
-//                             items: orden.items.item,
-//                             action: 'guardarProducto',
-//                             proveedor: proveedorSeleccionado // Envía el proveedor seleccionado
-//                         },
-//                         success: function (response) {
-//                             console.log("Respuesta del servidor:", response);
-//                             $.alert({
-//                                 title: 'Éxito',
-//                                 content: 'Los productos se han guardado correctamente.',
-//                                 type: 'green',
-//                                 theme: 'modern',
-//                                 onClose: function () {
-//                                     orden.delete();
-//                                     // Limpiar el select de proveedor
-//                                     $('#SelectProveedorProductos').val('').trigger('change')
-//                                     limpiarCheckboxesContabilizados();
-//                                 }
-//                             });
-//                         },
-//                         error: function (jqXHR, textStatus, errorThrown) {
-//                             var errorMessage = jqXHR.responseJSON?.error || textStatus || 'Error desconocido';
-//                             console.error("Error al guardar productos:", errorMessage);
-//                             $.alert({
-//                                 title: 'Error',
-//                                 content: 'Error al guardar productos: ' + errorMessage,
-//                                 type: 'red',
-//                                 theme: 'modern'
-//                             });
-//                         }
-//                     });
-//                 },
-//                 cancel: function () {
-//                     // Acción si el usuario cancela
-//                 }
-//             }
-//         });
-//     });
-
-//     $('#btnGuardarServicios').on('click', function () {
-//         if (ordenServ.items.item.length === 0) {
-//             $.alert({
-//                 title: 'Aviso',
-//                 content: 'No hay servicios seleccionados. Por favor, seleccione al menos un servicio.',
-//                 type: 'red',
-//                 theme: 'modern'
-//             });
-//             return false;
-//         }
-//         console.log("Enviando servicios:", ordenServ.items.item);  // Depuración para ver los servicios enviados
-//         $.confirm({
-//             theme: 'modern',
-//             title: 'Confirmación',
-//             content: '¿Desea guardar los servicios seleccionados?',
-//             icon: 'fas fa-check',
-//             type: 'green',
-//             buttons: {
-//                 confirm: function () {
-//                     $.ajax({
-//                         url: window.location.pathname,
-//                         type: 'POST',
-//                         data: {
-//                             items: ordenServ.items.item,
-//                             action: 'guardarServicio'
-//                         },
-//                         success: function (response) {
-//                             console.log("Respuesta del servidor:", response);  // Depuración de la respuesta
-//                             $.alert({
-//                                 title: 'Éxito',
-//                                 content: 'Los servicios se han guardado correctamente.',
-//                                 type: 'green',
-//                                 theme: 'modern',
-//                                 onClose: function () {
-//                                     ordenServ.delete(); // Limpia la tabla tras guardar
-//                                     limpiarCheckboxesContabilizados();
-//                                 }
-//                             });
-//                         },
-//                         error: function (jqXHR, textStatus, errorThrown) {
-//                             var errorMessage = jqXHR.responseJSON?.error || 'Error desconocido';
-//                             console.error("Error al guardar servicios:", errorMessage);  // Depuración del error
-//                             $.alert({
-//                                 title: 'Error',
-//                                 content: 'Error al guardar servicios: ' + errorMessage,
-//                                 type: 'red',
-//                                 theme: 'modern'
-//                             });
-//                         }
-//                     });
-//                 },
-//                 cancel: function () {
-//                     // Acción si el usuario cancela
-//                 }
-//             }
-//         });
-//     });
-// });
+// EVENTOS BOTONES GUARDAR LOGISTICA
 
 $(document).ready(function () {
     // Manejo de guardar productos
@@ -1044,18 +909,15 @@ $(document).ready(function () {
             return false;
         }
 
-        // Preparación de los datos mínimos
+        // Preparación de los datos 
         var data = {
             items: orden.items.item,
             proveedor: proveedorSeleccionado
         };
 
         console.log("Datos enviados para productos:", JSON.stringify(data));
-
-        // Token CSRF
         var token = $('input[name="csrfmiddlewaretoken"]').val();
 
-        // Confirmación de guardado
         $.confirm({
             theme: 'modern',
             title: 'Confirmación',
@@ -1064,11 +926,11 @@ $(document).ready(function () {
             type: 'green',
             buttons: {
                 confirm: function () {
-                    abrir_modal_cargar(); // Mostrar modal de carga
+                    abrir_modal_cargar();
                     $.ajax({
                         headers: { "X-CSRFToken": token },
                         type: "POST",
-                        url: `/erp/logistica/guardarProducto/`, // URL estática
+                        url: `/erp/logistica/guardarProducto/`, 
                         contentType: "application/json",
                         data: JSON.stringify(data),
                         success: function (response) {
@@ -1080,8 +942,8 @@ $(document).ready(function () {
                                     theme: 'modern',
                                     buttons: {
                                         confirm: function () {
-                                            $('#modalCarga').modal('hide'); // Oculta el modal
-                                            location.reload(true); // Recarga la página
+                                            $('#modalCarga').modal('hide'); 
+                                            location.reload(true); 
                                         },
                                     }
                                 });
@@ -1108,7 +970,6 @@ $(document).ready(function () {
                     });
                 },
                 cancel: function () {
-                    // Acciones si el usuario cancela
                 }
             }
         });
@@ -1125,16 +986,14 @@ $(document).ready(function () {
             });
             return false;
         }
-        console.log("Enviando Servicios:", ordenServ.items.item); // Depuración para ver los Servicios enviados
-        // Preparación de los datos mínimos
+        console.log("Enviando Servicios:", ordenServ.items.item); // Depuración 
+        // Preparación de los datos
         var data = {
             items: ordenServ.items.item
         };
         console.log("Datos enviados para servicios:", JSON.stringify(data));
-        // Token CSRF
         var token = $('input[name="csrfmiddlewaretoken"]').val();
 
-        // Confirmación de guardado
         $.confirm({
             theme: 'modern',
             title: 'Confirmación',
@@ -1143,11 +1002,11 @@ $(document).ready(function () {
             type: 'green',
             buttons: {
                 confirm: function () {
-                    abrir_modal_cargar(); // Mostrar modal de carga
+                    abrir_modal_cargar(); 
                     $.ajax({
                         headers: { "X-CSRFToken": token },
                         type: "POST",
-                        url: `/erp/logistica/guardarServicio/`, // URL estática
+                        url: `/erp/logistica/guardarServicio/`, 
                         contentType: "application/json",
                         data: JSON.stringify(data),
                         success: function (response) {
@@ -1159,8 +1018,8 @@ $(document).ready(function () {
                                     theme: 'modern',
                                     buttons: {
                                         confirm: function () {
-                                            $('#modalCarga').modal('hide'); // Oculta el modal
-                                            location.reload(true); // Recarga la página
+                                            $('#modalCarga').modal('hide'); 
+                                            location.reload(true); 
                                         },
                                     }
                                 });
@@ -1175,7 +1034,6 @@ $(document).ready(function () {
                             }
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
-                            //console.error("Error al guardar servicios:", errorThrown);
                             $.alert({
                                 title: 'Error',
                                 content: 'Error al guardar servicios: ' + textStatus,
@@ -1186,13 +1044,11 @@ $(document).ready(function () {
                     });
                 },
                 cancel: function () {
-                    // Acciones si el usuario cancela
                 }
             }
         });
     });
 });
-
 
 
 function limpiarCheckboxesContabilizados() {
