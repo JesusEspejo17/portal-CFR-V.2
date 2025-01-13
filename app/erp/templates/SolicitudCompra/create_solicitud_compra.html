@@ -111,10 +111,12 @@
                     <div class="form-group">
                         <label>Serie:</label>
                         <div id="url-serie" data-url="{% url 'erp:obtener_numero_serie' %}"></div>
-                        <select class="form-control form-control-solid select" id="serie" name="serie" data-placeholder="Seleccione un impuesto" required>
+                        <select class="form-control form-control-solid select" id="serie" name="serie" data-placeholder="Seleccione una serie" required>
                             <option></option>
-                            {% for s in serie %}
-                            <option>{{s.Nombre}}</option>
+                            {% for s in serie|dictsort:"Nombre"%}
+                                {% if s.Nombre != 'OrdenCompra' %}
+                                    <option>{{ s.Nombre }}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>

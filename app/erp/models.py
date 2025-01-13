@@ -272,6 +272,7 @@ class Series(models.Model):
     NumeroSiguiente = models.IntegerField()
     UltimoNumero = models.IntegerField()
     CodigoSerie = models.IntegerField(default=75)
+    DocType = models.CharField(max_length=10, verbose_name='DocType')
 
     def __str__(self):
         return self.Nombre

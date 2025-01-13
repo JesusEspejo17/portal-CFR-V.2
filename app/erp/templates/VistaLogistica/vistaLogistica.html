@@ -19,7 +19,7 @@
     <div class="card-body">
         <div class="row">
             <!--Columna izquierda: Formulario principal-->
-            <div class="col-lg-7">
+            <div class="col-lg-7" style="padding-right: 1px; padding-left: 18px;">
                 <div class="card card-primary">
                     <div class="card-header">
                         <div class="row col-sm-12 mt-3">
@@ -58,7 +58,7 @@
             <div class="col-lg-5">
                 <!-- Formulario de Productos-->
                 <form id="FormularioProductos">
-                    <div class="card card-secondary mb-4">
+                    <div class="card card-secondary mb-4" style="border-right-width: 7px;">
                         <div class="card-header">
                             <h3 class="card-title">
                                 <i class="fas fa-boxes"></i> Nueva Orden Productos:
@@ -75,8 +75,8 @@
                             <div class="form-group row">
                                 <div class="col-sm-5">Selección de Proveedor: </div>
                                 <div class="col-sm-7">
-                                    <select class="form-control select" name="SelectProveedor" id="SelectProveedorProductos"
-                                        data-placeholder="Seleccione un Proveedor" required>
+                                    <select class="form-select form-select-solid" data-control="select2" name="SelectProveedor" id="SelectProveedorProductos"
+                                        data-placeholder="Seleccione un Proveedor" required data-hide-search="true">
                                         <option></option>
                                         {% for socio in socio_negocio %}
                                         <option>{{socio.CardCode}}</option>
@@ -109,7 +109,7 @@
 
                 <!-- Formulario de Servicios-->
                 <form id="FormularioServicios" method="post">
-                    <div class="card card-secondary">
+                    <div class="card card-secondary" style="border-right-width: 7px;">
                         <div class="card-header">
                             <h3 class="card-title">
                                 <i class="fas fa-toolbox"></i> Nueva Orden Servicios:
