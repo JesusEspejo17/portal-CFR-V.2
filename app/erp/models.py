@@ -279,3 +279,30 @@ class Series(models.Model):
 
     class Meta:
         verbose_name = 'Series'
+        
+
+# ORDEN DE COMPRA
+class Orden_Compra(models.Model):
+    Orden = models.ForeignKey('self', on_delete=models.CASCADE, related_name="Detalles", null=True, blank=True, verbose_name="Orden asociada")
+    Solicitante = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Solicitante")
+    SystemDate = models.DateField(verbose_name='SystemDate', null=True)
+    Serie = models.ForeignKey('series', on_delete=models.SET_NULL, null=True, verbose_name="Serie")
+    DocDate = models.DateField(verbose_name='DocDate')
+    DocDueDate = models.DateField(verbose_name='DocDueDate')
+    ReqDate = models.DateField(verbose_name='RequestDate', null=True)
+    ItemCode = models.CharField(max_length=150, null=True, blank=True, verbose_name="Código del ítem")
+    ItemDescription = models.TextField(verbose_name="Descripción del ítem")
+    Moneda = models.ForeignKey('moneda', on_delete=models.SET_NULL, null=True, verbose_name="Moneda")
+    Quantity = models.IntegerField(verbose_name="Cantidad")
+    PrecioUnitario = models.FloatField(verbose_name="Precio unitario")
+    Total = models.FloatField(verbose_name="Total")
+    Impuesto = models.ForeignKey('osta', on_delete=models.SET_NULL, null=True, verbose_name="Impuestos")
+    Almacen = models.ForeignKey('owhs', on_delete=models.SET_NULL, null=True, verbose_name="Almacén")
+    Dimension = models.ForeignKey('dimensiones', on_delete=models.SET_NULL, null=True, verbose_name="Dimensión")
+
+    class Meta:
+        verbose_name = "Orden de Compra"
+        verbose_name_plural = "Órdenes de Compra"
+
+    def __str__(self):
+        return f"Orden {self.id} - {self.Solicitante.username}"

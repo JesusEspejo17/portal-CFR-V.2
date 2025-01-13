@@ -786,8 +786,8 @@ def export_data_as_jsonProductos(request):
                 "TaxDate": solicitud.DocDate.isoformat(),
                 "CardCode": proveedor,
                 "DocCurrency": solicitud.moneda.MonedaAbrev,
-                #"Series": solicitud.Serie,
-                "Series": 95,
+                "Series": solicitud.Serie,
+                # "Series": 95,
                 #"Comments": solicitud.Comments if solicitud.Comments else "", # Añadido Comments desde OPRQ
                 "DocumentLines": []
             }
@@ -862,8 +862,8 @@ def export_data_as_jsonServicios(request):
                 "TaxDate": solicitud.DocDate.isoformat(),
                 "CardCode": proveedor,
                 "DocCurrency": solicitud.moneda.MonedaAbrev,
-                #"Series": solicitud.Serie,
-                "Series": 95,
+                "Series": solicitud.Serie,
+                # "Series": 95,
                 #"Comments": solicitud.Comments if solicitud.Comments else "",
                 "DocumentLines": []
             }
