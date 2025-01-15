@@ -2,6 +2,8 @@ from django.db import models
 
 from user.models import User
 from django.forms import model_to_dict
+from datetime import date
+
 
 # Create your models here.
 
@@ -217,6 +219,7 @@ class OPRQ(models.Model):
     Total = models.FloatField(verbose_name='Total')
     TotalImp = models.FloatField(verbose_name='TotalImpuestos')
     DocNumSAP = models.IntegerField(null=True)
+    TipoDoc = models.CharField(max_length=10, verbose_name='TipoDocumentos', default='SOL')
 
     def __str__(self):
         return self.DocEntry
@@ -283,9 +286,9 @@ class Series(models.Model):
 
 # ORDEN DE COMPRA
 class Orden_Compra(models.Model):
-    Orden = models.ForeignKey('self', on_delete=models.CASCADE, related_name="Detalles", null=True, blank=True, verbose_name="Orden asociada")
+    NumDoc = models.ForeignKey(OPRQ, on_delete=models.CASCADE, verbose_name="Número de Documento", null=True, blank=True) 
     Solicitante = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Solicitante")
-    SystemDate = models.DateField(verbose_name='SystemDate', null=True)
+    SystemDate = models.DateField(verbose_name='SystemDate', null=True, default=date.today)  # Asignando la fecha actual
     Serie = models.ForeignKey('series', on_delete=models.SET_NULL, null=True, verbose_name="Serie")
     DocDate = models.DateField(verbose_name='DocDate')
     DocDueDate = models.DateField(verbose_name='DocDueDate')
@@ -299,7 +302,7 @@ class Orden_Compra(models.Model):
     Impuesto = models.ForeignKey('osta', on_delete=models.SET_NULL, null=True, verbose_name="Impuestos")
     Almacen = models.ForeignKey('owhs', on_delete=models.SET_NULL, null=True, verbose_name="Almacén")
     Dimension = models.ForeignKey('dimensiones', on_delete=models.SET_NULL, null=True, verbose_name="Dimensión")
-
+    
     class Meta:
         verbose_name = "Orden de Compra"
         verbose_name_plural = "Órdenes de Compra"

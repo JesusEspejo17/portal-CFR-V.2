@@ -316,16 +316,16 @@ class ListLogistica(ValidatePermissionRequiredMixin2, ListView):
             if action == "searchSolicitudes":
                 data = []
                 user = self.request.user
-                solicitudes = OPRQ.objects.filter(DocStatus='C').order_by('DocEntry')        
+                solicitudes = OPRQ.objects.filter(DocStatus='C', TipoDoc='SOL').order_by('DocEntry')       
                 for i in solicitudes:
                     data.append(i.toJSON())
             elif action == "showDetails":
                 data = []
-                for i in PRQ1.objects.filter(NumDoc=request.POST['id']):
+                for i in PRQ1.objects.filter(NumDoc=request.POST['id'], LineStatus='A'):  # Filtro por LineStatus
                     data.append(i.toJSON())
-            elif action=="getDetails":
+            elif action == "getDetails":
                 data = []
-                for i in PRQ1.objects.filter(NumDoc=request.POST['code']):
+                for i in PRQ1.objects.filter(NumDoc=request.POST['code'], LineStatus='A'):  # Filtro por LineStatus
                     data.append(i.toJSON())
             else:
                 data['error'] = 'Ha ocurrido un error'
@@ -746,16 +746,15 @@ def data_sender(json_data, id):
         
     return JsonResponse({'message': 'Data sent successfully'})
 
-#INGRESO A SAP LOGISTICA
-
-# EXPORT DATA PARA CADA UNO 
+# INGRESO A SAP EN LOGISTICA
+# NUEVO EXPORT´S CON LINEA USANDO DEF GUARDAR
 def export_data_as_jsonProductos(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             print("Datos recibidos en el servidor (Productos):", data)
 
-            items_data = data.get('items', [])  # Obtén la lista de diccionarios
+            items_data = data.get('items', [])
             proveedor = data.get('proveedor', None)
 
             if not items_data:
@@ -764,10 +763,8 @@ def export_data_as_jsonProductos(request):
             if not proveedor:
                 return JsonResponse({'error': 'No se especificó un proveedor.'}, status=400)
 
-            # Extrae los valores de 'Code' de cada diccionario en items_data
+            # Extraer los códigos de los ítems seleccionados
             items_codes = [item['Code'] for item in items_data]
-
-            # Ahora items_codes contiene una lista de enteros, que es lo que espera el filtro
             detalles = PRQ1.objects.filter(Code__in=items_codes).select_related(
                 'NumDoc', 'ItemCode', 'Currency', 'UnidadMedida', 'Almacen', 'CuentaMayor', 'idDimension', 'NumDoc__moneda', 'NumDoc__TaxCode'
             )
@@ -775,10 +772,13 @@ def export_data_as_jsonProductos(request):
             if not detalles:
                 return JsonResponse({'error': 'No se encontraron detalles para los códigos proporcionados.'}, status=400)
 
-            # Asumiendo que todos los items pertenecen a la misma solicitud (OPRQ)
+            # Obtener la solicitud asociada y actualizar su TipoDoc
             primera_detalle = detalles.first()
             solicitud = primera_detalle.NumDoc
+            solicitud.TipoDoc = 'OC'  # Cambiar el TipoDoc a 'OC'
+            solicitud.save()  # Guardar el cambio en la base de datos
 
+            # Generar el JSON con la serie original
             oprq = {
                 "DocType": "dDocument_Items",
                 "DocDate": solicitud.DocDate.isoformat(),
@@ -786,11 +786,11 @@ def export_data_as_jsonProductos(request):
                 "TaxDate": solicitud.DocDate.isoformat(),
                 "CardCode": proveedor,
                 "DocCurrency": solicitud.moneda.MonedaAbrev,
-                "Series": solicitud.Serie,
-                # "Series": 95,
-                #"Comments": solicitud.Comments if solicitud.Comments else "", # Añadido Comments desde OPRQ
+                #"Series": solicitud.Serie,
+                "Series": 95, # Ahora la serie es 95 solo para el evento
                 "DocumentLines": []
             }
+
             for idx, detalle in enumerate(detalles):
                 detalle_list = {
                     "LineNum": idx,
@@ -799,10 +799,9 @@ def export_data_as_jsonProductos(request):
                     "Quantity": detalle.Quantity,
                     "Price": detalle.Precio,
                     "Currency": detalle.Currency.MonedaAbrev,
-                    "WarehouseCode": detalle.Almacen.WhsCode, # Asumiendo que Almacen siempre tendrá un valor
+                    "WarehouseCode": detalle.Almacen.WhsCode,
                     "TaxCode": solicitud.TaxCode.Code,
                     "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
-                    #"CostingCode2": detalle.idDimension.descripcion if detalle.idDimension else None,
                 }
                 oprq["DocumentLines"].append(detalle_list)
 
@@ -810,9 +809,14 @@ def export_data_as_jsonProductos(request):
             json_data = json.dumps(oprq, indent=2, default=lambda o: o.isoformat() if isinstance(o, date) else None)
             print("JSON enviado a data_sender_productos:", json_data)
 
-            # Llamar a la función data_sender_productos
+            # Enviar a SAP
             response = data_sender_productos(json_data)
-            return response
+            if response.status_code == 200:
+                guardar_orden_compra(detalles, solicitud, tipo='productos')
+                return JsonResponse({'message': 'Producto enviado y guardado correctamente.'}, status=200)
+            else:
+                return JsonResponse({'error': 'Error al enviar a SAP'}, status=500)
+
 
         except Exception as e:
             import traceback
@@ -823,14 +827,15 @@ def export_data_as_jsonProductos(request):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
+
 def export_data_as_jsonServicios(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             print("Datos recibidos en el servidor (Servicios):", data)
 
-            items_data = data.get('items', [])
-            proveedor_frontend = data.get('proveedor', None) # Recibimos el proveedor, puede ser None
+            items_data = data.get('items', [])  # Obtén la lista de diccionarios
+            proveedor_frontend = data.get('proveedor', None)  # Recibimos el proveedor, puede ser None
 
             if not items_data:
                 return JsonResponse({'error': 'No se enviaron servicios.'}, status=400)
@@ -843,9 +848,12 @@ def export_data_as_jsonServicios(request):
 
             if not detalles:
                 return JsonResponse({'error': 'No se encontraron detalles para los códigos proporcionados.'}, status=400)
-
+            
+            # Obtener la solicitud asociada y actualizar su TipoDoc
             primera_detalle = detalles.first()
             solicitud = primera_detalle.NumDoc
+            solicitud.TipoDoc = 'OC'  # Cambiar el TipoDoc a 'OC'
+            solicitud.save()  # Guardar el cambio en la base de datos
 
             # Obtener el proveedor del primer detalle si no se proporcionó en el frontend
             if proveedor_frontend:
@@ -862,36 +870,34 @@ def export_data_as_jsonServicios(request):
                 "TaxDate": solicitud.DocDate.isoformat(),
                 "CardCode": proveedor,
                 "DocCurrency": solicitud.moneda.MonedaAbrev,
-                "Series": solicitud.Serie,
-                # "Series": 95,
-                #"Comments": solicitud.Comments if solicitud.Comments else "",
+                #"Series": solicitud.Serie,
+                "Series": 95, # Ahora la serie es 95 solo para el evento
                 "DocumentLines": []
             }
+
             for idx, detalle in enumerate(detalles):
                 detalle_list = {
                     "LineNum": idx,
-                    #"ItemCode": detalle.ItemCode.ItemCode,
                     "ItemDescription": detalle.Description,
                     "Quantity": detalle.Quantity,
                     "Price": detalle.Precio,
                     "Currency": detalle.Currency.MonedaAbrev,
                     "TaxCode": solicitud.TaxCode.Code,
                     "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
-                    "UnitPrice":detalle.Precio,
-                    "DocTotal":detalle.Precio*detalle.Quantity,
-                    #"CostingCode2": detalle.idDimension.descripcion if detalle.idDimension else None,
-                    
-                    # "RequiredDate": solicitud.ReqDate.isoformat(),
-                    # "UnitPrice": detalle.Precio,
-                    # "DocTotalFC": detalle.Precio * detalle.Quantity,
-                    # "AccountCode": detalle.CuentaMayor.AcctCode,
+                    "UnitPrice": detalle.Precio,
+                    "DocTotal": detalle.Precio * detalle.Quantity,  # Asegúrate de que el total esté calculado
                 }
                 oprq["DocumentLines"].append(detalle_list)
                 
             json_data = json.dumps(oprq, indent=2, default=lambda o: o.isoformat() if isinstance(o, date) else None)
             print("JSON generado para Servicios para enviar:", json_data)
+            
             response = data_sender_servicios(json_data)
-            return response
+            if response.status_code == 200:
+                guardar_orden_compra(detalles, solicitud, tipo='servicios')
+                return JsonResponse({'message': 'Servicio enviado y guardado correctamente.'}, status=200)
+            else:
+                return JsonResponse({'error': 'Error al enviar a SAP'}, status=500)
 
         except Exception as e:
             import traceback
@@ -900,7 +906,8 @@ def export_data_as_jsonServicios(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
-        
+
+
 
 # DATA SENDER PARA CADA UNO - GEM
 def data_sender_productos(json_data):
@@ -997,3 +1004,52 @@ def data_sender_servicios(json_data):
     return JsonResponse("OK", safe=False)
 
 
+#INGRESO A BD
+def guardar_orden_compra(detalles_seleccionados, solicitud, tipo):
+    """
+    Guarda los datos en la tabla Orden_Compra y actualiza los estados de solicitud y detalles.
+    :param detalles_seleccionados: Detalles de productos o servicios seleccionados.
+    :param solicitud: La solicitud original (OPRQ).
+    :param tipo: Tipo de documento (productos o servicios).
+    """
+    # Obtener la instancia de la serie
+    serie_instance = Series.objects.get(CodigoSerie=solicitud.Serie)
+
+    # Procesar los detalles seleccionados
+    for detalle in detalles_seleccionados:
+        # Crear la orden de compra
+        orden_compra = Orden_Compra(
+            Solicitante=solicitud.ReqIdUser,
+            Serie=serie_instance,  # Usar la instancia de Series
+            DocDate=solicitud.DocDate,
+            DocDueDate=solicitud.DocDueDate,
+            ReqDate=solicitud.ReqDate,
+            ItemCode=detalle.ItemCode.ItemCode if tipo == 'productos' else None,
+            ItemDescription=detalle.Description,
+            Moneda=detalle.Currency,
+            Quantity=detalle.Quantity,
+            PrecioUnitario=detalle.Precio,
+            Total=detalle.Precio * detalle.Quantity,
+            Impuesto=solicitud.TaxCode,
+            Almacen=detalle.Almacen if tipo == 'productos' else None,
+            Dimension=detalle.idDimension,
+            NumDoc=solicitud,
+        )
+        orden_compra.save()
+
+        # Actualizar el LineStatus del detalle seleccionado a 'C' (cerrado)
+        detalle.LineStatus = 'C'
+        detalle.save()
+
+    # Verificar si quedan detalles pendientes en la solicitud
+    detalles_pendientes = PRQ1.objects.filter(NumDoc=solicitud.DocEntry, LineStatus='A')
+
+    if not detalles_pendientes.exists():
+        # Si no hay pendientes, actualizar TipoDoc a 'OC'
+        solicitud.TipoDoc = 'OC'
+    else:
+        # Si hay pendientes, mantener TipoDoc como 'SOL'
+        solicitud.TipoDoc = 'SOL'
+
+    # Guardar los cambios en la solicitud
+    solicitud.save()

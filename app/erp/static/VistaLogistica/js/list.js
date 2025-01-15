@@ -934,7 +934,9 @@ $(document).ready(function () {
                         contentType: "application/json",
                         data: JSON.stringify(data),
                         success: function (response) {
-                            if (response === "OK") {
+                            console.log("Respuesta del servidor:", response);  // Para depuración
+                            if (response.message === "Producto enviado y guardado correctamente.") {
+                            //if (response === "OK") {
                                 $.confirm({
                                     title: 'Éxito',
                                     content: 'Los productos se han guardado correctamente.',
@@ -953,7 +955,8 @@ $(document).ready(function () {
                                     icon: 'fa fa-times-circle',
                                     theme: 'modern',
                                     type: 'red',
-                                    content: "Error al guardar los productos. Intente nuevamente."
+                                    content: response.error || "Error al guardar los productos. Intente nuevamente."
+                                    //content: "Error al guardar los productos. Intente nuevamente."
                                 });
                             }
                         },
@@ -1010,7 +1013,9 @@ $(document).ready(function () {
                         contentType: "application/json",
                         data: JSON.stringify(data),
                         success: function (response) {
-                            if (response === "OK") {
+                            console.log("Respuesta del servidor:", response);  // Para depuración
+                            if (response.message === "Servicio enviado y guardado correctamente.") {
+                            //if (response === "OK") {
                                 $.confirm({
                                     title: 'Éxito',
                                     content: 'Los servicios se han guardado correctamente.',
@@ -1029,7 +1034,8 @@ $(document).ready(function () {
                                     icon: 'fa fa-times-circle',
                                     theme: 'modern',
                                     type: 'red',
-                                    content: "Error al guardar los servicios. Intente nuevamente."
+                                    content: response.error || "Error al guardar los servicios. Intente nuevamente."
+                                    //content: "Error al guardar los servicios. Intente nuevamente."
                                 });
                             }
                         },
