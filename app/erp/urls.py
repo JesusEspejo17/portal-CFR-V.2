@@ -20,4 +20,5 @@ urlpatterns = [
     path('procesar_logistica/',ListLogistica.as_view(), name="listar_logistica"),
     path('logistica/guardarProducto/', export_data_as_jsonProductos, name='guardar_producto'),
     path('logistica/guardarServicio/', export_data_as_jsonServicios, name='guardar_servicio'),
+    path('listar_orden/',OrdenCompraListView.as_view(), name="listar_ordenes"),
 ]

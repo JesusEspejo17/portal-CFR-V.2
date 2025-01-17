@@ -1,0 +1,60 @@
+{% extends 'base/base.html' %}
+
+{% load static %}
+{% block head_list %}
+    <script src="{% static 'OrdenCompra/js/list.js' %}"></script> <!-- Agrega tu archivo JS -->
+    <style>
+        .fw-bold {
+            font-weight: 600 !important;
+        }
+    </style>
+{% endblock head_list %}
+
+{% block page_content %}
+    <form id="OrdenCompra" method="post" style="padding-left: 15px;padding-right: 15px;">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-boxes"></i> {{title}}
+                            </h3>
+                        </div>
+                    </div>  
+                </div>
+            </div>
+            <div class="card card-secondary">
+                <div class="card-body">
+                    <!-- Tabla de órdenes de compra -->
+                    <table id="tblOrdenCompra" class="table table-row-bordered gy-6">
+                        <thead>
+                            <tr class="fw-bold fs-5 text-gray-800 px-7">
+                                <th>#</th>
+                                <th>Descripción</th>
+                                <th style="text-align: center;">Tipo Documento</th>
+                                <th style="text-align: center;">Fecha Emitida</th>
+                                <th >Solicitante</th>
+                                <th>Solicitud</th> <!-- Nueva columna -->
+                                {% comment %} <th>Serie</th> {% endcomment %}
+                                {% comment %} <th>Fecha Doc</th> {% endcomment %}
+                                {% comment %} <th>Fecha Vencimiento</th> {% endcomment %}
+                                {% comment %} <th>Código Ítem</th> {% endcomment %}
+                                <th>Moneda</th>
+                                <th>Cantidad</th>
+                                {% comment %} <th>Precio Unitario</th> {% endcomment %}
+                                <th>Total</th>
+                                {% comment %} <th>Impuesto</th> {% endcomment %}
+                                {% comment %} <th>Almacén</th> {% endcomment %}
+                                {% comment %} <th>Dimensión</th> {% endcomment %}
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}
