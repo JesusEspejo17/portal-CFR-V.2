@@ -302,6 +302,7 @@ class Orden_Compra(models.Model):
     Impuesto = models.ForeignKey('osta', on_delete=models.SET_NULL, null=True, verbose_name="Impuestos")
     Almacen = models.ForeignKey('owhs', on_delete=models.SET_NULL, null=True, verbose_name="Almacén")
     Dimension = models.ForeignKey('dimensiones', on_delete=models.SET_NULL, null=True, verbose_name="Dimensión")
+    DocNumSAPoc = models.IntegerField(null=True, verbose_name="DocNumSAP Orden Compra")
     
     class Meta:
         verbose_name = "Orden de Compra"
