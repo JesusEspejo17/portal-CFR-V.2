@@ -336,7 +336,7 @@ $(function initializeDataTable() {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
-                    return '<button rel="remove" type="button" class="btn btn-info btn-xs btn-flat" onclick="mostrarDetalles(' + parseInt(row.DocEntry) + ')"><i class="fas fa-info-circle"></i> Detalles</button>';
+                    return '<button rel="remove" type="button" class="btn btn-primary btn-xs btn-flat" onclick="mostrarDetalles(' + parseInt(row.DocEntry) + ')"><i class="fas fa-info-circle"></i> Detalles</button>';
                 },
             },
             {
