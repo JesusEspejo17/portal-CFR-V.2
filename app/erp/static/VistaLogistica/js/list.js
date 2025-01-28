@@ -610,6 +610,7 @@ function tablaDetalleProducto(docNum) {
             { "data": "LineVendor" },
             { "data": "Description" },
             { "data": "Quantity" },
+            { "data": "Precio" },
             { "data": "UnidadMedida" },
             { "data": "Almacen" },
             { "data": "total" },
@@ -777,6 +778,7 @@ function tablaDetalleServicio(docNum) {
             { "data": "LineVendor" },
             { "data": "Description" },
             { "data": "Quantity" },
+            { "data": "Precio" },
             { "data": "CuentaMayor" },
             { "data": "total" },
             { "data": null }

@@ -665,7 +665,7 @@ def export_data_as_json(id):
                     'LineVendor': det.LineVendor.CardCode,
                     "TaxCode": solicitud.TaxCode.Code,
                     'Quantity': det.Quantity,
-                    #"UnitPrice":det.Precio,
+                    "UnitPrice":det.Precio,
                     'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
                     'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
                 }
@@ -1279,6 +1279,7 @@ def get_solicitud_detalle_producto(request, doc_num):
             'LineVendor__CardName',
             'Description',
             'Quantity',
+            'Precio',
             'UnidadMedida__Name',
             'Almacen__WhsName',
             'total',
@@ -1314,6 +1315,7 @@ def get_solicitud_detalle_servicio(request, doc_num):
             'LineVendor__CardName',
             'Description',
             'Quantity',
+            'Precio',
             'CuentaMayor__AcctName',
             'total',
             'LineStatus'
