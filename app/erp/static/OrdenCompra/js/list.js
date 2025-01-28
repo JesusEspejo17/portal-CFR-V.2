@@ -99,6 +99,72 @@ $(document).ready(function () {
             </div>`;
         });
         $('#container-origins').html(originsHtml);
+
+        $('#container-origins').on('click', '.badge-primary', function() {
+            var baseEntry = $(this).closest('.d-flex')
+                .find('.fw-bold')
+                .text()
+                .replace('SOLICITUD #', '')
+                .trim();
+                        
+            $.ajax({
+                url: '/erp/solicitud/detalle/' + encodeURIComponent(baseEntry) + '/',
+                type: 'GET',
+                success: function(data) {
+                    if (typeof data === 'string') {
+                        data = JSON.parse(data);
+                    }
+                    
+                    // Show solicitud modal with specific IDs
+                    $('#modalDetallesSolicitud').modal('show');
+                    
+                    // Use solicitud-specific IDs
+                    $('#solicitud_DocNum').text(data.DocNum);
+                    $('#solicitud_Serie').text(data.Serie);
+                    if (data.DocStatus === 'P') {
+                        $('#solicitud_DocStatus').text('Pendiente');
+                    } else if (data.DocStatus === 'A') {
+                        $('#solicitud_DocStatus').text('Aprobado por Jefatura');
+                    } else if (data.DocStatus === 'R') {
+                        $('#solicitud_DocStatus').text('Rechazado por Jefatura');
+                    } else if (data.DocStatus === 'C') {
+                        $('#solicitud_DocStatus').text('Contabilizado');
+                    }
+                    else {
+                        $('#solicitud_DocStatus').text('No especificado');
+                    }
+                    $('#solicitud_DocDate').text(data.DocDate);
+                    $('#solicitud_DocDueDate').text(data.DocDueDate);
+                    $('#solicitud_Moneda').text(data.moneda);
+                    $('#solicitud_TaxCode').text(data.TaxCode);
+                    
+                    $('#solicitud_Total').text(data.Total);
+                    $('#solicitud_TotalImp').text(data.TotalImp);
+                    $('#solicitud_ReqIdUser').text(data.ReqIdUser);
+                    $('#solicitud_Department').text(data.Department);
+
+                    $('#solicitud_DocEntry').text(data.DocEntry);
+
+                    if (data.DocType === 'I') {
+                        $('#solicitud_DocType').text('Artículo');
+                        $('#tblDetallesSolicitudServ').hide();
+                        $('#tblDetallesSolicitudProd').show();
+                        tablaSolicitudDetalleProducto(data.DocNum);
+                    } else if (data.DocType === 'S') {
+                        $('#solicitud_DocType').text('Servicio');
+                        $('#tblDetallesSolicitudProd').hide();
+                        $('#tblDetallesSolicitudServ').show();
+                        tablaSolicitudDetalleServicio(data.DocNum);
+                    } else {
+                        $('#solicitud_DocType').text('No especificado');
+                    }
+                    
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+        });       
         
         // Llenar modal con datos 
         $('#idOrden').text(data.DocNumOC);
@@ -143,3 +209,68 @@ $(document).ready(function () {
         $('#modalDetalles').modal('show');
     });
 });
+
+
+function tablaSolicitudDetalleProducto(docNum) {
+    console.log('1. Iniciando carga de tabla productos, DocNum:', docNum);
+    
+    $('#tblDetallesSolicitudProd').DataTable({
+        responsive: true,
+        autoWidth: false,
+        destroy: true,
+        deferRender: true,
+        ajax: {
+            url: '/erp/solicitud/detalle_producto/' + docNum + '/',
+            type: 'GET',
+            dataSrc: function(json) {
+                console.log('2. Datos recibidos productos:', json);
+                return json;
+            }
+        },
+        columns: [
+            { data: 'ItemCode__ItemCode' },
+            { data: 'LineVendor__CardName' },
+            { data: 'Description' },
+            { data: 'Quantity' },
+            { data: 'UnidadMedida__Name' },
+            { data: 'Almacen__WhsName' },
+            { data: 'total' },
+        ],
+        initComplete: function(settings, json) {
+            console.log('3. DataTable productos inicializada:', json);
+        }
+    });
+}
+
+function tablaSolicitudDetalleServicio(docNum) {
+    console.log('1. Iniciando carga de tabla servicios, DocNum:', docNum);
+    
+    $('#tblDetallesSolicitudServ').DataTable({
+        responsive: true,
+        autoWidth: false,
+        destroy: true,
+        deferRender: true,
+        ajax: {
+            url: '/erp/solicitud/detalle_servicio/' + docNum + '/',
+            type: 'GET',
+            dataSrc: function(json) {
+                console.log('2. Datos recibidos servicios:', json);
+                return json;
+            }
+        },
+        columns: [
+            { data: 'ItemCode__ItemCode' },
+            { data: 'LineVendor__CardName' },
+            { data: 'Description' },
+            { data: 'Quantity' },
+            { data: 'CuentaMayor__AcctName' },
+            { data: 'total' },
+        ],
+        initComplete: function(settings, json) {
+            console.log('3. DataTable servicios inicializada:', json);
+        },
+        error: function (xhr, error, thrown) {
+            console.error('Error en tabla servicios:', error);
+        }
+    });
+}

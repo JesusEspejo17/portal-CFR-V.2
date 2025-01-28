@@ -1,5 +1,6 @@
 from django.urls import path
 from erp.views import *
+import erp.views as views
 
 urlpatterns = [
     path('solicitud_compra/', solicitudcompra, name='solicitudcompra'),
@@ -21,4 +22,7 @@ urlpatterns = [
     path('logistica/guardarProducto/', export_data_as_jsonProductos, name='guardar_producto'),
     path('logistica/guardarServicio/', export_data_as_jsonServicios, name='guardar_servicio'),
     path('listar_orden/',OrdenCompraListView.as_view(), name="listar_ordenes"),
+    path('solicitud/detalle/<str:base_entry>/', views.get_solicitud_detalle, name='get_solicitud_detalle'),
+    path('solicitud/detalle_producto/<int:doc_num>/', views.get_solicitud_detalle_producto, name='get_solicitud_detalle_producto'),
+    path('solicitud/detalle_servicio/<int:doc_num>/', views.get_solicitud_detalle_servicio, name='get_solicitud_detalle_servicio'),
 ]

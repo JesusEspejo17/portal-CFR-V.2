@@ -1,0 +1,230 @@
+<div class="modal fade" id="modalDetallesSolicitud" tabindex="-1" role="dialog" aria-labelledby="modalDetallesSolicitudLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 90%;" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetallesLabel">Detalles de Solicitud<span class="text"
+                        id="idSolicitud"></span></h5>
+                {% comment %} REEMPLAZO DE "X" {% endcomment %}
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                <div class="card shadow-sm">
+                    <div id="kt_card_detalle_solicitud" class="collapse show">
+                        <div class="card-body">
+                            <div class="row g-5 g-xl-8">
+                                <!-- Campo oculto -->
+                                <label type="text" aria-readonly="true" id="InputDocEntry"
+                                    class="form-control form-control-user" style="text-align:right;"
+                                    hidden></label>
+            
+                                <!-- Primera fila -->
+                                <div class="row mb-5" style="margin-top: 15px;">
+                                    <div class="col-sm-4">
+                                      <label for="detallesDocNum" id="lblDetDocNum" class="col-sm-3 col-form-label d-inline-block" style="width: 170px;">Número de Documento:</label>
+                                      <label type="text" aria-readonly="true" id="solicitud_DocNum" class="form-control form-control-solid d-inline-block" style="text-align:right;"></label>
+                                    </div>
+                                    <div class="col-sm-4">
+                                      <label for="detalleSerie" class="col-sm-3 col-form-label d-inline-block">Serie:</label>
+                                      <label type="text" aria-readonly="true" id="solicitud_Serie" class="form-control form-control-solid d-inline-block" style="text-align:right;"></label>
+                                    </div>
+                                    <div class="col-sm-4">
+                                      <label for="detallesDocStatus" id="lblDocStatus" class="col-sm-3 col-form-label d-inline-block" style="width: 170px;">Estado de Documento:</label>
+                                      <label type="text" aria-readonly="true" id="solicitud_DocStatus" class="form-control form-control-solid d-inline-block" style="text-align:right;"></label>
+                                    </div>
+                                </div>
+
+                                <!-- Tercera fila -->
+                                <div class="col-sm-6" style="margin-top: 30px">
+                                    <div class="row mb-5">
+                                        <label for="detallesDocDate" id="lblDocDate"
+                                            class="col-sm-3 col-form-label d-inline-block" style="width: 167.5px;">Fecha del Documento:</label>
+                                        {% comment %} <div class="col-sm-9"> {% endcomment %}
+                                            <label type="text" aria-readonly="true" id="solicitud_DocDate"
+                                                class="form-control form-control-solid"
+                                                style="text-align:right;width: 427.6px;"></label>
+                                        {% comment %} </div> {% endcomment %}
+                                    </div>
+                                </div>
+
+                                <!-- Cuarta fila -->
+                                <div class="col-sm-6"  style="margin-top: 27px">
+                                    <div class="row mb-5">
+                                        <label for="detallesDocDueDate" id="lblDueDate"
+                                            class="col-sm-3 col-form-label d-inline-block" style="width: 167.5px;">Fecha de vencimiento:</label>
+                                        {% comment %} <div class="col-sm-9"> {% endcomment %}
+                                            <label type="text" aria-readonly="true" id="solicitud_DocDueDate"
+                                                class="form-control form-control-solid"
+                                                style="text-align:right;width: 427.6px;"></label>
+                                        {% comment %} </div> {% endcomment %}
+                                    </div>
+                                </div>
+
+                                <!-- Quinta fila -->
+                                <div class="row g-5 g-xl-8" style="margin-top: 1px">
+                                    <div class="col-sm-4">
+                                        <div class="row mb-5">
+                                            <label for="detallesMoneda" id="lblMoneda"
+                                                class="col-sm-3 col-form-label">Moneda:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" id="solicitud_Moneda"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:left;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+                                        <div class="row mb-5">
+                                            <label for="detallesTaxCode" id="lblTaxCode"
+                                                class="col-sm-3 col-form-label">Impuesto:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" id="solicitud_TaxCode"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:left;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+                                        <div class="row mb-5">
+                                            <label for="detallesDocType" id="lblDocType"
+                                                class="col-sm-3 col-form-label">Tipo:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" id="solicitud_DocType"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:left;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sexta fila - Totales -->
+                                <div class="row g-5 g-xl-8"  style="margin-top: 1px">
+                                    <div class="col-sm-6">
+                                        <!-- Columna vacía -->
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="row mb-5">
+                                            <label for="detallesTotal" id="lblTotal"
+                                                class="col-sm-5 col-form-label">Total:</label>
+                                            <div class="col-sm-7">
+                                                <label type="text" aria-readonly="true" id="solicitud_Total"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:right;"></label>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-5">
+                                            <label for="detallesTotalImp" id="lblTotalImp"
+                                                class="col-sm-5 col-form-label">Total con impuestos:</label>
+                                            <div class="col-sm-7">
+                                                <label type="text" aria-readonly="true" id="solicitud_TotalImp"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:right;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+                                <!-- Usuario Solicitante -->
+                                <h3 class="card-title align-items-start flex-column mb-5" style="margin-top: 1px">
+                                    <span class="card-label fw-bold text-dark">Usuario Solicitante</span>
+                                </h3>
+
+                                <div class="row g-5 g-xl-8" style="margin-top: 1px">
+                                    <div class="col-sm-6">
+                                        <div class="row mb-5">
+                                            <label for="detallesReqIdUser" id="lblReqIdUser"
+                                                class="col-sm-3 col-form-label">Usuario:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" name="detallesReqIdUser"
+                                                    id="solicitud_ReqIdUser" class="form-control form-control-solid"
+                                                    style="text-align:right;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="row mb-5">
+                                            <label for="departmentUser" id="lblDepartmentUser"
+                                                class="col-sm-3 col-form-label">Departamento:</label>
+                                            <div class="col-sm-9">
+                                                <label type="text" aria-readonly="true" id="solicitud_Department"
+                                                    class="form-control form-control-solid"
+                                                    style="text-align:right;"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tabla de detalles -->
+                                <div class="card card-flush mt-6">
+                                    <div class="card-body">
+                                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3" 
+                                            id="tblDetallesSolicitudProd" style="width: 100%;">
+                                            <thead>
+                                                <tr class="fw-bold text-muted">
+                                                    <th>Cod. Item</th>
+                                                    <th>LineVendor</th>
+                                                    <th>Descripción</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Unidad Medida</th>
+                                                    <th>Almacén</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                
+                                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3" 
+                                            id="tblDetallesSolicitudServ" style="width: 100%; display: none;">
+                                            <thead>
+                                                <tr class="fw-bold text-muted">
+                                                    <th>Cod. Item</th>
+                                                    <th>LineVendor</th>
+                                                    <th>Descripción</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Cuenta Mayor</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Cerrar todos los divs pendientes -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer del Modal -->
+                {% for group in request.user.groups.all %}
+                {% if group.name != 'Jefe_de_Presupuestos' %}
+                    <div class="modal-footer">
+                        <div class="d-flex justify-content-center gap-2">
+                            {% if edition_permissions %}
+                            <button type="button" id="btnAprobar" class="btn btn-success" onclick="aprobar()">Aprobar</button>
+                            <button type="button" id="btnRechazar" class="btn btn-danger" onclick="rechazar()">Rechazar</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="modal-footer">
+                        <div class="d-flex justify-content-center gap-2">
+                            {% if edition_permissions %}
+                            <button type="button" id="btnContabilizar" class="btn btn-success" onclick="contabilizar()">Contabilizar</button>
+                            <button type="button" id="btnRechazar" class="btn btn-danger" onclick="rechazar()">Rechazar</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>

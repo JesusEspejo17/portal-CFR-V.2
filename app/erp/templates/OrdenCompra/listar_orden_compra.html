@@ -2,6 +2,8 @@
 
 {% load static %}
 {% block head_list %}
+    {{ block.super }}
+    <script src="{% static 'SolicitudCompra/js/list.js' %}"></script>
     <script src="{% static 'OrdenCompra/js/list.js' %}"></script> <!-- Agrega tu archivo JS -->
     <style>
         .fw-bold {
@@ -208,4 +210,6 @@
             </div>
         </div>
     </div>
+    {% include 'Partials/_modal_detalles_solicitud.html' %}
 {% endblock %}
+

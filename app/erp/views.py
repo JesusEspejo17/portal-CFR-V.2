@@ -1185,105 +1185,6 @@ def guardar_orden_compra_oc(detalles_seleccionados, solicitud, tipo, proveedor):
     return orden_compra_cabecera
 
 # # LISTA DE ORDENES
-
-# class OrdenCompraListView(ValidatePermissionRequiredMixin2, ListView):
-#     model = OCC
-#     template_name = 'OrdenCompra/listar_orden_compra.html'
-#     required_groups = 'Jefe_Logistica'
-    
-#     @method_decorator(csrf_exempt)
-#     def dispatch(self, request, *args, **kwargs):
-#          return super().dispatch(request, *args, **kwargs)
-
-#     def post(self, request, *args, **kwargs):
-#         data = {}
-#         try:
-#             action = request.POST['action']
-#             if action == "searchdata":
-#                 data = []
-#                 position = 1
-#                 for i in OCC.objects.all():
-#                     item = i.toJSON()
-#                     item['position'] = position
-#                     data.append(item)
-#                     position += 1
-#             else:
-#                 data['error'] = 'Ha ocurrido un error'
-#         except Exception as e:
-#             data['error'] = str(e)
-#         return JsonResponse(data, safe=False)
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['title'] = 'Listado de Órdenes de Compra'
-#         context['entity'] = 'Órdenes de Compra'
-#         return context
-
-
-#27/01/24
-# class OrdenCompraListView(ValidatePermissionRequiredMixin2, ListView):
-#     model = OCC
-#     template_name = 'OrdenCompra/listar_orden_compra.html'
-#     required_groups = 'Jefe_Logistica'
-
-#     @method_decorator(csrf_exempt)
-#     def dispatch(self, request, *args, **kwargs):
-#         return super().dispatch(request, *args, **kwargs)
-
-#     def get_queryset(self):
-#         return OCC.objects.prefetch_related(
-#             Prefetch(
-#                 'detalles_oc',
-#                 queryset=OCD1.objects.select_related(
-#                     'ItemCodeOCD',
-#                     'LineVendorOCD',
-#                     'NumDocOCD'
-#                 )
-#             )
-#         ).all()
-
-#     def post(self, request, *args, **kwargs):
-#         try:
-#             action = request.POST['action']
-#             if action == "searchdata":
-#                 data = {
-#                     'data': [],
-#                     'draw': request.POST.get('draw', 1),
-#                     'recordsTotal': OCC.objects.count(),
-#                     'recordsFiltered': OCC.objects.count()
-#                 }
-                
-#                 position = 1  # Initialize position counter
-#                 for orden in self.get_queryset():
-#                     item = orden.toJSON()
-#                     item['position'] = position  # Add position to item
-#                     detalles = []
-#                     for detalle in orden.detalles_oc.all():
-#                         detalle_dict = {
-#                             'CodeOCD': detalle.CodeOCD,
-#                             'DocNumSAPOCD': detalle.DocNumSAPOCD,
-#                             'BaseEntryOCD': detalle.BaseEntryOCD,
-#                             'ItemCode': detalle.ItemCodeOCD.ItemCode if detalle.ItemCodeOCD else None,
-#                             'Description': detalle.DescriptionOCD,
-#                             'Quantity': detalle.QuantityOCD,
-#                             'Precio': detalle.PrecioOCD,
-#                             'Total': detalle.TotalOCD,
-#                             'LineStatus': detalle.LineStatusOCD
-#                         }
-#                         detalles.append(detalle_dict)
-#                     item['detalles'] = detalles
-#                     data['data'].append(item)
-#                     position += 1  # Increment position
-                    
-#                 print("Debug - Data length:", len(data['data']))
-#             else:
-#                 data = {'error': 'Ha ocurrido un error: Acción no válida'}
-#         except Exception as e:
-#             print(f"Error: {str(e)}")
-#             data = {'error': str(e)}
-        
-#         return JsonResponse(data, safe=False)
-
 class OrdenCompraListView(ValidatePermissionRequiredMixin2, ListView):
     model = OCC
     template_name = 'OrdenCompra/listar_orden_compra.html'
@@ -1343,4 +1244,85 @@ class OrdenCompraListView(ValidatePermissionRequiredMixin2, ListView):
             data = {'error': str(e)}
         return JsonResponse(data, safe=False)
 
-
+#DETALLES DE ORDEN
+@csrf_exempt
+def get_solicitud_detalle(request, base_entry):
+    try:
+        # Limpiar el base_entry de espacios y "Ver"
+        base_entry_clean = base_entry.split()[0]
+        solicitud = OPRQ.objects.get(DocNumSAP=base_entry_clean)
+        return JsonResponse(solicitud.toJSON())
+    except OPRQ.DoesNotExist:
+        return JsonResponse({'error': f'Solicitud con BaseEntry {base_entry_clean} no encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+#DETALLES DE TABLA PRODUCTO DENTRO DE OC
+@csrf_exempt
+def get_solicitud_detalle_producto(request, doc_num):
+    try:
+        print(f"Buscando DocEntry en OPRQ para DocNum: {doc_num}")
+        # First get DocEntry from OPRQ
+        oprq = OPRQ.objects.get(DocNum=doc_num)
+        print(f"DocEntry encontrado: {oprq.DocEntry}")
+        
+        # Then use DocEntry to query PRQ1
+        detalles = PRQ1.objects.filter(
+            NumDoc_id=oprq.DocEntry
+        ).select_related(
+            'ItemCode',
+            'LineVendor',
+            'UnidadMedida',
+            'Almacen'
+        ).values(
+            'ItemCode__ItemCode',
+            'LineVendor__CardName',
+            'Description',
+            'Quantity',
+            'UnidadMedida__Name',
+            'Almacen__WhsName',
+            'total',
+            'LineStatus'
+        )
+        print(f"Detalles encontrados: {detalles.count()}")
+        return JsonResponse(list(detalles), safe=False)
+    except OPRQ.DoesNotExist:
+        print(f"No se encontró OPRQ con DocNum: {doc_num}")
+        return JsonResponse([], safe=False)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+    
+#DETALLES DE TABLA SERVICIO DENTRO DE OC
+@csrf_exempt
+def get_solicitud_detalle_servicio(request, doc_num):
+    try:
+        print(f"Buscando DocEntry en OPRQ para DocNum: {doc_num}")
+        # Get DocEntry from OPRQ
+        oprq = OPRQ.objects.get(DocNum=doc_num)
+        print(f"DocEntry encontrado: {oprq.DocEntry}")
+        
+        # Query PRQ1 using DocEntry
+        detalles = PRQ1.objects.filter(
+            NumDoc_id=oprq.DocEntry
+        ).select_related(
+            'ItemCode',
+            'LineVendor',
+            'CuentaMayor'
+        ).values(
+            'ItemCode__ItemCode',
+            'LineVendor__CardName',
+            'Description',
+            'Quantity',
+            'CuentaMayor__AcctName',
+            'total',
+            'LineStatus'
+        )
+        print(f"Servicios encontrados: {detalles.count()}")
+        return JsonResponse(list(detalles), safe=False)
+    except OPRQ.DoesNotExist:
+        print(f"No se encontró OPRQ con DocNum: {doc_num}")
+        return JsonResponse([], safe=False)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
