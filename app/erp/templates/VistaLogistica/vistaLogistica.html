@@ -21,21 +21,19 @@
             <!--Columna izquierda: Formulario principal-->
             <div class="col-lg-7" style="padding-right: 1px; padding-left: 18px;">
                 <div class="card card-primary">
-                    <div class="card-header">
-                        <div class="row col-sm-12 mt-3">
-                            <div class="col col-sm-6 mt-3">
-                                <h3 class="card-title">
-                                    {% if user.is_head_of_area %}
-                                    <i class="fas fa-boxes"></i> {{title}}: {{user.departamento}}
-                                    {% else %}
-                                    <i class="fas fa-boxes"></i> {{title}}
-                                    {% endif %}
-                                </h3>
-                            </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card card-primary">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-boxes"></i>Solicitudes Contabilizadas:
+                                    </h3>
+                                </div>
+                            </div>  
                         </div>
                     </div>
                     <div class="card card-body">
-                        <table class="table table-bordered" id="tblContabilizados">
+                        <table class="table table-row-bordered gy-6" id="tblContabilizados">
                             <thead>
                                 <tr>
                                     <th style="width: 5%;">#</th>
@@ -84,7 +82,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <table class="table table-bordered" id="tblOrdenProd">
+                            <table class="table table-row-bordered gy-6" id="tblOrdenProd">
                                 <thead>
                                     <tr>
                                         <th style="width: 10%;">Eliminar</th>
@@ -130,7 +128,7 @@
                                         value="{{user.first_name}}" id="NombreSolicitanteServicios">
                                 </div>
                             </div>
-                            <table class="table table-bordered" id="tblOrdenServ">
+                            <table class="table table-row-bordered gy-6" id="tblOrdenServ">
                                 <thead>
                                     <tr>
                                         <th style="width: 10%;">Eliminar</th>

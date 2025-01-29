@@ -40,7 +40,7 @@
     <link rel="stylesheet" href="{% static 'base/vendor/jquery_confirm/jquery-confirm.min.css' %}">
 
     <!-- Bordes -->
-    <link href="{% static 'base/vendor/datatables/dataTables.bootstrap4.min.css'%}" rel="stylesheet">
+    {% comment %} <link href="{% static 'base/vendor/datatables/dataTables.bootstrap4.min.css'%}" rel="stylesheet"> {% endcomment %}
 
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->    
     <script>var hostUrl = "{% static 'base/assets/' %}";</script>
@@ -233,6 +233,8 @@
                             <h6 class="menu-content text-muted mb-0 fs-7 text-uppercase">Compras:</h6>
                         </div>
                         <!--end:Menu item-->
+                        {% for group in request.user.groups.all %}
+                        {% if group.name == 'Jefe_De_Area' or group.name == 'Jefe_de_Presupuestos' or group.name == 'Empleado' or group.name == 'Administrador'%}
                         <!--begin:Menu item-->
                         <div class="menu-item">
                             <!--begin:Menu link-->
@@ -245,8 +247,11 @@
                             <!--end:Menu link-->
                         </div>
                         <!--end:Menu item-->
+                        {% endif %}
+                        {% endfor %}
+
                         {% for group in request.user.groups.all %}
-                        {% if group.name == 'Jefe_Logistica' %}
+                        {% if group.name == 'Jefe_Logistica' or group.name == 'Administrador' %}
                         <!--begin:Menu item-->
                         <div class="menu-item">
                             <!--begin:Menu link-->
@@ -268,6 +273,8 @@
             </div>
             <!--end::Menu-->
 
+            {% for group in request.user.groups.all %}
+            {% if group.name == 'Empleado' or group.name == 'Administrador'%}
             <!--begin::Menu-->
             <div class="menu menu-column menu-rounded menu-sub-indention fw-semibold fs-6" id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
                 <!--begin:Menu item-->
@@ -315,27 +322,19 @@
                             <!--end:Menu link-->
                         </div>
                         <!--end:Menu item-->
-                        <!--begin:Menu item-->
-                        <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link active" href="{% url 'erp:solicitudcompra' %}">
-                                <span class="menu-bullet">
-                                    <span class="bullet bullet-dot"></span>
-                                </span>
-                                <span class="menu-title">Entregas a Rendir</span>
-                            </a>
-                            <!--end:Menu link-->
-                        </div>
-                        <!--end:Menu item-->
                     </div>
                     <!--end:Menu sub-->
                 </div>
                 <!--end:Menu item-->
             </div>
             <!--end::Menu-->
+            {% endif %}
+            {% endfor %}
 
 
             {% comment %} MENU ORDENES DE COMPRA {% endcomment %}
+            {% for group in request.user.groups.all %}
+            {% if group.name == 'Jefe_Logistica' or group.name == 'Jefe_de_Presupuestos'%}
             <!--begin::Menu-->
             <div class="menu menu-column menu-rounded menu-sub-indention fw-semibold fs-6" id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
                 <!--begin:Menu item-->
@@ -389,6 +388,8 @@
                 <!--end:Menu item-->
             </div>
             <!--end::Menu-->
+            {% endif %}
+            {% endfor %}
 
             {% for group in request.user.groups.all %}
             {% if group.name == 'Administrador' %}
@@ -503,7 +504,7 @@
                         <!--begin::Copyright-->
                         <div class="text-gray-900 order-2 order-md-1">
                             <span class="text-muted fw-semibold me-1">Copyright &copy; </span>
-                            <a target="" class="text-gray-800 text-hover-primary">CFR Business & Solutions 2024</a>
+                            <a target="" class="text-gray-800 text-hover-primary">CFR Business & Solutions 2025</a>
                         </div>
                     </div>
                     <!--end::Footer container-->

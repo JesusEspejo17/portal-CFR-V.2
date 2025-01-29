@@ -1188,7 +1188,7 @@ def guardar_orden_compra_oc(detalles_seleccionados, solicitud, tipo, proveedor):
 class OrdenCompraListView(ValidatePermissionRequiredMixin2, ListView):
     model = OCC
     template_name = 'OrdenCompra/listar_orden_compra.html'
-    required_groups = 'Jefe_Logistica'
+    required_groups = ['Jefe_Logistica', 'Jefe_de_Presupuestos']
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
