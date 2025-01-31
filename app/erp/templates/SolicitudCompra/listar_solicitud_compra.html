@@ -450,8 +450,34 @@
     function rechazar() {
         var id = $("#InputDocEntry").html();
         var user = $("#detallesReqIdUser").text().trim();
-        var data = { id: id, usuario: user};
-        data = JSON.stringify(data);
+        
+        // Recoger items seleccionados
+        var arrcheckedProd = [];
+        $('input[name="chk-detalle"]:checked').each(function() {
+            arrcheckedProd.push(parseInt($(this).val()));
+        });
+
+        console.log('Items seleccionados:', arrcheckedProd);
+    
+        // Validar selección
+        if (arrcheckedProd.length === 0) {
+            $.alert({
+                title: 'Advertencia',
+                content: 'Debe seleccionar al menos un ítem para rechazar',
+                type: 'orange',
+                theme: 'modern'
+            });
+            return;
+        }
+    
+        var data = JSON.stringify({
+            id: id,
+            usuario: user,
+            arrcheckedProd: arrcheckedProd
+        });
+
+        console.log('Datos a enviar:', data);
+    
         var token = '{{csrf_token}}';
         $.confirm({
             theme: 'modern',
@@ -468,6 +494,7 @@
                         type: "POST",
                         url: "/erp/solicitud/rechazar/" + id,
                         data: data,
+                        contentType: 'application/json',
                         success: function (response) {
                             if (response === "OK") {
                                 $.confirm({
@@ -482,8 +509,7 @@
                                         },
                                     }
                                 });
-                            }
-                            else {
+                            } else {
                                 $('#modalCarga').modal('hide');
                                 $.alert({
                                     title: 'Error',
@@ -507,8 +533,7 @@
                         }
                     });
                 },
-                cancel: function () {
-                },
+                cancel: function () {},
             }
         });
     }
@@ -778,7 +803,7 @@
         }
     }
 
-    function contabilizar() {
+    {% comment %} function contabilizar() {
         var id = $("#InputDocEntry").html();
         var user = $("#detallesReqIdUser").text().trim();
         var data = { id: id, usuario: user };
@@ -838,6 +863,95 @@
                 },
                 cancel: function () {
                 },
+            }
+        });
+    } {% endcomment %}
+
+    function contabilizar() {
+        var id = $("#InputDocEntry").html();
+        var user = $("#detallesReqIdUser").text().trim();
+        
+        // Recoger items seleccionados
+        var arrcheckedProd = [];
+        $('input[name="chk-detalle"]:checked').each(function() {
+            arrcheckedProd.push(parseInt($(this).val()));
+        });
+    
+        console.log('Items seleccionados:', arrcheckedProd);
+    
+        // Validar selección
+        if (arrcheckedProd.length === 0) {
+            $.alert({
+                title: 'Advertencia',
+                content: 'Debe seleccionar al menos un ítem para contabilizar',
+                type: 'orange',
+                theme: 'modern'
+            });
+            return;
+        }
+    
+        var data = JSON.stringify({
+            id: id,
+            usuario: user,
+            arrcheckedProd: arrcheckedProd
+        });
+    
+        console.log('Datos a enviar:', data);
+    
+        var token = '{{csrf_token}}';
+        $.confirm({
+            theme: 'modern',
+            title: 'Confirmación',
+            columnClass: 'medium',
+            icon: 'fas fa-check',
+            type: 'green',
+            content: '¿Desea contabilizar la Solicitud de Compra N°: ' + id + '?',
+            buttons: {
+                confirm: function () {
+                    abrir_modal_cargar();
+                    $.ajax({
+                        headers: { "X-CSRFToken": token },
+                        type: "POST",
+                        url: "/erp/solicitud/contabilizar/" + id,
+                        data: data,
+                        contentType: 'application/json',
+                        success: function (response) {
+                            if (response === "OK") {
+                                $.confirm({
+                                    title: 'Éxito',
+                                    content: 'La solicitud ha sido contabilizada exitosamente.',
+                                    type: 'green',
+                                    theme: 'modern',
+                                    buttons: {
+                                        confirm: function () {
+                                            $('#modalCarga').modal('hide');
+                                            location.reload(true);
+                                        },
+                                    }
+                                });
+                            } else {
+                                $.alert({
+                                    title: 'Error',
+                                    icon: 'fa fa-times-circle',
+                                    theme: 'modern',
+                                    type: 'red',
+                                    content: "Error Intentado Cambiar Estado a Cliente",
+                                    buttons: {
+                                        ok: function () {
+                                            text: 'OK';
+                                            btnClass: 'btn-danger'
+                                            $('#modalCarga').modal('hide');
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrow) {
+                            console.log(textStatus, errorThrow, jqXHR);
+                        }
+                    });
+                },
+                cancel: function () {},
             }
         });
     }

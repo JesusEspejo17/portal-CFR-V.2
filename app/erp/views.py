@@ -298,18 +298,21 @@ def obtener_numero_serie(request):
         return JsonResponse({'error': 'Nombre de impuesto no proporcionado'}, status=400)
 
 class ListLogistica(ValidatePermissionRequiredMixin2, ListView):
-    model: OPRQ
+    model = OPRQ
     template_name = 'VistaLogistica/vistaLogistica.html'
     required_groups = 'Jefe_Logistica'
+
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         socioNegocio = OCRD.objects.all()
         contexto = {
             'socio_negocio': socioNegocio,
         }
         return render(request, self.template_name, contexto)
+
     def post(self, request, *args, **kwargs):
         data = {}
         try:
@@ -317,39 +320,190 @@ class ListLogistica(ValidatePermissionRequiredMixin2, ListView):
             if action == "searchSolicitudes":
                 data = []
                 user = self.request.user
-                solicitudes = OPRQ.objects.filter(DocStatus='C', TipoDoc='SOL').order_by('DocEntry')       
-                for i in solicitudes:
-                    data.append(i.toJSON())
+                solicitudes = OPRQ.objects.filter(DocStatus__in=['C', 'CP'], TipoDoc='SOL').order_by('DocEntry')
+                for solicitud in solicitudes:
+                    # Verificar si la solicitud tiene detalles en LineStatus 'L'
+                    if PRQ1.objects.filter(NumDoc=solicitud.pk, LineStatus='L').exists():
+                        data.append(solicitud.toJSON())
             elif action == "showDetails":
                 data = []
-                for i in PRQ1.objects.filter(NumDoc=request.POST['id'], LineStatus='A'):  # Filtro por LineStatus
-                    data.append(i.toJSON())
+                for detalle in PRQ1.objects.filter(NumDoc=request.POST['id'], LineStatus='L'):
+                    data.append(detalle.toJSON())
             elif action == "getDetails":
                 data = []
-                for i in PRQ1.objects.filter(NumDoc=request.POST['code'], LineStatus='A'):  # Filtro por LineStatus
-                    data.append(i.toJSON())
+                for detalle in PRQ1.objects.filter(NumDoc=request.POST['code'], LineStatus='L'):
+                    data.append(detalle.toJSON())
             else:
                 data['error'] = 'Ha ocurrido un error'
         except Exception as e:
             data['error'] = str(e)
         return JsonResponse(data, safe=False)
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Listado de Solicitudes'
         context['entity'] = 'OPRQ'
         return context
-    
+
     def get_queryset(self):
         return OPRQ.objects.order_by('DocNum')
 
+# class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
+#     model: OPRQ
+#     template_name = 'SolicitudCompra/listar_solicitud_compra.html'
+#     required_groups = ['Empleado', 'Validador', 'Jefe_De_Area', 'Jefe_de_Presupuestos']
+#     @method_decorator(csrf_exempt)
+#     def dispatch(self, request, *args, **kwargs):
+#         return super().dispatch(request, *args, **kwargs)
+#     def post(self, request, *args, **kwargs):
+#         data = {}
+#         try:
+#             action = request.POST['action']
+#             if action == "searchSolicitudes":
+#                 estado = request.POST['estado']
+#                 data = []
+#                 user = self.request.user
+#                 if user.groups.filter(name__in=['Administrador', 'Validador']).exists():
+#                     if estado == '0':
+#                         solicitudes = OPRQ.objects.order_by('DocEntry')
+#                     else:
+#                         solicitudes = OPRQ.objects.filter(DocStatus=estado).order_by('DocEntry')
+#                 elif user.groups.filter(name__in=['Jefe_De_Area']).exists():
+#                     depto = Departamento.objects.get(Name=user.departamento)
+#                     if estado == '0':
+#                         solicitudes = OPRQ.objects.filter(Department=depto.Code).order_by('DocEntry')
+#                     else:
+#                         solicitudes = OPRQ.objects.filter(DocStatus=estado).filter(Department=depto.Code).order_by('DocEntry')
+#                 elif user.groups.filter(name__in=['Empleado']).exists():
+#                     if estado == '0':
+#                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).order_by('DocEntry')
+#                     else:
+#                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).filter(DocStatus=estado).order_by('DocEntry')
+#                 elif user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
+#                     solicitudes = OPRQ.objects.filter(DocStatus='A').order_by('DocEntry')          
+#                 for i in solicitudes:
+#                     data.append(i.toJSON())
+#             elif action == "showDetails":
+#                 data = []
+#                 for i in PRQ1.objects.filter(NumDoc=request.POST['id']):
+#                     data.append(i.toJSON())
+#             elif action=="getDetails":
+#                 data = []
+#                 for i in PRQ1.objects.filter(NumDoc=request.POST['code']):
+#                     data.append(i.toJSON())
+#             else:
+#                 data['error'] = 'Ha ocurrido un error'
+#         except Exception as e:
+#             data['error'] = {{str(e)}}
+#         return JsonResponse(data, safe=False)
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['title'] = 'Listado de Solicitudes'
+#         context['entity'] = 'OPRQ'
+#         context['edition_permissions'] = self.request.user.has_perm('erp.change_oprq')
+#         return context
+    
+#     def get_queryset(self):
+#         return OPRQ.objects.order_by('DocNum')
+    
+# @login_required
+# def get_user_groups(request):
+#     if request.user.is_authenticated:
+#         user_groups = list(request.user.groups.values_list('name', flat=True))
+#         return JsonResponse(user_groups, safe=False)
+#     else:
+#         return JsonResponse({'error': 'User not authenticated'}, status=401)
+
+##ULTIMO LIST ANTES DE MODIFICACION DE NO LISTARSE C
+# class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
+#     model = OPRQ
+#     template_name = 'SolicitudCompra/listar_solicitud_compra.html'
+#     required_groups = ['Empleado', 'Validador', 'Jefe_De_Area', 'Jefe_de_Presupuestos']
+
+#     @method_decorator(csrf_exempt)
+#     def dispatch(self, request, *args, **kwargs):
+#         return super().dispatch(request, *args, **kwargs)
+
+#     def post(self, request, *args, **kwargs):
+#         data = {}
+#         try:
+#             action = request.POST['action']
+#             if action == "searchSolicitudes":
+#                 estado = request.POST['estado']
+#                 data = []
+#                 user = self.request.user
+#                 if user.groups.filter(name__in=['Administrador', 'Validador']).exists():
+#                     if estado == '0':
+#                         solicitudes = OPRQ.objects.order_by('DocEntry')
+#                     else:
+#                         solicitudes = OPRQ.objects.filter(DocStatus=estado).order_by('DocEntry')
+#                 elif user.groups.filter(name__in=['Jefe_De_Area']).exists():
+#                     depto = Departamento.objects.get(Name=user.departamento)
+#                     if estado == '0':
+#                         solicitudes = OPRQ.objects.filter(Department=depto.Code).order_by('DocEntry')
+#                     else:
+#                         solicitudes = OPRQ.objects.filter(DocStatus=estado).filter(Department=depto.Code).order_by('DocEntry')
+#                 elif user.groups.filter(name__in=['Empleado']).exists():
+#                     if estado == '0':
+#                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).order_by('DocEntry')
+#                     else:
+#                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).filter(DocStatus=estado).order_by('DocEntry')
+#                 elif user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
+#                     solicitudes = OPRQ.objects.filter(DocStatus__in=['A', 'C', 'CP']).order_by('DocEntry')  # Filtrar por 'A', 'C', 'CP'
+#                 for i in solicitudes:
+#                     data.append(i.toJSON())
+#             elif action == "showDetails":
+#                 data = []
+#                 user = self.request.user
+#                 if user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
+#                     for i in PRQ1.objects.filter(NumDoc=request.POST['id'], LineStatus='A'):  # Filtrar por LineStatus 'A'
+#                         data.append(i.toJSON())
+#                 else:
+#                     for i in PRQ1.objects.filter(NumDoc=request.POST['id']):
+#                         data.append(i.toJSON())
+#             elif action == "getDetails":
+#                 data = []
+#                 user = self.request.user
+#                 if user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
+#                     for i in PRQ1.objects.filter(NumDoc=request.POST['code'], LineStatus='A'):  # Filtrar por LineStatus 'A'
+#                         data.append(i.toJSON())
+#                 else:
+#                     for i in PRQ1.objects.filter(NumDoc=request.POST['code']):
+#                         data.append(i.toJSON())
+#             else:
+#                 data['error'] = 'Ha ocurrido un error'
+#         except Exception as e:
+#             data['error'] = str(e)
+#         return JsonResponse(data, safe=False)
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['title'] = 'Listado de Solicitudes'
+#         context['entity'] = 'OPRQ'
+#         context['edition_permissions'] = self.request.user.has_perm('erp.change_oprq')
+#         return context
+
+#     def get_queryset(self):
+#         return OPRQ.objects.order_by('DocNum')
+
+# @login_required
+# def get_user_groups(request):
+#     if request.user.is_authenticated:
+#         user_groups = list(request.user.groups.values_list('name', flat=True))
+#         return JsonResponse(user_groups, safe=False)
+#     else:
+#         return JsonResponse({'error': 'User not authenticated'}, status=401)
+
 class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
-    model: OPRQ
+    model = OPRQ
     template_name = 'SolicitudCompra/listar_solicitud_compra.html'
     required_groups = ['Empleado', 'Validador', 'Jefe_De_Area', 'Jefe_de_Presupuestos']
+
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         data = {}
         try:
@@ -375,21 +529,31 @@ class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
                     else:
                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).filter(DocStatus=estado).order_by('DocEntry')
                 elif user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
-                    solicitudes = OPRQ.objects.filter(DocStatus='A').order_by('DocEntry')          
+                    solicitudes = OPRQ.objects.filter(DocStatus__in=['A', 'CP']).order_by('DocEntry')  # Filtrar por 'A' y 'CP'
                 for i in solicitudes:
                     data.append(i.toJSON())
             elif action == "showDetails":
                 data = []
-                for i in PRQ1.objects.filter(NumDoc=request.POST['id']):
-                    data.append(i.toJSON())
-            elif action=="getDetails":
+                user = self.request.user
+                if user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
+                    for i in PRQ1.objects.filter(NumDoc=request.POST['id'], LineStatus='A'):  # Filtrar por LineStatus 'A'
+                        data.append(i.toJSON())
+                else:
+                    for i in PRQ1.objects.filter(NumDoc=request.POST['id']):
+                        data.append(i.toJSON())
+            elif action == "getDetails":
                 data = []
-                for i in PRQ1.objects.filter(NumDoc=request.POST['code']):
-                    data.append(i.toJSON())
+                user = self.request.user
+                if user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
+                    for i in PRQ1.objects.filter(NumDoc=request.POST['code'], LineStatus='A'):  # Filtrar por LineStatus 'A'
+                        data.append(i.toJSON())
+                else:
+                    for i in PRQ1.objects.filter(NumDoc=request.POST['code']):
+                        data.append(i.toJSON())
             else:
                 data['error'] = 'Ha ocurrido un error'
         except Exception as e:
-            data['error'] = {{str(e)}}
+            data['error'] = str(e)
         return JsonResponse(data, safe=False)
 
     def get_context_data(self, **kwargs):
@@ -398,10 +562,10 @@ class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
         context['entity'] = 'OPRQ'
         context['edition_permissions'] = self.request.user.has_perm('erp.change_oprq')
         return context
-    
+
     def get_queryset(self):
         return OPRQ.objects.order_by('DocNum')
-    
+
 @login_required
 def get_user_groups(request):
     if request.user.is_authenticated:
@@ -409,27 +573,121 @@ def get_user_groups(request):
         return JsonResponse(user_groups, safe=False)
     else:
         return JsonResponse({'error': 'User not authenticated'}, status=401)
+
+
     
-def solicitudContabilizar(request,id):
-    Solicitud = OPRQ.objects.filter(pk=id)
-    if request.method=="POST":
+# def solicitudContabilizar(request,id):
+#     Solicitud = OPRQ.objects.filter(pk=id)
+#     if request.method=="POST":
+#         try:
+#             if Solicitud:
+#                 validate = Validaciones()
+#                 Solicitud.update(DocStatus="C")
+#                 data = json.loads(request.body)
+#                 usuario = data.get('usuario', None)
+#                 validate.codReqUser = usuario
+#                 validate.codValidador = request.user.username
+#                 validate.fecha = timezone.now()
+#                 validate.estado = "Contabilizado"
+#                 validate.save()
+#                 send_email_to_user(1)
+#                 return HttpResponse("OK")
+#         except Exception as e:
+#             msg = f"Error al insertar datos maestros: {str(e)}"
+#             return JsonResponse({'error': msg}, status=500)
+#     return JsonResponse({'error': 'Metodo no permitido'}, status=405)
+
+##CONTABILIZAR FALTA FUNCION ACTUALIZAR A C
+# def solicitudContabilizar(request, id):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             usuario = data.get('usuario', None)
+#             items_contabilizados = data.get('arrcheckedProd', [])
+            
+#             if not items_contabilizados:
+#                 return JsonResponse({'error': 'Debe seleccionar al menos un item para contabilizar'}, status=400)
+
+#             solicitud = OPRQ.objects.filter(pk=id).first()
+#             if not solicitud:
+#                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
+#             with transaction.atomic():
+#                 # Actualizar items seleccionados a 'L'
+#                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_contabilizados)
+#                 detalles_actualizados = detalles.update(LineStatus='L')
+
+#                 # Verificar si todos los detalles están en 'L'
+#                 todos_contabilizados = not PRQ1.objects.filter(NumDoc=id).exclude(LineStatus='L').exists()
+                
+#                 if todos_contabilizados:
+#                     OPRQ.objects.filter(pk=id).update(DocStatus="C")
+#                 else:
+#                     OPRQ.objects.filter(pk=id).update(DocStatus="CP")
+
+#                 validate = Validaciones()
+#                 validate.codReqUser = usuario
+#                 validate.codValidador = request.user.username
+#                 validate.fecha = timezone.now()
+#                 validate.estado = "Contabilizado"
+#                 validate.save()
+                
+#                 send_email_to_user(1)
+#                 return HttpResponse("OK")
+
+#         except Exception as e:
+#             msg = f"Error al insertar datos maestros: {str(e)}"
+#             return JsonResponse({'error': msg}, status=500)
+            
+#     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+def solicitudContabilizar(request, id):
+    if request.method == "POST":
         try:
-            if Solicitud:
+            data = json.loads(request.body)
+            usuario = data.get('usuario', None)
+            items_contabilizados = data.get('arrcheckedProd', [])
+            
+            if not items_contabilizados:
+                return JsonResponse({'error': 'Debe seleccionar al menos un item para contabilizar'}, status=400)
+
+            solicitud = OPRQ.objects.filter(pk=id).first()
+            if not solicitud:
+                return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
+            with transaction.atomic():
+                # Actualizar items seleccionados a 'L'
+                detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_contabilizados)
+                detalles_actualizados = detalles.update(LineStatus='L')
+
+                # Verificar si todos los detalles están en 'L'
+                todos_contabilizados = not PRQ1.objects.filter(NumDoc=id).exclude(LineStatus='L').exists()
+                
+                if todos_contabilizados:
+                    OPRQ.objects.filter(pk=id).update(DocStatus="C")
+                else:
+                    OPRQ.objects.filter(pk=id).update(DocStatus="CP")
+
+                # Verificar si todos los detalles están contabilizados y no hay detalles pendientes
+                detalles_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus__in=['A', 'P']).exists()
+                if not detalles_pendientes:
+                    OPRQ.objects.filter(pk=id).update(DocStatus="C")
+
                 validate = Validaciones()
-                Solicitud.update(DocStatus="C")
-                data = json.loads(request.body)
-                usuario = data.get('usuario', None)
                 validate.codReqUser = usuario
                 validate.codValidador = request.user.username
                 validate.fecha = timezone.now()
                 validate.estado = "Contabilizado"
                 validate.save()
+                
                 send_email_to_user(1)
                 return HttpResponse("OK")
+
         except Exception as e:
             msg = f"Error al insertar datos maestros: {str(e)}"
             return JsonResponse({'error': msg}, status=500)
-    return JsonResponse({'error': 'Metodo no permitido'}, status=405)
+            
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 def solicitudContabilizarMasivo(request):
     if request.method == "POST":
@@ -548,7 +806,8 @@ def solicitudRechazarMasivo(request):
             msg = f"Error al insertar datos maestros: {str(e)}"
             return JsonResponse({'error': msg}, status=500)
     return JsonResponse({'error': 'Metodo no permitido'}, status=405)
-    
+
+#CODIGO ORIGINAL
 def solicitudAprobar(request,id):
     if request.method=="POST":
         try:
@@ -601,37 +860,142 @@ def solicitudAprobar(request,id):
     return JsonResponse({'error': 'Metodo no permitido'}, status=405)
 
 
-def solicitudRechazar(request,id):
-    if request.method=="POST":
+# def solicitudRechazar(request, id):
+#     print("----- Inicio de solicitudRechazar -----")
+#     if request.method == "POST":
+#         try:
+#             print(f"  Método: POST")
+#             data = json.loads(request.body)
+#             print(f"  Datos recibidos: {data}")
+#             usuario = data.get('usuario', None)
+#             print(f"  Usuario: {usuario}")
+
+#             Solicitud = OPRQ.objects.filter(pk=id)
+#             print(f"  Solicitud encontrada (pk={id}): {Solicitud.exists()}")
+#             if not Solicitud:
+#                 print(f"  ERROR: Solicitud no encontrada (pk={id})")
+#                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
+#             with transaction.atomic():
+#                 detalles = PRQ1.objects.filter(NumDoc=id)
+#                 print(f"  Detalles encontrados para la solicitud (NumDoc={id}): {detalles.count()}")
+#                 if detalles.exists():
+#                     for i, detalle in enumerate(detalles):
+#                         print(f"    Detalle {i+1}:")
+#                         print(f"      Code: {detalle.Code}")
+#                         print(f"      LineStatus actual: {detalle.LineStatus}")
+#                         detalle.LineStatus = 'R'
+#                         detalle.save()
+#                         print(f"      LineStatus actualizado a: 'R'")
+#                 else:
+#                     print(f"  ERROR: No se encontraron detalles para la solicitud (NumDoc={id})")
+#                     return JsonResponse({'error': 'Detalle no encontrado'}, status=404)
+
+#                 validate = Validaciones()
+#                 Solicitud.update(DocStatus="R")
+#                 print(f"  DocStatus de la solicitud actualizado a: 'R'")
+                
+#                 validate.codReqUser = usuario
+#                 validate.codValidador = request.user.username
+#                 validate.fecha = timezone.now()
+#                 validate.estado = "Rechazado"
+#                 validate.save()
+#                 send_email_to_user(0)
+#                 print("----- Fin de solicitudRechazar (éxito) -----")
+#                 return HttpResponse("OK")
+#         except Exception as e:
+#             msg = f"Error al insertar datos maestros: {str(e)}"
+#             print(f"  ERROR: {msg}")
+#             return JsonResponse({'error': msg}, status=500)
+#     else:
+#         print("  Método no permitido (no es POST)")
+#     print("----- Fin de solicitudRechazar (error) -----")
+#     return JsonResponse({'error': 'Metodo no permitido'}, status=405)
+
+#FUNCIONA CON INSOMNIA
+# def solicitudRechazar(request, id):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             usuario = data.get('usuario', None)
+#             items_rechazados = data.get('arrcheckedProd', [])
+            
+#             # Validar que haya items seleccionados
+#             if not items_rechazados:
+#                 return JsonResponse({'error': 'Debe seleccionar al menos un item para rechazar'}, status=400)
+
+#             solicitud = OPRQ.objects.filter(pk=id).first()
+#             if not solicitud:
+#                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
+#             with transaction.atomic():
+#                 # Actualizar solo los items seleccionados
+#                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
+#                 detalles.update(LineStatus='R')
+
+#                 # Verificar si quedan líneas pendientes
+#                 lineas_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                
+#                 # Actualizar DocStatus solo si no quedan líneas pendientes
+#                 if not lineas_pendientes:
+#                     OPRQ.objects.filter(pk=id).update(DocStatus="R")
+
+#                 validate = Validaciones()
+#                 validate.codReqUser = usuario
+#                 validate.codValidador = request.user.username
+#                 validate.fecha = timezone.now()
+#                 validate.estado = "Rechazado"
+#                 validate.save()
+                
+#                 send_email_to_user(0)
+#                 return HttpResponse("OK")
+
+#         except Exception as e:
+#             msg = f"Error al insertar datos maestros: {str(e)}"
+#             return JsonResponse({'error': msg}, status=500)
+            
+#     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+def solicitudRechazar(request, id):
+    if request.method == "POST":
         try:
             data = json.loads(request.body)
             usuario = data.get('usuario', None)
-            Solicitud = OPRQ.objects.filter(pk=id)
-            if not Solicitud:
+            items_rechazados = data.get('arrcheckedProd', [])
+            
+            if not items_rechazados:
+                return JsonResponse({'error': 'Debe seleccionar al menos un item para rechazar'}, status=400)
+
+            solicitud = OPRQ.objects.filter(pk=id).first()
+            if not solicitud:
                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
             with transaction.atomic():
-                detalles = PRQ1.objects.filter(NumDoc=id)
-                if detalles.exists():
-                    for detalle in detalles:
-                        detalle.LineStatus = 'R'
-                        detalle.save()
-                else:
-                    return JsonResponse({'error': 'Detalle no encontrado'}, status=404)
+                # Actualizar items seleccionados
+                detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
+                detalles_actualizados = detalles.update(LineStatus='R')
+
+                # Verificar líneas pendientes
+                lineas_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                
+                if not lineas_pendientes:
+                    OPRQ.objects.filter(pk=id).update(DocStatus="R")
+
                 validate = Validaciones()
-                Solicitud.update(DocStatus="R")
-                data = json.loads(request.body)
-                usuario = data.get('usuario', None)
-                validate.codReqUser = usuario
+                validate.codReqUser  = usuario
                 validate.codValidador = request.user.username
                 validate.fecha = timezone.now()
                 validate.estado = "Rechazado"
                 validate.save()
+                
                 send_email_to_user(0)
                 return HttpResponse("OK")
+
         except Exception as e:
             msg = f"Error al insertar datos maestros: {str(e)}"
             return JsonResponse({'error': msg}, status=500)
-    return JsonResponse({'error': 'Metodo no permitido'}, status=405)
+            
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
 def export_data_as_json(id):

@@ -129,6 +129,11 @@ $(document).ready(function () {
                         $('#solicitud_DocStatus').text('Rechazado por Jefatura');
                     } else if (data.DocStatus === 'C') {
                         $('#solicitud_DocStatus').text('Contabilizado');
+                    } else if (data.DocStatus === 'CP') {
+                        $('#solicitud_DocStatus').text('Contabilizado Parcial');
+                        if ($('#btnAprobar').length && $('#btnRechazar').length) {
+                            disableAndMakeTransparent();
+                        }
                     }
                     else {
                         $('#solicitud_DocStatus').text('No especificado');

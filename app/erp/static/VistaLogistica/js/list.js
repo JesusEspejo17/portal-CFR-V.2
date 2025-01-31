@@ -547,6 +547,11 @@ function mostrarDetallesContabilizados(docNum) {
         if ($('#btnAprobar').length && $('#btnRechazar').length) {
             disableAndMakeTransparent();
         }
+    } else if (data.DocStatus === 'CP') {
+        $('#detallesDocStatus').text('Contabilizado Parcial');
+        if ($('#btnAprobar').length && $('#btnRechazar').length) {
+            disableAndMakeTransparent();
+        }
     }
     else {
         $('#detallesDocStatus').text('No especificado');

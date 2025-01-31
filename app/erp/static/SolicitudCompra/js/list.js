@@ -55,71 +55,6 @@ function updateButtonStates() {
     }
 }
 
-// function setupCheckboxChangeListener() {
-//     $('#tblSolicitudes').on('change', 'input[type="checkbox"]', function () {
-//         updateButtonStates();
-//         var $checkbox = $(this);
-//         var docEntry = $(this).val();
-//         var table = $('#tblSolicitudes').DataTable();
-//         var rowDataC = table.row($checkbox.closest('tr')).data();
-
-//         if ($(this).is(':checked')) {
-//             $.ajax({
-//                 url: window.location.pathname,
-//                 type: 'POST',
-//                 data: {
-//                     'action': 'getDetails',
-//                     'code': rowDataC.DocEntry
-//                 },
-//                 dataSrc: "",
-//                 // success: function (response) {
-//                 //     for (var j = 0; j < response.length; j++) {
-//                 //         checkedProd.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
-//                 //     }
-//                 // },
-//                 success: function (response) {
-//                     for (var j = 0; j < response.length; j++) {
-//                         if (rowDataC.DocType === 'S') {
-//                             checkedServ.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
-//                         } else {
-//                             checkedProd.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
-//                         }
-//                     }
-//                 },
-//                 error: function (xhr, status, error) {
-//                     // Maneja cualquier error aquí
-//                     console.error('Error en la solicitud:', status, error);
-//                 }
-//             });
-//         } else {
-//             $.ajax({
-//                 url: window.location.pathname,
-//                 type: 'POST',
-//                 data: {
-//                     'action': 'getDetails',
-//                     'code': rowDataC.DocEntry
-//                 },
-//                 dataSrc: "",
-//                 success: function (response) {
-//                     for (var j = 0; j < response.length; j++) {
-//                         var index = checkedProd.findIndex(function (item) {
-//                             return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
-//                         });
-//                         if (index !== -1) {
-//                             checkedProd.splice(index, 1);
-//                         }
-//                     }
-//                 },
-//                 error: function (xhr, status, error) {
-//                     // Maneja cualquier error aquí
-//                     console.error('Error en la solicitud:', status, error);
-//                 }
-//             });
-//         }
-
-//     });
-// }
-
 function setupCheckboxChangeListener() {
     $('#tblSolicitudes').on('change', 'input[type="checkbox"]', function () {
         updateButtonStates();
@@ -379,6 +314,9 @@ $(function initializeDataTable() {
                     } else if (status == 'C') {
                         badgeClass = 'badge-success';
                         statusText = 'Contabilizado';
+                    } else if (status == 'CP') {
+                        badgeClass = 'badge-success';
+                        statusText = 'Contabilizado Parcial';
                     }
 
                     return '<span class="badge ' + badgeClass + '">' + statusText + '</span>';
@@ -465,6 +403,11 @@ function mostrarDetalles(docNum) {
         }
     } else if (data.DocStatus === 'C') {
         $('#detallesDocStatus').text('Contabilizado');
+        if ($('#btnAprobar').length && $('#btnRechazar').length) {
+            disableAndMakeTransparent();
+        }
+    } else if (data.DocStatus === 'CP') {
+        $('#detallesDocStatus').text('Contabilizado Parcial');
         if ($('#btnAprobar').length && $('#btnRechazar').length) {
             disableAndMakeTransparent();
         }
@@ -574,16 +517,19 @@ function tablaDetalleServicio(docNum) {
                     // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
                     if (isHeadofBudget) {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
-                        return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+                        //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+                        return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                     }
 
                     // Para otros roles, mantener la lógica existente
                     if (row.LineStatus === 'P') {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
                     } else {
-                        return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
+                        //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
+                        return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                     }
-                    return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+                    //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+                    return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                 }
             }
         ],
@@ -727,19 +673,21 @@ function tablaDetalleProducto(docNum) {
                     var checked = '';
                     var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
 
+                    //AGREGUE NAME Y VALUE A LOS TRES CHECKBOX, FALTA SERVICIO
+
                     // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
                     if (isHeadofBudget) {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
-                        return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+                        return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                     }
 
                     // Para otros roles, mantener la lógica existente
                     if (row.LineStatus === 'P') {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
                     } else {
-                        return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
+                        return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                     }
-                    return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+                    return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                 }
             }
         ],

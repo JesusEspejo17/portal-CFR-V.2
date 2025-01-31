@@ -64,6 +64,9 @@ class Home(LoginRequiredMixin, generic.TemplateView):
             elif ultima_solicitud.DocStatus=='C':
                 estado = "Contabilizado"
                 tipo="success"
+            elif ultima_solicitud.DocStatus=='CP':
+                estado = "Contabilizado Parcial"
+                tipo="success"
             else:
                 estado="No especificado"
                 tipo="secondary"
