@@ -259,6 +259,7 @@ class PRQ1(models.Model):
     LineStatus = models.CharField(max_length=1, default='P',null=True, blank=True)
     Precio = models.FloatField(default=0.0, null=False)
     LineCount = models.IntegerField(default=0)
+    LineCount_Indexado = models.IntegerField(null=True, blank=True)
     
     def __str__(self):
         return self.Code

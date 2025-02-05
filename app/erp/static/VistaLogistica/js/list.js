@@ -73,8 +73,8 @@ function iniciarTabla() {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row, meta) {
-                    if (row.Serie == 75) {
-                        return '<span class="badge badge-black">75 </span> / <span class="badge badge-success"> Primario</span>';
+                    if (row.Serie == 120) {
+                        return '<span class="badge badge-black">120 </span> / <span class="badge badge-success"> Primario</span>';
                     } else {
                         return row.Serie;
                     }
