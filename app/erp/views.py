@@ -1158,7 +1158,8 @@ def solicitudRechazar(request, id):
                 detalles_actualizados = detalles.update(LineStatus='R')
 
                 # Verificar líneas pendientes
-                lineas_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                # lineas_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                lineas_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus__in=['P', 'A']).exists()
                 
                 if not lineas_pendientes:
                     OPRQ.objects.filter(pk=id).update(DocStatus="R")
@@ -1720,11 +1721,11 @@ def guardar_orden_compra_oc(detalles_seleccionados, solicitud, tipo, proveedor):
     solicitudes_actualizadas = set(detalle.NumDoc for detalle in detalles_seleccionados)  # Conjunto de solicitudes únicas
 
     for solicitud in solicitudes_actualizadas:
-        # Verificar si todos los detalles de la solicitud tienen LineStatus 'C'
-        detalles_pendientes = PRQ1.objects.filter(NumDoc=solicitud.DocEntry, LineStatus='L').exists()
+        # Verificar si hay detalles pendientes con LineStatus 'A' o 'L'
+        detalles_pendientes = PRQ1.objects.filter(NumDoc=solicitud.DocEntry, LineStatus__in=['A', 'L']).exists()
 
         if not detalles_pendientes:
-            # Si no hay detalles pendientes, actualizar TipoDoc a 'OC'
+            # Solo actualizar TipoDoc a 'OC' si NO hay detalles pendientes con 'A' o 'L'
             solicitud.TipoDoc = 'OC'
         else:
             # Si hay detalles pendientes, mantener TipoDoc como 'SOL'

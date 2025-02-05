@@ -241,6 +241,19 @@ function tablaSolicitudDetalleProducto(docNum) {
             { data: 'UnidadMedida__Name' },
             { data: 'Almacen__WhsName' },
             { data: 'total' },
+            {
+                data: 'LineStatus',
+                render: function(data, type, row) {
+                    // Cambiar el valor de LineStatus a texto legible
+                    if (data === 'C') {
+                        return 'Cerrado';
+                    } else if (data === 'R') {
+                        return 'Rechazado';
+                    } else {
+                        return data; // Retornar el valor original si no es 'C' ni 'R'
+                    }
+                }
+            },
         ],
         initComplete: function(settings, json) {
             console.log('3. DataTable productos inicializada:', json);
@@ -272,6 +285,19 @@ function tablaSolicitudDetalleServicio(docNum) {
             { data: 'Precio' },
             { data: 'CuentaMayor__AcctName' },
             { data: 'total' },
+            {
+                data: 'LineStatus',
+                render: function(data, type, row) {
+                    // Cambiar el valor de LineStatus a texto legible
+                    if (data === 'C') {
+                        return 'Cerrado';
+                    } else if (data === 'R') {
+                        return 'Rechazado';
+                    } else {
+                        return data; // Retornar el valor original si no es 'C' ni 'R'
+                    }
+                }
+            },
         ],
         initComplete: function(settings, json) {
             console.log('3. DataTable servicios inicializada:', json);
