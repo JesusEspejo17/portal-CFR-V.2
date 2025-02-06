@@ -153,17 +153,22 @@ $(document).ready(function () {
                     if (data.DocType === 'I') {
                         $('#solicitud_DocType').text('Artículo');
                         $('#tblDetallesSolicitudServ').hide();
+                            if ($.fn.DataTable.isDataTable('#tblDetallesSolicitudServ')) {
+                                $('#tblDetallesSolicitudServ').DataTable().destroy();
+                            }
                         $('#tblDetallesSolicitudProd').show();
                         tablaSolicitudDetalleProducto(data.DocNum);
                     } else if (data.DocType === 'S') {
                         $('#solicitud_DocType').text('Servicio');
                         $('#tblDetallesSolicitudProd').hide();
+                            if ($.fn.DataTable.isDataTable('#tblDetallesSolicitudProd')) {
+                                $('#tblDetallesSolicitudProd').DataTable().destroy();
+                            }
                         $('#tblDetallesSolicitudServ').show();
                         tablaSolicitudDetalleServicio(data.DocNum);
                     } else {
                         $('#solicitud_DocType').text('No especificado');
                     }
-                    
                 },
                 error: function(xhr, status, error) {
                     console.error("Error:", error);
@@ -230,6 +235,9 @@ function tablaSolicitudDetalleProducto(docNum) {
             dataSrc: function(json) {
                 console.log('2. Datos recibidos productos:', json);
                 return json;
+            },
+            error: function(xhr, error, thrown) {
+                console.error('Error al cargar datos:', error);
             }
         },
         columns: [
@@ -275,6 +283,9 @@ function tablaSolicitudDetalleServicio(docNum) {
             dataSrc: function(json) {
                 console.log('2. Datos recibidos servicios:', json);
                 return json;
+            },
+            error: function(xhr, error, thrown) {
+                console.error('Error al cargar datos:', error);
             }
         },
         columns: [

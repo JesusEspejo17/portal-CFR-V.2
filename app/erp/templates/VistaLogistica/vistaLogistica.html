@@ -77,7 +77,7 @@
                                         data-placeholder="Seleccione un Proveedor" required data-hide-search="true">
                                         <option></option>
                                         {% for socio in socio_negocio %}
-                                        <option>{{socio.CardName}}</option>
+                                        <option value="{{ socio.CardCode }}">{{ socio.CardName }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
