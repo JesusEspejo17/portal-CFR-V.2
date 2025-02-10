@@ -117,26 +117,24 @@ $(document).ready(function () {
                     
                     // Show solicitud modal with specific IDs
                     $('#modalDetallesSolicitud').modal('show');
-                    
-                    // Use solicitud-specific IDs
-                    $('#solicitud_DocNum').text(data.DocNum);
-                    $('#solicitud_Serie').text(data.Serie);
-                    if (data.DocStatus === 'P') {
-                        $('#solicitud_DocStatus').text('Pendiente');
-                    } else if (data.DocStatus === 'A') {
-                        $('#solicitud_DocStatus').text('Aprobado por Jefatura');
-                    } else if (data.DocStatus === 'R') {
-                        $('#solicitud_DocStatus').text('Rechazado por Jefatura');
-                    } else if (data.DocStatus === 'C') {
-                        $('#solicitud_DocStatus').text('Contabilizado');
-                    } else if (data.DocStatus === 'CP') {
-                        $('#solicitud_DocStatus').text('Contabilizado Parcial');
-                        if ($('#btnAprobar').length && $('#btnRechazar').length) {
-                            disableAndMakeTransparent();
+
+                    if (data.TipoDoc === 'OC') {
+                        $('#solicitud_DocStatus').text('Cerrado');
+                    } else {
+                        if (data.DocStatus === 'P') {
+                            $('#solicitud_DocStatus').text('Pendiente');
+                        } else if (data.DocStatus === 'A') {
+                            $('#solicitud_DocStatus').text('Aprobado por Jefatura');
+                        } else if (data.DocStatus === 'R') {
+                            $('#solicitud_DocStatus').text('Rechazado por Jefatura');
+                        } else if (data.DocStatus === 'C') {
+                            $('#solicitud_DocStatus').text('Contabilizado');
+                        } else if (data.DocStatus === 'CP') {
+                            $('#solicitud_DocStatus').text('Contabilizado Parcial');
+                            if ($('#btnAprobar').length && $('#btnRechazar').length) {
+                                disableAndMakeTransparent();
+                            }
                         }
-                    }
-                    else {
-                        $('#solicitud_DocStatus').text('No especificado');
                     }
                     $('#solicitud_DocDate').text(data.DocDate);
                     $('#solicitud_DocDueDate').text(data.DocDueDate);
@@ -209,7 +207,7 @@ $(document).ready(function () {
                     <td>${detalle.QuantityOCD}</td>
                     <td>${detalle.PrecioOCD}</td>
                     <td>${detalle.TotalOCD}</td>
-                    <td>${detalle.LineStatusOCD}</td>
+                    
                 </tr>
             `;
         });
@@ -254,7 +252,7 @@ function tablaSolicitudDetalleProducto(docNum) {
                 render: function(data, type, row) {
                     // Cambiar el valor de LineStatus a texto legible
                     if (data === 'C') {
-                        return 'Cerrado';
+                        return 'Cerrada';
                     } else if (data === 'R') {
                         return 'Rechazado';
                     } else {
@@ -301,7 +299,7 @@ function tablaSolicitudDetalleServicio(docNum) {
                 render: function(data, type, row) {
                     // Cambiar el valor de LineStatus a texto legible
                     if (data === 'C') {
-                        return 'Cerrado';
+                        return 'Cerrada';
                     } else if (data === 'R') {
                         return 'Rechazado';
                     } else {

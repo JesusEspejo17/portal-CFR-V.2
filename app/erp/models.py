@@ -260,6 +260,8 @@ class PRQ1(models.Model):
     Precio = models.FloatField(default=0.0, null=False)
     LineCount = models.IntegerField(default=0)
     LineCount_Indexado = models.IntegerField(null=True, blank=True)
+    Quantity_rest = models.IntegerField(null=True, blank=True)  # Quitar el default
+    total_rest = models.FloatField(null=True, blank=True)
     
     def __str__(self):
         return self.Code
@@ -268,16 +270,26 @@ class PRQ1(models.Model):
         verbose_name = 'PRQ1'
         
     def save(self, *args, **kwargs):
-        # Si es un nuevo registro (no tiene PK aún), calculamos LineCount
+        # Si es un nuevo registro, inicializar Quantity_rest
+        if not self.pk:  # si es una nueva instancia
+            self.Quantity_rest = int(self.Quantity)  # Convertir a int
+        
+        # Validación para que Quantity_rest no sea negativo
+        if int(self.Quantity_rest) < 0:  # Convertir a int
+            raise ValueError("La cantidad restante no puede ser negativa")
+
+        # Cálculo automático de total_rest
+        self.total_rest = float(self.Precio) * float(self.Quantity_rest)  # Convertir a float
+
+        # Código existente para LineCount
         if not self.pk:
-            # Obtener el último LineCount para el mismo NumDoc_id
             ultimo_line_count = PRQ1.objects.filter(NumDoc=self.NumDoc).order_by('-LineCount').first()
             if ultimo_line_count:
                 self.LineCount = ultimo_line_count.LineCount + 1
             else:
-                self.LineCount = 0  # Si no hay detalles previos, empieza en 0
+                self.LineCount = 0
 
-        super(PRQ1, self).save(*args, **kwargs) # Guarda el objeto PRQ1 normalmente
+        super(PRQ1, self).save(*args, **kwargs)
 
     def toJSON(self):
         item = model_to_dict(self)

@@ -34,9 +34,19 @@
                             </div>
                             {% for group in request.user.groups.all %}
                             {% if group.name != 'Jefe_de_Presupuestos' %}
-                            <div class="col col-sm-6 mt-3" style="text-align: left; display: flex; align-items: center;">
+                            {% comment %} <div class="col col-sm-6 mt-3" style="text-align: left; display: flex; align-items: center;">
                                 <label for="filtrarEstado" class="col-sm-3 col-form-label" style="margin-left: 30%">Filtrar por estado:</label>
                                 <select class="col-sm-6 col-form-label" style="text-align: left;" id="filtrarEstado">
+                                    <option value="0">Todos</option>
+                                    <option value="A">Aprobado</option>
+                                    <option value="P">Pendiente</option>
+                                    <option value="R">Rechazado</option>
+                                    <option value="C">Contabilizado</option>
+                                </select>
+                            </div> {% endcomment %}
+                            <div class="col col-sm-6 mt-3" style="text-align: left; display: flex; align-items: center;">
+                                <label for="filtrarEstado" class="col-sm-3 col-form-label" style="margin-left: 30%">Filtrar por estado:</label>
+                                <select class="col-sm-6 col-form-label" style="text-align: left; display: none;" id="filtrarEstado">
                                     <option value="0">Todos</option>
                                     <option value="A">Aprobado</option>
                                     <option value="P">Pendiente</option>
