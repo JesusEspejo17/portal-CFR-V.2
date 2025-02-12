@@ -1,6 +1,32 @@
 {% extends 'base/base.html' %}
 {% block page_content %}
 <div class="container-fluid">
+  <style>
+  .bg-info {
+      --bs-bg-rgb-color: var(--bs-info-rgb);
+      background-color:rgba(129, 70, 255, 0.44)!important;
+  }
+  .bg-primary {
+    --bs-bg-rgb-color: var(--bs-primary-rgb);
+    background-color:#1b84ff80!important
+  }
+  .bg-success {
+    --bs-bg-rgb-color: var(--bs-success-rgb);
+    background-color: #17c65399!important
+  }
+  .bg-warning {
+    --bs-bg-rgb-color: var(--bs-warning-rgb);
+    background-color:#f6c00091!important
+  }
+  .bg-danger {
+    --bs-bg-rgb-color: var(--bs-danger-rgb);
+    background-color:#f8285ab8!important
+  }
+  .card {
+    --bs-card-bg:rgb(255, 255, 255);
+  }
+  
+</style>
 
   <!-- Page Heading -->
   <h1 class="h3 mb-4 text-gray-800" style="margin-left: 12px;">Bienvenido, {{user.username}} {{user.last_name}}</h1>
@@ -56,7 +82,7 @@
         </div>
       </div>
       <div class="col-lg-6">
-        <div class="card text-white bg-primary mb-4" style="height:90%;">
+        <div class="card text-white bg-primary shadow mb-4" style="height:90%;">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
@@ -73,7 +99,7 @@
     </div>
     <div class="row">
       <div class="col-lg-6">
-        <div class="card text-white bg-info mb-4">
+        <div class="card text-white bg-info shadow mb-4">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
@@ -86,7 +112,7 @@
             </div>
           </div>
         </div>
-        <div class="card text-white bg-warning mb-4">
+        <div class="card text-white bg-warning shadow mb-4">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
@@ -101,7 +127,7 @@
         </div>
       </div>
       <div class="col-lg-6">
-        <div class="card text-white bg-success mb-4">
+        <div class="card text-white bg-success shadow mb-4">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
@@ -114,7 +140,7 @@
             </div>
           </div>
         </div>
-        <div class="card text-white bg-danger mb-4">
+        <div class="card text-white bg-danger shadow mb-4">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">

@@ -3,6 +3,11 @@
 {% load static %}
 {% block head_list %}
     <script src="{% static 'users/js/list.js' %}"></script>
+    <style>
+        .cardusu {
+            --bs-card-bg:rgb(255, 255, 255);
+        }
+    </style>
 {% endblock head_list %}
 
 {% block page_content %}
@@ -10,7 +15,7 @@
         <div class="card-body" style="padding-left: 15px; padding-right: 15px;">
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="card card-primary">
+                    <div class="card cardusu card-primary">
                         <div class="card-header">
                             <h3 class="card-title">
                                 <i class="fas fa-boxes"></i> {{title}}
@@ -19,7 +24,7 @@
                     </div>  
                 </div>
             </div>
-            <div class="card card-secondary">
+            <div class="card cardusu card-secondary">
                 <div class="card-body">
                     <!-- Tabla de usuarios con el estilo avanzado de DOM Positioning -->
                     <table id="tblUsers" class="table table-row-bordered gy-5">

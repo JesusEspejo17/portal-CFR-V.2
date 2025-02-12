@@ -185,6 +185,7 @@ $(function initializeDataTable() {
         columns: [
             { "data": null },
             { "data": null },
+            { "data": "DocNumSAP" },
             { "data": "ReqIdUser" },
             { "data": "DocType" },
             { "data": "moneda" },
@@ -192,7 +193,6 @@ $(function initializeDataTable() {
             { "data": "DocDate" },
             { "data": "DocDueDate" },
             { "data": "DocStatus" },
-            { "data": "Total" },
             { "data": "TotalImp" },
             { "data": null },
             { "data": null },
@@ -237,14 +237,9 @@ $(function initializeDataTable() {
                 },
             },
             {
-                targets: [9],
+                targets: [2],
                 class: "text-center",
-                orderable: false,
-                render: function (data, type, row) {
-                    var value = row.Total;
-                    var sol = 'S/. ';
-                    return sol + value;
-                },
+                orderable: true,
             },
             {
                 targets: [10],
@@ -257,12 +252,12 @@ $(function initializeDataTable() {
                 },
             },
             {
-                targets: [2, 4, 5, 7],
+                targets: [3, 5, 6, 8],
                 class: "text-center",
                 orderable: false,
             },
             {
-                targets: [6],
+                targets: [7],
                 class: "text-center",
                 orderable: true,
             },
@@ -275,14 +270,14 @@ $(function initializeDataTable() {
                 },
             },
             {
-                targets: [-10],
+                targets: [-9],
                 class: "text-center",
                 orderable: true,
                 render: function (data, type, row) {
                     var type = row.DocType;
                     var badgeClass = '';
                     var statusText = '';
-
+        
                     if (type === 'I') {
                         badgeClass = 'badge-dark';
                         statusText = 'Artículo';
@@ -294,14 +289,14 @@ $(function initializeDataTable() {
                 },
             },
             {
-                targets: [-5],
+                targets: [-4],
                 class: "text-center",
                 orderable: true,
                 render: function (data, type, row) {
                     var status = row.DocStatus;
                     var badgeClass = '';
                     var statusText = '';
-
+        
                     if (status === 'P') {
                         badgeClass = 'badge-warning';
                         statusText = 'Pendiente';
@@ -318,7 +313,7 @@ $(function initializeDataTable() {
                         badgeClass = 'badge-success';
                         statusText = 'Contabilizado Parcial';
                     }
-
+        
                     return '<span class="badge ' + badgeClass + '">' + statusText + '</span>';
                 },
             },
@@ -492,6 +487,10 @@ function tablaDetalleServicio(docNum) {
                     return sol + value;
                 },
             },
+            {
+                targets: [5,6],
+                class: "text-center",
+            },
             // {
             //     targets: [-1],
             //     class: "text-center",
@@ -531,7 +530,7 @@ function tablaDetalleServicio(docNum) {
                     //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
                     return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                 }
-            }
+            },
         ],
         createdRow: function (row, data, dataIndex) {
             if (data.LineStatus != 'P') {

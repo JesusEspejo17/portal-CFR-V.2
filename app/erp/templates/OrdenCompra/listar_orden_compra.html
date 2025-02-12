@@ -1,4 +1,4 @@
-{% extends 'base/base.html' %}
+{% extends 'base/base.html'%}
 
 {% load static %}
 {% block head_list %}
@@ -9,40 +9,64 @@
         .fw-bold {
             font-weight: 600 !important;
         }
+        .cardli {
+            --bs-card-bg:rgb(255, 255, 255);
+        }
+        .cardmodaltabla {
+            --bs-card-bg:rgba(255, 255, 255, 0.59);
+        }
+        .text-muteddet{
+            color:rgb(2, 11, 32) !important;
+        }
+        .form-control.form-control-solid {
+            background-color: var(--bs-gray-100);
+            border-color: #1813133d;
+            color: #484a50;
+            transition: color .2s ease;
+            font-weight: 500;
+        }
+        .col-form-label {
+            font-size: 1.05rem;
+            font-weight: 550;
+            color: #000000;
+        }
     </style>
 {% endblock head_list %}
 
 {% block page_content %}
     <form id="OrdenCompra" method="post" style="padding-left: 15px;padding-right: 15px;">
+        {% comment %} <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <input type="hidden" name="action" value="searchdata"> {% endcomment %}
         <div class="card-body">
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="card card-primary">
+                    <div class="card cardli card-primary">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <i class="fas fa-boxes"></i> {{title}}
+                                <i class="fas fa-boxes"></i> {{ title }}
                             </h3>
                         </div>
                     </div>  
                 </div>
             </div>
-            <div class="card card-secondary">
+            <div class="card cardli card-secondary">
                 <div class="card-body">
                     <!-- Tabla de órdenes de compra -->
                     <table id="tblOrdenCompra" class="table table-row-bordered gy-6">
                         <thead>
                             <tr class="fw-bold fs-5 text-gray-800 px-7">
-                                <th style="text-align: center;">#</th>
-                                <th style="text-align: center;">Numero de Documento</th> <!-- Número de Orden de Compra -->
+                                {% comment %} <th style="text-align: center;">#</th> {% endcomment %}
+                                <th style="text-align: center;">Num. Documento</th>
+                                <th style="text-align: center;">Num. SAP</th>
                                 <th style="text-align: center;">Solicitante</th>
                                 <th style="text-align: center;">Tipo Documento</th>
                                 <th style="text-align: center;">Moneda</th>
-                                <th style="text-align: center;">Fecha Emitida</th>
-                                <th style="text-align: center;">Total</th> <!-- Serie de la Orden -->                               
-                                {% comment %} <th>Proveedor</th> <!-- Proveedor de la Orden --> {% endcomment %}
-                                <th style="text-align: center;">Total con Impuestos</th>
-                                <th style="text-align: center;">Acciones</th> <!-- New column -->
-                                {% comment %} <th>Comentarios</th> <!-- Comentarios --> {% endcomment %}
+                                <th style="text-align: center;">Impuesto Adjunto</th>
+                                <th style="text-align: center;">Fecha Aprobada</th>
+                                <th style="text-align: center;">Estado</th>
+                                {% comment %} <th style="text-align: center;">Total</th> {% endcomment %}
+                                <th style="text-align: center;">Monto Total</th>
+                                <th style="text-align: center;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,7 +77,7 @@
         </div>
     </form>
 
-    <!-- Add Modal Structure -->
+    <!-- Modal de Detalles -->
     <div class="modal fade" id="modalDetalles" tabindex="-1" role="dialog" aria-labelledby="modalDetallesLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl" style="max-width: 90%;" role="document">
             <div class="modal-content">
@@ -61,7 +85,6 @@
                     <h5 class="modal-title" id="modalDetallesLabel">Detalles de Orden de Compra: <span class="text" id="idOrden"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
                 <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
                     <div class="card shadow-sm">
                         <div id="kt_card_detalle_orden" class="collapse show">
@@ -81,7 +104,6 @@
                                         <label id="detallesProveedor" class="form-control form-control-solid"></label>
                                     </div>
                                 </div>
-
                                 <!-- Dates -->
                                 <div class="row mb-5">
                                     <div class="col-sm-6">
@@ -93,81 +115,62 @@
                                         <label id="detallesDocDueDate" class="form-control form-control-solid"></label>
                                     </div>
                                 </div>
-
-                                <!-- Quinta fila -->
+                                <!-- Additional Details -->
                                 <div class="row g-5 g-xl-8" style="margin-top: 1px">
                                     <div class="col-sm-4">
                                         <div class="row mb-5">
-                                            <label for="detallesMoneda" id="lblMoneda"
-                                                class="col-sm-3 col-form-label">Moneda:</label>
+                                            <label for="detallesMoneda" id="lblMoneda" class="col-sm-3 col-form-label">Moneda:</label>
                                             <div class="col-sm-9">
-                                                <label type="text" aria-readonly="true" id="detallesMoneda"
-                                                    class="form-control form-control-solid"
-                                                    style="text-align:left;"></label>
+                                                <label id="detallesMoneda" class="form-control form-control-solid"></label>
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="col-sm-4">
                                         <div class="row mb-5">
-                                            <label for="detallesTaxCode" id="lblTaxCode"
-                                                class="col-sm-3 col-form-label">Impuesto:</label>
+                                            <label for="detallesTaxCode" id="lblTaxCode" class="col-sm-3 col-form-label">Impuesto:</label>
                                             <div class="col-sm-9">
-                                                <label type="text" aria-readonly="true" id="detallesTaxCode"
-                                                    class="form-control form-control-solid"
-                                                    style="text-align:left;"></label>
+                                                <label id="detallesTaxCode" class="form-control form-control-solid"></label>
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="col-sm-4">
                                         <div class="row mb-5">
-                                            <label for="detallesDocType" id="lblDocType"
-                                                class="col-sm-3 col-form-label">Tipo:</label>
+                                            <label for="detallesDocType" id="lblDocType" class="col-sm-3 col-form-label">Tipo:</label>
                                             <div class="col-sm-9">
-                                                <label type="text" aria-readonly="true" id="detallesDocType"
-                                                    class="form-control form-control-solid"
-                                                    style="text-align:left;"></label>
+                                                <label id="detallesDocType" class="form-control form-control-solid"></label>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                <div class="row g-5 g-xl-8" style="margin-top: 1px; height: 100%;">
+                                    <div class="col-sm-6 d-flex align-items-center" style="margin: 0;"> <!-- Elimina el margen -->
+                                        <div class="w-100"> <!-- Asegúrate de que el contenido ocupe el ancho completo -->
+                                            <div class="row mb-5">
+                                                <label for="detallesSolicitante" id="lblUser " class="col-sm-5 col-form-label">Solicitante</label>
+                                                <div class="col-sm-7">
+                                                    <label type="text" aria-readonly="true" id="detallesSolicitante"
+                                                        class="form-control form-control-solid" style="text-align:right;"></label>
+                                                </div>
+                                            </div>
 
-                                <!-- Sexta fila - Totales -->
-                                <div class="row g-5 g-xl-8"  style="margin-top: 1px">
-                                    <div class="col-sm-6" style="margin-top: 80px;">
-                                        <div class="row mb-5">
-                                            <label for="detallesSolicitante" id="lblUser"
-                                                class="col-sm-5 col-form-label">Solicitante</label>
-                                            <div class="col-sm-7">
-                                                <label type="text" aria-readonly="true" id="detallesSolicitante"
-                                                    class="form-control form-control-solid"
-                                                    style="text-align:right;"></label>
+                                            <div class="row mb-5">
+                                                <label for="detallesTotal" id="lblTotal" class="col-sm-5 col-form-label">Total:</label>
+                                                <div class="col-sm-7">
+                                                    <label type="text" aria-readonly="true" id="detallesTotal"
+                                                        class="form-control form-control-solid" style="text-align:right;"></label>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-5">
+                                                <label for="detallesTotalImp" id="lblTotalImp" class="col-sm-5 col-form-label">Total con impuestos:</label>
+                                                <div class="col-sm-7">
+                                                    <label type="text" aria-readonly="true" id="detallesTotalImp"
+                                                        class="form-control form-control-solid" style="text-align:right;"></label>
+                                                </div>
                                             </div>
                                         </div>
-
-                                        <div class="row mb-5">
-                                            <label for="detallesTotal" id="lblTotal"
-                                                class="col-sm-5 col-form-label">Total:</label>
-                                            <div class="col-sm-7">
-                                                <label type="text" aria-readonly="true" id="detallesTotal"
-                                                    class="form-control form-control-solid"
-                                                    style="text-align:right;"></label>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-5">
-                                            <label for="detallesTotalImp" id="lblTotalImp"
-                                                class="col-sm-5 col-form-label">Total con impuestos:</label>
-                                            <div class="col-sm-7">
-                                                <label type="text" aria-readonly="true" id="detallesTotalImp"
-                                                    class="form-control form-control-solid"
-                                                    style="text-align:right;"></label>
-                                            </div>
-                                        </div>
-                                        
                                     </div>
-                                    <div class="col-sm-6">
-                                        <div class="card card-xl-stretch mb-5 mb-xl-8">
+                                    <div class="col-sm-6"> <!-- Mantener el ancho original de la columna derecha -->
+                                        <div class="card cardli card-xl-stretch mb-5 mb-xl-8">
                                             <div class="card-header border-0">
                                                 <h3 class="card-title fw-bold text-gray-900">Lista de Solicitudes:</h3>
                                             </div>
@@ -176,13 +179,13 @@
                                             </div>
                                         </div>
                                     </div>
-
+                                </div>
                                 <!-- Details Table -->
-                                <div class="card card-flush mt-6">
+                                <div class="card cardmodaltabla card-flush mt-6">
                                     <div class="card-body">
-                                        <table class="table table-row-bordered" id="tblDetalles">
+                                        <table class="table table-striped" id="tblDetalles">
                                             <thead>
-                                                <tr class="fw-bold text-muted">
+                                                <tr class="fw-bold text-muteddet">
                                                     <th>Cod. Item</th>
                                                     <th>Descripción</th>
                                                     <th>Cantidad</th>
@@ -199,7 +202,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Modal Footer -->
                 <div class="modal-footer">
                     <div class="d-flex justify-content-center gap-2">
@@ -210,5 +212,5 @@
         </div>
     </div>
     {% include 'Partials/_modal_detalles_solicitud.html' %}
+</div>
 {% endblock %}
-

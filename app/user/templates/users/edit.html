@@ -1,9 +1,17 @@
 {% extends 'base/base.html' %}
 
 {% load static %}
+{% block head_list %}
+<script src="{% static 'users/js/list.js' %}"></script>
+<style>
+    .cardusu {
+        --bs-card-bg:rgb(255, 255, 255);
+    }
+</style>
+{% endblock head_list %}
 
 {% block page_content %}
-<div class="card">
+<div class="card cardusu" style="margin-left: 15px;margin-right: 15px;">
     <!--begin::Card header-->
     <div class="card-header border-0 pt-6">
         <div class="card-title">

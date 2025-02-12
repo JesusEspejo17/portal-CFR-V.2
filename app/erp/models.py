@@ -236,6 +236,10 @@ class OPRQ(models.Model):
         item['Department'] = self.Department.Name if self.Department else ''
         item['TaxCode'] = self.TaxCode.Code if self.TaxCode else ''
         item['moneda'] = self.moneda.MonedaAbrev if self.moneda else ''
+        item['DocDate'] = self.DocDate.strftime('%d-%m-%Y') if self.DocDate else None
+        item['DocDueDate'] = self.DocDueDate.strftime('%d-%m-%Y') if self.DocDueDate else None
+        item['ReqDate'] = self.ReqDate.strftime('%d-%m-%Y') if self.ReqDate else None
+        item['SystemDate'] = self.SystemDate.strftime('%d-%m-%Y') if self.SystemDate else None
         if self.DocStatus == 'P':
             item['seleccionable'] = True
         else:
@@ -367,9 +371,9 @@ class OCC(models.Model):
             'SerieOC': self.SerieOC.Nombre if self.SerieOC else None,  # Asegúrate de que 'name' sea un atributo válido
             'SolicitanteOC': self.SolicitanteOC.username,  # O el atributo que desees mostrar
             'DocTypeOC': self.DocTypeOC,
-            'DocDateOC': self.DocDateOC.isoformat(),  # Formato de fecha ISO
-            'DocDueDateOC': self.DocDueDateOC.isoformat(),
-            'SystemDateOC': self.SystemDateOC.isoformat(),
+            'DocDateOC': self.DocDateOC.strftime('%d-%m-%Y'),  # Formato de fecha ISO
+            'DocDueDateOC': self.DocDueDateOC.strftime('%d-%m-%Y'),
+            'SystemDateOC': self.SystemDateOC.strftime('%d-%m-%Y'),
             'ProveedorOC': self.ProveedorOC.CardName if self.ProveedorOC else None,  # Asegúrate de que 'name' sea un atributo válido
             'MonedaOC': self.MonedaOC.MonedaAbrev if self.MonedaOC else None,  # Asegúrate de que 'name' sea un atributo válido
             'TaxCodeOC': self.TaxCodeOC.Code if self.TaxCodeOC else None,  # Asegúrate de que 'code' sea un atributo válido

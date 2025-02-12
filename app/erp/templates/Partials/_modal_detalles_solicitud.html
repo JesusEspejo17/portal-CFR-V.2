@@ -52,7 +52,7 @@
                                 <div class="col-sm-6"  style="margin-top: 27px">
                                     <div class="row mb-5">
                                         <label for="detallesDocDueDate" id="lblDueDate"
-                                            class="col-sm-3 col-form-label d-inline-block" style="width: 167.5px;">Fecha de vencimiento:</label>
+                                            class="col-sm-3 col-form-label d-inline-block" style="width: 169.5px;">Fecha de vencimiento:</label>
                                         {% comment %} <div class="col-sm-9"> {% endcomment %}
                                             <label type="text" aria-readonly="true" id="solicitud_DocDueDate"
                                                 class="form-control form-control-solid"
@@ -158,12 +158,12 @@
                                 </div>
 
                                 <!-- Tabla de detalles -->
-                                <div class="card card-flush mt-6">
+                                <div class="card cardmodaltabla card-flush mt-6">
                                     <div class="card-body">
-                                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3" 
+                                        <table class="table table-striped" 
                                             id="tblDetallesSolicitudProd" style="width: 100%;">
                                             <thead>
-                                                <tr class="fw-bold text-muted">
+                                                <tr class="fw-bold text-muteddet">
                                                     <th>Cod. Item</th>
                                                     <th>LineVendor</th>
                                                     <th>Descripción</th>
@@ -179,10 +179,10 @@
                                             </tbody>
                                         </table>
                                 
-                                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3" 
+                                        <table class="table table-striped" 
                                             id="tblDetallesSolicitudServ" style="width: 100%; display: none;">
                                             <thead>
-                                                <tr class="fw-bold text-muted">
+                                                <tr class="fw-bold text-muteddet">
                                                     <th>Cod. Item</th>
                                                     <th>LineVendor</th>
                                                     <th>Descripción</th>
@@ -232,3 +232,15 @@
                 {% endfor %}
             </div>
         </div>
+
+        <style>
+            .cardmodaltabla {
+                --bs-card-bg:rgb(255, 255, 255);
+            }
+            .text-muteddet{
+                color:rgb(2, 11, 32) !important;
+            }
+            .fs-8 {
+                font-size: 0.95rem !important;
+            }
+        </style>

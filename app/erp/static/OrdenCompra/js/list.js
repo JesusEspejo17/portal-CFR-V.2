@@ -13,23 +13,28 @@ $(document).ready(function () {
             dataSrc: 'data'  // Changed from empty string to 'data'
         },
         columns: [
-            { data: 'position' },
             { data: 'DocNumOC' },
+            { data: 'DocNumSAPOC' },
             { data: 'SolicitanteOC' },
             { data: 'DocTypeOC' },
             { data: 'MonedaOC' },
-            { data: 'DocDateOC' },
-            { data: 'TotalOC' },
+            { data: 'TaxCodeOC' },
+            { data: 'SystemDateOC' },
+            {
+                data: null,
+                defaultContent: '<span class="badge badge-success">Orden de Compra</span>'
+            },
+            
             { data: 'TotalImpuestosOC' },
             {
                 data: null,
                 defaultContent: '<button type="button" class="btn btn-primary btn-sm btn-ver-detalles"><i class="fas fa-eye"></i> Ver</button>'
-            }
+            },
         ],
-        order: [[1, 'desc'], [2, 'asc']],
+        order: [[, '']],
         columnDefs: [
             {
-                targets: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                targets: [0, 1, 2, 3, 4, 5, 6, 7,8,9],
                 class: "text-center",
             },
             {
@@ -53,6 +58,15 @@ $(document).ready(function () {
                     }
                     return '<span class="badge ' + badgeClass + '">' + statusText + '</span>';
                 },
+            },
+            {
+                targets: [8], // Índices de las columnas TotalOC y TotalImpuestosOC
+                render: function (data, type, row) {
+                    if (type === 'display' || type === 'filter') {
+                        return parseFloat(data).toFixed(2); // Formatear a dos decimales
+                    }
+                    return data; // Para otros tipos, devolver el dato sin cambios
+                }
             }
         ],
         dom: "<'row mb-2'"
@@ -85,18 +99,51 @@ $(document).ready(function () {
         var tr = $(this).closest('tr');
         var data = table.row(tr).data();
 
+        // var originsHtml = '';
+        // data.origins.forEach(function(origin) {
+        // originsHtml += `
+        //     <div class="d-flex align-items-center mb-8">
+        //     <div class="flex-grow-1">
+        //         <a class="text-gray-800 text-hover-primary fw-bold fs-6">
+        //         SOLICITUD #${origin.BaseEntryOCD}
+        //         </a>
+        //         <span class="text-muted fw-semibold d-block">${origin.DescriptionOCD}</span>
+        //     </div>
+        //     <a href="#" class="badge badge-primary fs-8 fw-bold">Ver</a>
+        //     </div>`;
+        // });
+        // $('#container-origins').html(originsHtml);
+
+        // Modifica esta parte en el evento click de '.btn-ver-detalles'
         var originsHtml = '';
+        var currentDocNum = null;
+
+        // Ordenar los origins por BaseEntryOCD para agruparlos
+        data.origins.sort((a, b) => a.BaseEntryOCD - b.BaseEntryOCD);
+
         data.origins.forEach(function(origin) {
-        originsHtml += `
-            <div class="d-flex align-items-center mb-8">
-            <div class="flex-grow-1">
-                <a class="text-gray-800 text-hover-primary fw-bold fs-6">
-                SOLICITUD #${origin.BaseEntryOCD}
-                </a>
-                <span class="text-muted fw-semibold d-block">${origin.DescriptionOCD}</span>
-            </div>
-            <a href="#" class="badge badge-primary fs-8 fw-bold">Ver</a>
-            </div>`;
+            if (currentDocNum !== origin.BaseEntryOCD) {
+                // Encabezado de SOLICITUD con el botón Ver alineado a la derecha
+                originsHtml += `
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="text-gray-800 text-hover-primary fw-bold fs-6">
+                            SOLICITUD #${origin.BaseEntryOCD}
+                        </div>
+                        <a href="#" class="badge badge-primary fs-8 fw-bold">Ver</a>
+                    </div>
+                    <div class="mb-3">
+                        <span class="text-muted fw-semibold d-block">${origin.DescriptionOCD}</span>
+                    </div>`;
+                currentDocNum = origin.BaseEntryOCD;
+            } else {
+                // Si es el mismo número de solicitud, solo mostrar la descripción
+                originsHtml += `
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-grow-1"> <!-- Añadimos padding-left para indentar -->
+                            <span class="text-muted fw-semibold d-block">${origin.DescriptionOCD}</span>
+                        </div>
+                    </div>`;
+            }
         });
         $('#container-origins').html(originsHtml);
 
@@ -118,6 +165,9 @@ $(document).ready(function () {
                     // Show solicitud modal with specific IDs
                     $('#modalDetallesSolicitud').modal('show');
 
+                    // Use solicitud-specific IDs
+                    $('#solicitud_DocNum').text(data.DocNum);
+                    $('#solicitud_Serie').text(data.Serie);
                     if (data.TipoDoc === 'OC') {
                         $('#solicitud_DocStatus').text('Cerrado');
                     } else {
@@ -192,8 +242,8 @@ $(document).ready(function () {
         } else {
             $('#detallesDocType').text('No especificado');
         }
-        $('#detallesTotal').text(data.TotalOC);
-        $('#detallesTotalImp').text(data.TotalImpuestosOC);
+        $('#detallesTotal').text(data.TotalOC.toFixed(2));
+        $('#detallesTotalImp').text(data.TotalImpuestosOC.toFixed(2));
         $('#detallesSolicitante').text(data.SolicitanteOC);
     
         // Llenar tabla de detalles con datos de PRQ1, asegúrate de tener estos datos en la respuesta del servidor
@@ -252,11 +302,13 @@ function tablaSolicitudDetalleProducto(docNum) {
                 render: function(data, type, row) {
                     // Cambiar el valor de LineStatus a texto legible
                     if (data === 'C') {
-                        return 'Cerrada';
+                        return 'Cerrado';
                     } else if (data === 'R') {
                         return 'Rechazado';
+                    } else if (data === 'A' || data === 'L') {
+                        return 'Pendiente';
                     } else {
-                        return data; // Retornar el valor original si no es 'C' ni 'R'
+                        return data; // Retornar el valor original si no es 'C', 'R', 'A' ni 'L'
                     }
                 }
             },
@@ -299,11 +351,13 @@ function tablaSolicitudDetalleServicio(docNum) {
                 render: function(data, type, row) {
                     // Cambiar el valor de LineStatus a texto legible
                     if (data === 'C') {
-                        return 'Cerrada';
+                        return 'Cerrado';
                     } else if (data === 'R') {
                         return 'Rechazado';
+                    } else if (data === 'A' || data === 'L') {
+                        return 'Pendiente';
                     } else {
-                        return data; // Retornar el valor original si no es 'C' ni 'R'
+                        return data; // Retornar el valor original si no es 'C', 'R', 'A' ni 'L'
                     }
                 }
             },

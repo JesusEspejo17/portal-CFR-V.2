@@ -11,6 +11,31 @@
         pointer-events: none;
         /* Deshabilitar interacciones con la fila */
     }
+    .cardho {
+        --bs-card-bg:rgb(255, 255, 255);
+    }
+    .cardmodaltabla {
+        --bs-card-bg:rgb(255, 255, 255);
+    }
+    .text-muteddet{
+        color:rgb(2, 11, 32) !important;
+    }
+    .form-check .form-check-input {
+        float: left;
+        margin-left: 0.00rem;
+    }
+    .form-control.form-control-solid {
+        background-color: var(--bs-gray-100);
+        border-color: #1813133d;
+        color: #484a50;
+        transition: color .2s ease;
+        font-weight: 500;
+    }
+    .col-form-label {
+        font-size: 1.05rem;
+        font-weight: 550;
+        color: #000000;
+    }
 </style>
 {% endblock head_list %}
 
@@ -20,7 +45,7 @@
     <div class="card-body" style="padding-left: 15px; padding-right: 15px;padding-bottom: 15px;">
         <div class="row">
             <div class="col-lg-12">
-                <div class="card card-primary">
+                <div class="card cardho card-primary">
                     <div class="card-header">
                         <div class="row col-sm-12 mt-3">
                             <div class="col col-sm-6 mt-3">
@@ -69,13 +94,14 @@
                 </div>
             </div>
         </div>
-        <div class="card card-secondary">
+        <div class="card  cardho card-secondary">
             <div class="card-body">
                 <table class="table table-row-bordered gy-6" id="tblSolicitudes" style="width: 100%;">
                     <thead>
                         <tr>
                             <th scope="col" style="width: 3%; text-align: center;"><strong>#</strong></th>
                             <th scope="col" style="width: 5%; text-align: center;"><strong>Num. Documento</strong></th>
+                            <th scope="col" style="width: 5%; text-align: center;"><strong>Num. SAP</strong></th>
                             <th scope="col" style="width: 13%; text-align: center;"><strong>Solicitante</strong></th>
                             <th scope="col" style="width: 8%; text-align: center;"><strong>Tipo de Solicitud</strong></th>
                             <th scope="col" style="width: 5%; text-align: center;"><strong>Moneda</strong></th>
@@ -83,8 +109,8 @@
                             <th scope="col" style="width: 10%; text-align: center;"><strong>Fecha de registro</strong></th>
                             <th scope="col" style="width: 10%; text-align: center;"><strong>Fecha de vencimiento</strong></th>
                             <th scope="col" style="width: 10%; text-align: center;"><strong>Estado</strong></th>
+                            {% comment %} <th scope="col" style="width: 11%; text-align: center;"><strong>Total</strong></th> {% endcomment %}
                             <th scope="col" style="width: 11%; text-align: center;"><strong>Total</strong></th>
-                            <th scope="col" style="width: 11%; text-align: center;"><strong>Total con impuestos</strong></th>
                             <th scope="col" style="width: 4%; text-align: center;"><strong>Seleccionar</strong></th>
                             <th scope="col" style="width: 5%; text-align: center;"><strong>Procesar</strong></th>
                         </tr>
@@ -173,7 +199,7 @@
                                 <div class="col-sm-6"  style="margin-top: 27px">
                                     <div class="row mb-5">
                                         <label for="detallesDocDueDate" id="lblDueDate"
-                                            class="col-sm-3 col-form-label d-inline-block" style="width: 167.5px;">Fecha de vencimiento:</label>
+                                            class="col-sm-3 col-form-label d-inline-block" style="width: 169.5px;">Fecha de vencimiento:</label>
                                         {% comment %} <div class="col-sm-9"> {% endcomment %}
                                             <label type="text" aria-readonly="true" id="detallesDocDueDate"
                                                 class="form-control form-control-solid"
@@ -279,12 +305,12 @@
                                 </div>
 
                                 <!-- Tabla de detalles -->
-                                <div class="card card-flush mt-6">
+                                <div class="card cardmodaltabla card-flush mt-6">
                                     <div class="card-body">
-                                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3" 
+                                        <table class="table table-striped" 
                                             id="tblDetallesProd" style="width: 100%;">
                                             <thead>
-                                                <tr class="fw-bold text-muted">
+                                                <tr class="fw-bold text-muteddet">
                                                     <th>Cod. Item</th>
                                                     <th>LineVendor</th>
                                                     <th>Descripción</th>
@@ -300,17 +326,17 @@
                                             </tbody>
                                         </table>
 
-                                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3" 
+                                        <table class="table table-striped" 
                                             id="tblDetallesServ" style="width: 100%; display: none;">
                                             <thead>
-                                                <tr class="fw-bold text-muted">
+                                                <tr class="fw-bold text-muteddet">
                                                     <th>Cod. Item</th>
                                                     <th>LineVendor</th>
                                                     <th>Descripción</th>
                                                     <th>Cantidad</th>
                                                     <th>Precio</th>
-                                                    <th>Cuenta Mayor</th>
-                                                    <th>Total</th>
+                                                    <th style="text-align: center;">Cuenta Mayor</th>
+                                                    <th style="text-align: center;">Total</th>
                                                     <th>Seleccionar</th>
                                                 </tr>
                                             </thead>
@@ -353,6 +379,7 @@
                 {% endfor %}
             </div>
         </div>
+    </div>
 
     <div class="modal fade" id="modalCarga" tabindex="-1" role="dialog"
         style="padding-top: 340px; padding-left: 150px; text-align: center;" aria-labelledby="modalDetallesLabel"

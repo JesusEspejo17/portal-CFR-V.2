@@ -2,6 +2,33 @@
 {% load static %}
 
 {% block head_list %}
+<style>
+    .card {
+        --bs-card-bg:rgba(255, 255, 255, 0.9)!important;
+    }
+    .form-control.form-control-solid {
+        background-color: #f0f0f0ad;
+        border-color:rgb(127 119 119 / 46%);
+        color: #858892f0;
+        transition: color .2s ease;
+        font-weight: 450;
+    }
+    .form-control.form-control-solidS {
+        background-color: #ffffff;
+        border-color: rgb(127 119 119 / 46%);
+        color:rgba(133, 136, 146, 0.99);
+        transition: color .2s ease;
+        font-weight: 450;
+    }
+    label {
+        display: inline-block;
+        font-size: 13px; /* Ajusta el tamaño de la fuente según sea necesario */
+        font-weight: 600; /* Aplica negrita */
+    }
+    .form-group{
+        margin-bottom: 8px;
+    }
+</style>
 {% endblock head_list %}
 
 {% block page_content %}
@@ -51,7 +78,7 @@
                     </div>
                     <div class="form-group">
                         <label>Departamento / Área:</label>
-                        <select class="form-control form-control-solid select" name="Department" data-placeholder="Seleccione un departamento" id="selectDepartamento">
+                        <select class="form-control form-control-solidS select" name="Department" data-placeholder="Seleccione un departamento" id="selectDepartamento">
                             <option></option>
                             {% for dep in Departamento %}
                             <option>{{dep.Name}}</option>
@@ -67,7 +94,7 @@
                 
                     <div class="form-group">
                         <label>Moneda:</label>
-                        <select class="form-control form-control-solid select" name="moneda" id="selecMoneda" data-placeholder="Seleccione una moneda" required>
+                        <select class="form-control form-control-solidS select" name="moneda" id="selecMoneda" data-placeholder="Seleccione una moneda" required>
                             <option></option>
                             {% for mon in moneda %}
                             <option>{{mon.MonedaAbrev}}</option>
@@ -77,7 +104,7 @@
                     <div class="form-group">
                         <label>Impuestos:</label>
                         <div id="url-data" data-url="{% url 'erp:obtener_impuesto' %}"></div>
-                        <select class="form-control form-control-solid select" id="idImpuestos" name="TaxCode" data-placeholder="Seleccione un impuesto" required>
+                        <select class="form-control form-control-solidS select" id="idImpuestos" name="TaxCode" data-placeholder="Seleccione un impuesto" required>
                             <option></option>
                             {% for imp in OSTA %}
                             <option>{{imp.get_impuesto_name}}</option>
@@ -94,11 +121,11 @@
                     </div>
                     <div class="form-group">
                         <label>Detalle:</label>
-                        <select class="form-control form-control-solid select mb-2" name="selecDetalle" id="selectDetalle" data-control="select2" data-hide-search="true">
+                        <select class="form-control form-control-solidS select mb-2" name="selecDetalle" id="selectDetalle" data-control="select2" data-hide-search="true">
                             <option value="0">Servicio</option>
                             <option value="1">Artículo</option>
                         </select>
-                        <button type="button" class="btn btn-success" id="btnAgregar">
+                        <button type="button" class="btn btn-success" id="btnAgregar" style="margin-top: 10px;">
                             <i class="fas fa-check"></i> Agregar
                         </button>
                     </div>
@@ -111,7 +138,7 @@
                     <div class="form-group">
                         <label>Serie:</label>
                         <div id="url-serie" data-url="{% url 'erp:obtener_numero_serie' %}"></div>
-                        <select class="form-control form-control-solid select" id="serie" name="serie" data-placeholder="Seleccione una serie" required>
+                        <select class="form-control form-control-solidS select" id="serie" name="serie" data-placeholder="Seleccione una serie" required>
                             <option></option>
                             {% for s in serie|dictsort:"Nombre"%}
                                 {% if s.Nombre != 'OrdenCompra' %}
@@ -141,7 +168,7 @@
                     </div>
                     <div class="form-group">
                         <label>Comentarios:</label>
-                        <textarea class="form-control form-control-solid" name="Comments" id="Comentarios" rows="3"></textarea>
+                        <textarea class="form-control form-control-solidS" name="Comments" id="Comentarios" rows="3"></textarea>
                     </div>
 
             </div> <!-- Cierre de la fila principal -->
@@ -192,7 +219,7 @@
                 <input type="hidden" name="servs_data" id="id_servs_data">
             </div>
 
-            <div class="card-footer">
+            {% comment %} <div class="card-footer"> {% endcomment %}
                 <div class="row">
                     <div class="col-lg-6">
                         <button type="submit" class="btn btn-primary mr-2">
@@ -203,7 +230,7 @@
                         </a>
                     </div>
                 </div>
-            </div>
+            {% comment %} </div> {% endcomment %}
         </div>   
     </form>
 

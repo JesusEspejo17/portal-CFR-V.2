@@ -4,11 +4,16 @@
 
 {% block head_list %}
 <script src="{% static 'users/js/list.js' %}"></script>
+<style>
+    .cardusu {
+        --bs-card-bg:rgb(255, 255, 255);
+    }
+</style>
 {% endblock head_list %}
 
 {% block page_content %}
 
-<div class="card" style="border-left-width: 15px; border-right-width: 15px; border-radius: 1.625rem;">
+<div class="card cardusu" style="border-left-width: 15px; border-right-width: 15px; border-radius: 1.625rem;">
     <!--begin::Card header-->
     <div class="card-header border-0 pt-6">
         <div class="card-title">
