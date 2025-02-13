@@ -189,7 +189,6 @@ $(function initializeDataTable() {
             { "data": "ReqIdUser" },
             { "data": "DocType" },
             { "data": "moneda" },
-            { "data": "TaxCode" },
             { "data": "DocDate" },
             { "data": "DocDueDate" },
             { "data": "DocStatus" },
@@ -207,16 +206,16 @@ $(function initializeDataTable() {
                     var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
                     if (hasGroupAccess) {
                         if (isHeadofBudget) {
-                            return '<div class="form-check"> <input class="form-check-input" type="checkbox"  value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" ></input></div>';
+                            return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox"  value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" ></input></div>';
                         } else {
                             if (row.seleccionable == 1) {
-                                return '<div class="form-check"> <input class="form-check-input" type="checkbox"  value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" ></input></div>';
+                                return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox"  value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" ></input></div>';
                             } else {
-                                return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" disabled></input></div>';
+                                return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" disabled></input></div>';
                             }
                         }
                     } else {
-                        return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" disabled></input></div>';
+                        return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" disabled></input></div>';
                     }
                 },
             },
@@ -236,13 +235,27 @@ $(function initializeDataTable() {
                     return meta.row + 1;
                 },
             },
+            // {
+            //     targets: [2],
+            //     class: "text-center",
+            //     orderable: true,
+            // },
             {
                 targets: [2],
                 class: "text-center",
                 orderable: true,
+                render: function (data, type, row) {
+                    if (type === 'display' || type === 'filter') {
+                        if (!data) {
+                            return '<span class="badge badge-warning" style="background-color: red;">Migración Pendiente</span>'; // Badge rojo
+                        }
+                        return data; // Mostrar el dato si no está vacío
+                    }
+                    return data; // Para otros tipos, devolver el dato sin cambios
+                }
             },
             {
-                targets: [10],
+                targets: [9],
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
@@ -252,12 +265,12 @@ $(function initializeDataTable() {
                 },
             },
             {
-                targets: [3, 5, 6, 8],
+                targets: [3, 5, 6, 7],
                 class: "text-center",
                 orderable: false,
             },
             {
-                targets: [7],
+                targets: [6],
                 class: "text-center",
                 orderable: true,
             },
@@ -270,7 +283,7 @@ $(function initializeDataTable() {
                 },
             },
             {
-                targets: [-9],
+                targets: [-8],
                 class: "text-center",
                 orderable: true,
                 render: function (data, type, row) {

@@ -18,7 +18,7 @@ $(document).ready(function () {
             { data: 'SolicitanteOC' },
             { data: 'DocTypeOC' },
             { data: 'MonedaOC' },
-            { data: 'TaxCodeOC' },
+            // { data: 'TaxCodeOC' },
             { data: 'SystemDateOC' },
             {
                 data: null,
@@ -34,7 +34,7 @@ $(document).ready(function () {
         order: [[, '']],
         columnDefs: [
             {
-                targets: [0, 1, 2, 3, 4, 5, 6, 7,8,9],
+                targets: [0, 1, 2, 3, 4, 5, 6, 7,8],
                 class: "text-center",
             },
             {
@@ -60,10 +60,10 @@ $(document).ready(function () {
                 },
             },
             {
-                targets: [8], // Índices de las columnas TotalOC y TotalImpuestosOC
+                targets: [7], // Índices de las columnas TotalOC y TotalImpuestosOC
                 render: function (data, type, row) {
                     if (type === 'display' || type === 'filter') {
-                        return parseFloat(data).toFixed(2); // Formatear a dos decimales
+                        return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
                     }
                     return data; // Para otros tipos, devolver el dato sin cambios
                 }
@@ -254,9 +254,9 @@ $(document).ready(function () {
                 <tr>
                     <td>${detalle.ItemCodeOCD}</td>
                     <td>${detalle.DescriptionOCD}</td>
-                    <td>${detalle.QuantityOCD}</td>
-                    <td>${detalle.PrecioOCD}</td>
-                    <td>${detalle.TotalOCD}</td>
+                    <td style="text-align: center;">${detalle.QuantityOCD}</td>
+                    <td style="text-align: center;">S/. ${detalle.PrecioOCD}</td>
+                    <td style="text-align: center;">S/.${detalle.TotalOCD}</td>
                     
                 </tr>
             `;
@@ -293,26 +293,82 @@ function tablaSolicitudDetalleProducto(docNum) {
             { data: 'LineVendor__CardName' },
             { data: 'Description' },
             { data: 'Quantity' },
-            { data: 'Precio' },
+            {
+                data: 'Precio',
+                render: function(data, type, row) {
+                    return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                }
+            },
             { data: 'UnidadMedida__Name' },
             { data: 'Almacen__WhsName' },
-            { data: 'total' },
+            {
+                data: 'total',
+                render: function(data, type, row) {
+                    return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                }
+            },
+            {
+                data: 'Quantity_rest',
+                render: function(data, type, row) {
+                    // Si LineStatus es 'C' o 'R', retornar 0
+                    if (row.LineStatus === 'C' || row.LineStatus === 'R') {
+                        return 0;
+                    }
+                    return data; // De lo contrario, retornar el valor original
+                }
+            },
             {
                 data: 'LineStatus',
                 render: function(data, type, row) {
-                    // Cambiar el valor de LineStatus a texto legible
+                    // Cambiar el valor de LineStatus a un badge con color
+                    let badgeClass = '';
+                    let badgeText = '';
+            
                     if (data === 'C') {
-                        return 'Cerrado';
+                        badgeClass = 'badge badge-info'; // Clase para "Cerrado"
+                        badgeText = 'Cerrado';
                     } else if (data === 'R') {
-                        return 'Rechazado';
+                        badgeClass = 'badge badge-danger'; // Clase para "Rechazado"
+                        badgeText = 'Rechazado';
                     } else if (data === 'A' || data === 'L') {
-                        return 'Pendiente';
+                        badgeClass = 'badge badge-warning'; // Clase para "Pendiente"
+                        badgeText = 'Pendiente';
                     } else {
-                        return data; // Retornar el valor original si no es 'C', 'R', 'A' ni 'L'
+                        badgeClass = 'badge badge-secondary'; // Clase para otros estados
+                        badgeText = data; // Retornar el valor original si no es 'C', 'R', 'A' ni 'L'
                     }
+            
+                    return `<span class="${badgeClass}" style="padding: 5px; border-radius: 5px;">${badgeText}</span>`;
                 }
+            }
+        ],
+        columnDefs: [
+            {
+                targets: [3, 5, 6, 7,8, 9],
+                class: "text-center",
             },
         ],
+        language: {
+            "sEmptyTable": "No hay datos disponibles en la tabla",
+            "sInfo": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+            "sInfoEmpty": "Mostrando 0 a 0 de 0 entradas",
+            "sInfoFiltered": "(filtrado de _MAX_ entradas totales)",
+            "sLengthMenu": "",
+            "sLoadingRecords": "Cargando...",
+            "sProcessing": "Procesando...",
+            "sSearch": "Buscar:",
+            "sZeroRecords": "No se encontraron resultados",
+            "oPaginate": {
+                "sFirst": "Primero",
+                "sLast": "Último",
+                "sNext": "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+                "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+            }
+        },
         initComplete: function(settings, json) {
             console.log('3. DataTable productos inicializada:', json);
         }
@@ -348,20 +404,57 @@ function tablaSolicitudDetalleServicio(docNum) {
             { data: 'total' },
             {
                 data: 'LineStatus',
+                class: "text-center",
                 render: function(data, type, row) {
-                    // Cambiar el valor de LineStatus a texto legible
+                    // Cambiar el valor de LineStatus a un badge con color
+                    let badgeClass = '';
+                    let badgeText = '';
+            
                     if (data === 'C') {
-                        return 'Cerrado';
+                        badgeClass = 'badge badge-info'; // Clase para "Cerrado"
+                        badgeText = 'Cerrado';
                     } else if (data === 'R') {
-                        return 'Rechazado';
+                        badgeClass = 'badge badge-danger'; // Clase para "Rechazado"
+                        badgeText = 'Rechazado';
                     } else if (data === 'A' || data === 'L') {
-                        return 'Pendiente';
+                        badgeClass = 'badge badge-warning'; // Clase para "Pendiente"
+                        badgeText = 'Pendiente';
                     } else {
-                        return data; // Retornar el valor original si no es 'C', 'R', 'A' ni 'L'
+                        badgeClass = 'badge badge-secondary'; // Clase para otros estados
+                        badgeText = data; // Retornar el valor original si no es 'C', 'R', 'A' ni 'L'
                     }
+            
+                    return `<span class="${badgeClass}" style="padding: 5px; border-radius: 5px;">${badgeText}</span>`;
                 }
+            }
+        ],
+        columnDefs: [
+            {
+                targets: [3,4,5,6,7],
+                class: "text-center",
             },
         ],
+        language: {
+            "sEmptyTable": "No hay datos disponibles en la tabla",
+            "sInfo": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+            "sInfoEmpty": "Mostrando 0 a 0 de 0 entradas",
+            "sInfoFiltered": "(filtrado de _MAX_ entradas totales)",
+            "sLengthMenu": "",
+            "sLoadingRecords": "Cargando...",
+            "sProcessing": "Procesando...",
+            "sSearch": "Buscar:",
+            "sZeroRecords": "No se encontraron resultados",
+            "oPaginate": {
+                "sFirst": "Primero",
+                "sLast": "Último",
+                "sNext": "Siguiente",
+                "sPrevious": "Anterior"
+            },
+            "oAria": {
+                "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+            }
+        },
         initComplete: function(settings, json) {
             console.log('3. DataTable servicios inicializada:', json);
         },

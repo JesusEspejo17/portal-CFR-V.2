@@ -203,6 +203,21 @@
                         editable: true,
                     },
                 ],
+                language: {
+                    "sEmptyTable": "No hay datos disponibles en la tabla",
+                    "sInfo": "",
+                    "sInfoEmpty": "Mostrando 0 a 0 de 0 entradas",
+                    "sInfoFiltered": "(filtrado de _MAX_ entradas totales)",
+                    "sLengthMenu": "",
+                    "sLoadingRecords": "Cargando...",
+                    "sProcessing": "Procesando...",
+                    "sSearch": "Buscar:",
+                    "sZeroRecords": "No se encontraron resultados",
+                    "oAria": {
+                        "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
                 initComplete: function (settings, json) {
                     $(function () {
                         $('#tblServSeleccionados').find('select').select2();
@@ -261,6 +276,25 @@
         autoWidth: true,
         destroy: true,
         deferRender: true,
+        pageLength : 5,
+        "language": {
+		    "lengthMenu": "Mostrar _MENU_",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "search": "Buscar:",
+            "infoFiltered": "(filtrado de _MAX_ registros totales)"
+	},
+	"dom":
+		"<'row mb-2'" +
+		"<'col-sm-6 d-flex align-items-center justify-conten-start dt-toolbar'l>" +
+		"<'col-sm-6 d-flex align-items-center justify-content-end dt-toolbar'f>" +
+		">" +
+
+		"<'table-responsive'tr>" +
+
+		"<'row'" +
+		"<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
+		"<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
+		">"
     });
 
     function seleccionarServicio(codigo, descripcion, precio, button) {

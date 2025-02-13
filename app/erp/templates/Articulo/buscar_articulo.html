@@ -2,20 +2,20 @@
     <div class="modal-content">
         <div class="col-xl-12 col-md-12 mb-12">
             <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body" style="max-height: 80vh; overflow-y: auto;">
+                <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Buscar Producto
                             </div>
-                            <div class="dropdown-divider"></div>
-                            <div class="card-body">
+                            
+                            <div class="card-body" style="max-height: 80vh; overflow-y: auto;">
                                 <div class="card card-secondary">
                                     <div class="card-body">
                                         <div class="form-group row">
                                             <div class="form-group col-sm-12 mb-sm-3">
                                                 <table class="table table-striped table-hover dt-responsive nowrap"
-                                                    id="tblBuscarProd" style="width: 100%;">
+                                                    id="tblBuscarProd">
                                                     <thead>
                                                         <th>Código</th>
                                                         <th>Nombre</th>
@@ -272,6 +272,21 @@
                         editable: true,
                     },
                 ],
+                language: {
+                    "sEmptyTable": "No hay datos disponibles en la tabla",
+                    "sInfo": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                    "sInfoEmpty": "Mostrando 0 a 0 de 0 entradas",
+                    "sInfoFiltered": "(filtrado de _MAX_ entradas totales)",
+                    "sLengthMenu": "",
+                    "sLoadingRecords": "Cargando...",
+                    "sProcessing": "Procesando...",
+                    "sSearch": "Buscar:",
+                    "sZeroRecords": "No se encontraron resultados",
+                    "oAria": {
+                        "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
                 initComplete: function (settings, json) {
                     $(function () {
                         $('#tblProdSeleccionados').find('select').select2();
@@ -364,8 +379,25 @@
         autoWidth: true,
         destroy: true,
         deferRender: true,
-        scrollX: true,
         pageLength : 5,
+        "language": {
+		    "lengthMenu": "Mostrar _MENU_",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "search": "Buscar:",
+            "infoFiltered": "(filtrado de _MAX_ registros totales)"
+	},
+	"dom":
+		"<'row mb-2'" +
+		"<'col-sm-6 d-flex align-items-center justify-conten-start dt-toolbar'l>" +
+		"<'col-sm-6 d-flex align-items-center justify-content-end dt-toolbar'f>" +
+		">" +
+
+		"<'table-responsive'tr>" +
+
+		"<'row'" +
+		"<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
+		"<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
+		">"
     });
 
     $(function () {

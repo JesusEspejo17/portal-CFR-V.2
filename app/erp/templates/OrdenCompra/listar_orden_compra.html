@@ -61,7 +61,7 @@
                                 <th style="text-align: center;">Solicitante</th>
                                 <th style="text-align: center;">Tipo Documento</th>
                                 <th style="text-align: center;">Moneda</th>
-                                <th style="text-align: center;">Impuesto Adjunto</th>
+                                {% comment %} <th style="text-align: center;">Impuesto Adjunto</th> {% endcomment %}
                                 <th style="text-align: center;">Fecha Aprobada</th>
                                 <th style="text-align: center;">Estado</th>
                                 {% comment %} <th style="text-align: center;">Total</th> {% endcomment %}
@@ -88,114 +88,111 @@
                 <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
                     <div class="card shadow-sm">
                         <div id="kt_card_detalle_orden" class="collapse show">
-                            <div class="card-body">
-                                <!-- Document Details -->
-                                <div class="row mb-5">
-                                    <div class="col-sm-4">
-                                        <label for="detallesDocNum" class="col-form-label">Número de Documento:</label>
-                                        <label id="detallesDocNum" class="form-control form-control-solid"></label>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <label for="detalleSerie" class="col-form-label">Serie:</label>
-                                        <label id="detalleSerie" class="form-control form-control-solid"></label>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <label for="detallesProveedor" class="col-form-label">Proveedor:</label>
-                                        <label id="detallesProveedor" class="form-control form-control-solid"></label>
-                                    </div>
-                                </div>
-                                <!-- Dates -->
-                                <div class="row mb-5">
-                                    <div class="col-sm-6">
-                                        <label for="detallesDocDate" class="col-form-label">Fecha del Documento:</label>
-                                        <label id="detallesDocDate" class="form-control form-control-solid"></label>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label for="detallesDocDueDate" class="col-form-label">Fecha de vencimiento:</label>
-                                        <label id="detallesDocDueDate" class="form-control form-control-solid"></label>
-                                    </div>
-                                </div>
-                                <!-- Additional Details -->
-                                <div class="row g-5 g-xl-8" style="margin-top: 1px">
-                                    <div class="col-sm-4">
-                                        <div class="row mb-5">
-                                            <label for="detallesMoneda" id="lblMoneda" class="col-sm-3 col-form-label">Moneda:</label>
-                                            <div class="col-sm-9">
-                                                <label id="detallesMoneda" class="form-control form-control-solid"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <div class="row mb-5">
-                                            <label for="detallesTaxCode" id="lblTaxCode" class="col-sm-3 col-form-label">Impuesto:</label>
-                                            <div class="col-sm-9">
-                                                <label id="detallesTaxCode" class="form-control form-control-solid"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <div class="row mb-5">
-                                            <label for="detallesDocType" id="lblDocType" class="col-sm-3 col-form-label">Tipo:</label>
-                                            <div class="col-sm-9">
-                                                <label id="detallesDocType" class="form-control form-control-solid"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row g-5 g-xl-8" style="margin-top: 1px; height: 100%;">
-                                    <div class="col-sm-6 d-flex align-items-center" style="margin: 0;"> <!-- Elimina el margen -->
-                                        <div class="w-100"> <!-- Asegúrate de que el contenido ocupe el ancho completo -->
-                                            <div class="row mb-5">
-                                                <label for="detallesSolicitante" id="lblUser " class="col-sm-5 col-form-label">Solicitante</label>
-                                                <div class="col-sm-7">
-                                                    <label type="text" aria-readonly="true" id="detallesSolicitante"
-                                                        class="form-control form-control-solid" style="text-align:right;"></label>
-                                                </div>
-                                            </div>
 
-                                            <div class="row mb-5">
-                                                <label for="detallesTotal" id="lblTotal" class="col-sm-5 col-form-label">Total:</label>
-                                                <div class="col-sm-7">
-                                                    <label type="text" aria-readonly="true" id="detallesTotal"
-                                                        class="form-control form-control-solid" style="text-align:right;"></label>
+                            
+                            <div class="card-body">
+                                <div class="row g-5 g-xl-8">
+                                    <!-- Primera fila -->
+                                    <div class="row mb-5" style="margin-top: 20px;">
+                                        <div class="col-sm-4 d-flex align-items-center">
+                                            <label for="detallesDocNum" id="lblDetDocNum" class="col-form-label flex-shrink-0" style="width: 200px;">Número de Documento:</label>
+                                            <label type="text" aria-readonly="true" id="detallesDocNum" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                        </div>
+                                        <div class="col-sm-4 d-flex align-items-center">
+                                            <label for="detalleSerie" class="col-form-label flex-shrink-0" style="width: 200px;">Serie:</label>
+                                            <label type="text" aria-readonly="true" id="detalleSerie" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                        </div>
+                                        <div class="col-sm-4 d-flex align-items-center">
+                                            <label for="detallesProveedor" class="col-form-label flex-shrink-0" style="width: 200px;">Proveedor:</label>
+                                            <label type="text" aria-readonly="true" id="detallesProveedor" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Fechas -->
+                                    <div class="row mb-5" style="margin-top: 20px;">
+                                        <div class="col-sm-6 d-flex align-items-center">
+                                            <label for="detallesDocDate" id="lblDocDate" class="col-form-label flex-shrink-0" style="width: 200px;">Fecha del Documento:</label>
+                                            <label type="text" aria-readonly="true" id="detallesDocDate" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                        </div>
+                                        <div class="col-sm-6 d-flex align-items-center">
+                                            <label for="detallesDocDueDate" id="lblDueDate" class="col-form-label flex-shrink-0" style="width: 200px;">Fecha de vencimiento:</label>
+                                            <label type="text" aria-readonly="true" id="detallesDocDueDate" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Detalles -->
+                                    <div class="row mb-5" style="margin-top: 20px;">
+                                        <div class="col-sm-4 d-flex align-items-center">
+                                            <label for="detallesMoneda" id="lblMoneda" class="col-form-label flex-shrink-0" style="width: 200px;">Moneda:</label>
+                                            <label type="text" aria-readonly="true" id="detallesMoneda" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                        </div>
+                                        <div class="col-sm-4 d-flex align-items-center">
+                                            <label for="detallesTaxCode" id="lblTaxCode" class="col-form-label flex-shrink-0" style="width: 200px;">Impuesto:</label>
+                                            <label type="text" aria-readonly="true" id="detallesTaxCode" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                        </div>
+                                        <div class="col-sm-4 d-flex align-items-center">
+                                            <label for="detallesDocType" id="lblDocType" class="col-form-label flex-shrink-0" style="width: 200px;">Tipo:</label>
+                                            <label type="text" aria-readonly="true" id="detallesDocType" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-5 g-xl-8" style="margin-top: 1px; height: 100%;">
+                                        <div class="col-sm-6 d-flex align-items-center" style="margin: 0;"> <!-- Elimina el margen -->
+                                            <div class="w-100"> <!-- Asegúrate de que el contenido ocupe el ancho completo -->
+                                                <div class="row mb-5">
+                                                    <label for="detallesSolicitante" id="lblUser " class="col-sm-5 col-form-label">Solicitante</label>
+                                                    <div class="col-sm-7">
+                                                        <label type="text" aria-readonly="true" id="detallesSolicitante"
+                                                            class="form-control form-control-solid" style="text-align:left;"></label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mb-5">
+                                                    <label for="detallesTotal" id="lblTotal" class="col-sm-5 col-form-label">Total:</label>
+                                                    <div class="col-sm-7">
+                                                        <label type="text" aria-readonly="true" id="detallesTotal"
+                                                            class="form-control form-control-solid" style="text-align:left;"></label>
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-5">
+                                                    <label for="detallesTotalImp" id="lblTotalImp" class="col-sm-5 col-form-label">Total con impuestos:</label>
+                                                    <div class="col-sm-7">
+                                                        <label type="text" aria-readonly="true" id="detallesTotalImp"
+                                                            class="form-control form-control-solid" style="text-align:left;"></label>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="row mb-5">
-                                                <label for="detallesTotalImp" id="lblTotalImp" class="col-sm-5 col-form-label">Total con impuestos:</label>
-                                                <div class="col-sm-7">
-                                                    <label type="text" aria-readonly="true" id="detallesTotalImp"
-                                                        class="form-control form-control-solid" style="text-align:right;"></label>
+                                        </div>
+
+                                        <div class="col-sm-6"> <!-- Mantener el ancho original de la columna derecha -->
+                                            <div class="card cardli card-xl-stretch mb-5 mb-xl-8">
+                                                <div class="card-header border-0">
+                                                    <h3 class="card-title fw-bold text-gray-900">Lista de Solicitudes:</h3>
+                                                </div>
+                                                <div class="card-body pt-2" id="container-origins">
+                                                    <!-- Aquí se inyecta la información de origen desde list.js -->
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-sm-6"> <!-- Mantener el ancho original de la columna derecha -->
-                                        <div class="card cardli card-xl-stretch mb-5 mb-xl-8">
-                                            <div class="card-header border-0">
-                                                <h3 class="card-title fw-bold text-gray-900">Lista de Solicitudes:</h3>
-                                            </div>
-                                            <div class="card-body pt-2" id="container-origins">
-                                                <!-- Aquí se inyecta la información de origen desde list.js -->
-                                            </div>
+
+                                    <!-- Details Table -->
+                                    <div class="card cardmodaltabla card-flush mt-6">
+                                        <div class="card-body">
+                                            <table class="table table-striped" id="tblDetalles">
+                                                <thead>
+                                                    <tr class="fw-bold text-muteddet">
+                                                        <th>Cod. Item</th>
+                                                        <th>Descripción</th>
+                                                        <th style="text-align:center">Cantidad</th>
+                                                        <th style="text-align:center">Precio</th>
+                                                        <th style="text-align:center">Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                    </div>
-                                </div>
-                                <!-- Details Table -->
-                                <div class="card cardmodaltabla card-flush mt-6">
-                                    <div class="card-body">
-                                        <table class="table table-striped" id="tblDetalles">
-                                            <thead>
-                                                <tr class="fw-bold text-muteddet">
-                                                    <th>Cod. Item</th>
-                                                    <th>Descripción</th>
-                                                    <th>Cantidad</th>
-                                                    <th>Precio</th>
-                                                    <th>Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            </tbody>
-                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -205,7 +202,7 @@
                 <!-- Modal Footer -->
                 <div class="modal-footer">
                     <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-success" onclick="reporte()">Generar Reporte</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </div>

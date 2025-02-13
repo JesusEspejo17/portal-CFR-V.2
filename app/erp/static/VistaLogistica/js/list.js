@@ -1,7 +1,6 @@
 $(document).ready(function () {
     iniciarTabla();
 });
-var tableContabilizados;
 function iniciarTabla() {
     tableContabilizados = $('#tblContabilizados').DataTable({
         destroy: true,
@@ -9,9 +8,19 @@ function iniciarTabla() {
         autoWidth: false,
         order: [[0, 'asc']],
         scrollX: true,
+        "dom":
+            "<'row mb-2'" +
+            "<'col-sm-6 d-flex align-items-center justify-content-start'l>" +
+            "<'col-sm-6 d-flex align-items-center justify-content-end'f>" +
+            ">" +
+            "<'table-responsive'tr>" +
+            "<'row'" +
+            "<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
+            "<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
+            ">",
         "language": {
+            "lengthMenu": "",
             "sProcessing": "Procesando...",
-            "sLengthMenu": "Mostrar _MENU_ registros",
             "sZeroRecords": "No se encontraron resultados",
             "sEmptyTable": "Ningún dato disponible en esta tabla",
             "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
@@ -42,6 +51,7 @@ function iniciarTabla() {
             dataSrc: ""
         },
         columns: [
+            // Mantén tus columnas actuales
             { "data": null },
             { "data": "DocNum" },
             { "data": "Serie" },
@@ -377,6 +387,7 @@ function iniciarTabla() {
                     }
                 }
             });
+            
         }
     });
 }

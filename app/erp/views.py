@@ -979,7 +979,8 @@ def solicitudRechazarMasivo(request):
                     # Verificar estado de todos los detalles
                     total_detalles = detalles.count()
                     detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
-                    detalles_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
+                    detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                    detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
                     detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
                     detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
 
@@ -987,7 +988,11 @@ def solicitudRechazarMasivo(request):
                     if total_detalles == detalles_rechazados:
                         # Si todos están rechazados
                         OPRQ.objects.filter(pk=id).update(DocStatus="R")
-                    elif not detalles_pendientes:
+                    elif detalles_pendientes_P:
+                        # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
+                        # No hacemos update para mantener el DocStatus actual
+                        pass
+                    elif not detalles_pendientes_A:
                         if detalles_cerrados + detalles_rechazados == total_detalles:
                             # Si no hay pendientes y todos los demás están cerrados (C)
                             OPRQ.objects.filter(pk=id).update(
@@ -1013,6 +1018,7 @@ def solicitudRechazarMasivo(request):
             return JsonResponse({'error': msg}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 
 #CODIGO ORIGINAL
 # def solicitudAprobar(request,id):
@@ -1294,7 +1300,8 @@ def solicitudRechazar(request, id):
                 # Verificar estado de todos los detalles
                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
-                detalles_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
+                detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
                 detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
                 detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
                 
@@ -1302,7 +1309,11 @@ def solicitudRechazar(request, id):
                 if total_detalles == detalles_rechazados:
                     # Si todos están rechazados
                     OPRQ.objects.filter(pk=id).update(DocStatus="R")
-                elif not detalles_pendientes:
+                elif detalles_pendientes_P:
+                    # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
+                    # No hacemos update para mantener el DocStatus actual
+                    pass
+                elif not detalles_pendientes_A:
                     if detalles_cerrados + detalles_rechazados == total_detalles:
                         # Si no hay pendientes y todos los demás están cerrados (C)
                         OPRQ.objects.filter(pk=id).update(
@@ -1328,7 +1339,6 @@ def solicitudRechazar(request, id):
             return JsonResponse({'error': msg}, status=500)
             
     return JsonResponse({'error': 'Método no permitido'}, status=405)
-
 
 def export_data_as_json(id):
     solicitudes = OPRQ.objects.filter(pk=id)
@@ -1835,11 +1845,141 @@ def data_sender(json_data, id):
 
 #     return orden_compra_cabecera
 
+
+
+
+# def export_data_as_jsonProductos(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+            
+#             items_data = data.get('items', [])
+#             proveedor = data.get('proveedor', None)
+
+#             if not items_data:
+#                 return JsonResponse({'error': 'No se enviaron productos.'}, status=400)
+
+#             if not proveedor:
+#                 return JsonResponse({'error': 'No se especificó un proveedor.'}, status=400)
+
+#             items_codes = [item['Code'] for item in items_data]
+#             detalles = PRQ1.objects.filter(Code__in=items_codes).select_related(
+#                 'NumDoc', 'ItemCode', 'Currency', 'UnidadMedida', 'Almacen', 'CuentaMayor', 'idDimension', 'NumDoc__moneda', 'NumDoc__TaxCode'
+#             )
+
+#             if not detalles:
+#                 return JsonResponse({'error': 'No se encontraron detalles para los códigos proporcionados.'}, status=400)
+
+#             solicitud = detalles.first().NumDoc
+
+#             # Guardar orden de compra en OCC y OCD1
+#             orden_compra_cabecera = guardar_orden_compra_oc_producto(
+#                 detalles_seleccionados=detalles, 
+#                 solicitud=solicitud, 
+#                 tipo='I', 
+#                 proveedor=proveedor,
+#                 items_data=items_data  # Nuevo parámetro
+#             )
+            
+#             # Generar JSON para SAP
+#             oprq = {
+#                 "DocType": "dDocument_Items",
+#                 "DocDate": solicitud.DocDate.isoformat(),
+#                 "DocDueDate": solicitud.DocDueDate.isoformat(),
+#                 "TaxDate": solicitud.DocDate.isoformat(),
+#                 "CardCode": proveedor,
+#                 "DocCurrency": solicitud.moneda.MonedaAbrev,
+#                 "Series": 117,
+#                 "DocumentLines": []
+#             }
+
+#             for idx, detalle in enumerate(detalles):
+#                 # Encontrar el item correspondiente en items_data
+#                 item_data = next((item for item in items_data if str(item['Code']) == str(detalle.Code)), None)
+#                 if item_data:
+#                     try:
+#                         # Actualizar PRQ1
+#                         detalle.Quantity_rest = item_data['Quantity_rest']
+#                         detalle.total_rest = item_data['total_rest']
+#                         if detalle.Quantity_rest == 0:
+#                             detalle.LineStatus = 'C'
+#                         detalle.save()
+#                     except Exception as e:
+#                         print(f"Error actualizando PRQ1: {str(e)}")
+#                         logger.error(f"Error actualizando PRQ1: {str(e)}")
+#                         raise
+                    
+#                     # El LineStatus depende de si quedan unidades
+#                     if detalle.Quantity_rest == 0:
+#                         detalle.LineStatus = 'C'
+#                     detalle.save()
+                
+#                 oprq["DocumentLines"].append({
+#                     "LineNum": idx,
+#                     "ItemCode": detalle.ItemCode.ItemCode,
+#                     "ItemDescription": detalle.Description,
+#                     "Quantity": item_data['Quantity'],
+#                     "UnitPrice": detalle.Precio,
+#                     "Currency": detalle.Currency.MonedaAbrev,
+#                     "WarehouseCode": detalle.Almacen.WhsCode,
+#                     "TaxCode": solicitud.TaxCode.Code,
+#                     "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
+#                     "BaseType": 1470000113,
+#                     "BaseEntry": detalle.NumDoc.DocNumSAP, 
+#                     "BaseLine": detalle.LineCount_Indexado,   
+#                 })
+
+#             json_data = json.dumps(oprq, indent=2)
+#             print("JSON generado para Productos para enviar:", json_data)
+#             response = data_sender_productos(json_data, solicitud)
+
+#             if isinstance(response, dict):
+#                 if response.get('status') == 'success' and response.get('doc_entry'):
+#                     doc_entry_sap = response['doc_entry']
+#                     print(f"DocEntry a usar: {doc_entry_sap}")
+
+#                     # Actualizar DocNumSAPOC en la cabecera
+#                     orden_compra_cabecera.DocNumSAPOC = doc_entry_sap
+#                     orden_compra_cabecera.save()
+
+#                     # Actualizar DocNumSAPOCD en los detalles
+#                     detalles_ocd1 = OCD1.objects.filter(NumDocOCD=orden_compra_cabecera)
+#                     for detalle_ocd1 in detalles_ocd1:
+#                         detalle_ocd1.DocNumSAPOCD = doc_entry_sap
+#                         detalle_ocd1.save()
+
+#                     # Verificar detalles pendientes
+#                     detalles_asociados = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
+#                     detalles_pendientes = detalles_asociados.filter(
+#                         Q(LineStatus__in=['A', 'L']) | Q(Quantity_rest__gt=0)
+#                     ).exclude(LineStatus='R').exists()
+
+#                     # Actualizar TipoDoc
+#                     solicitud.TipoDoc = 'OC' if not detalles_pendientes else 'SOL'
+#                     solicitud.save()
+
+#                     return JsonResponse({'message': 'Producto enviado y guardado correctamente.'}, status=200)
+#                 else:
+#                     error_msg = f"Error en SAP: {response.get('error', 'Error desconocido')}"
+#                     print(error_msg)
+#                     return JsonResponse({'error': error_msg}, status=500)
+#             else:
+#                 error_msg = f"Respuesta inválida de SAP: {response}"
+#                 print(error_msg)
+#                 return JsonResponse({'error': error_msg}, status=500)
+
+#         except Exception as e:
+#             print(f"ERROR GENERAL: {str(e)}")
+#             print("Traceback completo:")
+#             print(traceback.format_exc())
+#             return JsonResponse({'error': str(e)}, status=500)
+
+#     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 def export_data_as_jsonProductos(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            
             items_data = data.get('items', [])
             proveedor = data.get('proveedor', None)
 
@@ -1851,7 +1991,8 @@ def export_data_as_jsonProductos(request):
 
             items_codes = [item['Code'] for item in items_data]
             detalles = PRQ1.objects.filter(Code__in=items_codes).select_related(
-                'NumDoc', 'ItemCode', 'Currency', 'UnidadMedida', 'Almacen', 'CuentaMayor', 'idDimension', 'NumDoc__moneda', 'NumDoc__TaxCode'
+                'NumDoc', 'ItemCode', 'Currency', 'UnidadMedida', 'Almacen', 
+                'CuentaMayor', 'idDimension', 'NumDoc__moneda', 'NumDoc__TaxCode'
             )
 
             if not detalles:
@@ -1859,16 +2000,7 @@ def export_data_as_jsonProductos(request):
 
             solicitud = detalles.first().NumDoc
 
-            # Guardar orden de compra en OCC y OCD1
-            orden_compra_cabecera = guardar_orden_compra_oc_producto(
-                detalles_seleccionados=detalles, 
-                solicitud=solicitud, 
-                tipo='I', 
-                proveedor=proveedor,
-                items_data=items_data  # Nuevo parámetro
-            )
-            
-            # Generar JSON para SAP
+            # Primero crear el JSON para SAP
             oprq = {
                 "DocType": "dDocument_Items",
                 "DocDate": solicitud.DocDate.isoformat(),
@@ -1881,77 +2013,84 @@ def export_data_as_jsonProductos(request):
             }
 
             for idx, detalle in enumerate(detalles):
-                # Encontrar el item correspondiente en items_data
                 item_data = next((item for item in items_data if str(item['Code']) == str(detalle.Code)), None)
                 if item_data:
-                    try:
-                        # Actualizar PRQ1
-                        detalle.Quantity_rest = item_data['Quantity_rest']
-                        detalle.total_rest = item_data['total_rest']
-                        if detalle.Quantity_rest == 0:
-                            detalle.LineStatus = 'C'
-                        detalle.save()
-                    except Exception as e:
-                        print(f"Error actualizando PRQ1: {str(e)}")
-                        logger.error(f"Error actualizando PRQ1: {str(e)}")
-                        raise
-                    
-                    # El LineStatus depende de si quedan unidades
-                    if detalle.Quantity_rest == 0:
-                        detalle.LineStatus = 'C'
-                    detalle.save()
-                
-                oprq["DocumentLines"].append({
-                    "LineNum": idx,
-                    "ItemCode": detalle.ItemCode.ItemCode,
-                    "ItemDescription": detalle.Description,
-                    "Quantity": item_data['Quantity'],
-                    "UnitPrice": detalle.Precio,
-                    "Currency": detalle.Currency.MonedaAbrev,
-                    "WarehouseCode": detalle.Almacen.WhsCode,
-                    "TaxCode": solicitud.TaxCode.Code,
-                    "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
-                    "BaseType": 1470000113,
-                    "BaseEntry": detalle.NumDoc.DocNumSAP, 
-                    "BaseLine": detalle.LineCount_Indexado,   
-                })
+                    oprq["DocumentLines"].append({
+                        "LineNum": idx,
+                        "ItemCode": detalle.ItemCode.ItemCode,
+                        "ItemDescription": detalle.Description,
+                        "Quantity": item_data['Quantity'],
+                        "UnitPrice": detalle.Precio,
+                        "Currency": detalle.Currency.MonedaAbrev,
+                        "WarehouseCode": detalle.Almacen.WhsCode,
+                        "TaxCode": solicitud.TaxCode.Code,
+                        "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
+                        "BaseType": 1470000113,
+                        "BaseEntry": detalle.NumDoc.DocNumSAP,
+                        "BaseLine": detalle.LineCount_Indexado,
+                    })
 
             json_data = json.dumps(oprq, indent=2)
             print("JSON generado para Productos para enviar:", json_data)
+            
+            # Intentar migración a SAP
             response = data_sender_productos(json_data, solicitud)
 
-            if isinstance(response, dict):
-                if response.get('status') == 'success' and response.get('doc_entry'):
-                    doc_entry_sap = response['doc_entry']
-                    print(f"DocEntry a usar: {doc_entry_sap}")
+            if isinstance(response, dict) and response.get('status') == 'success' and response.get('doc_entry'):
+                doc_entry_sap = response['doc_entry']
+                print(f"DocEntry a usar: {doc_entry_sap}")
 
-                    # Actualizar DocNumSAPOC en la cabecera
-                    orden_compra_cabecera.DocNumSAPOC = doc_entry_sap
-                    orden_compra_cabecera.save()
+                # Solo si la migración a SAP fue exitosa, procedemos a actualizar la BD
+                with transaction.atomic():
+                    try:
+                        # 1. Crear orden de compra en OCC y OCD1 (inicialmente con DocNumSAP en NULL)
+                        orden_compra_cabecera = guardar_orden_compra_oc_producto(
+                            detalles_seleccionados=detalles,
+                            solicitud=solicitud,
+                            tipo='I',
+                            proveedor=proveedor,
+                            items_data=items_data
+                        )
 
-                    # Actualizar DocNumSAPOCD en los detalles
-                    detalles_ocd1 = OCD1.objects.filter(NumDocOCD=orden_compra_cabecera)
-                    for detalle_ocd1 in detalles_ocd1:
-                        detalle_ocd1.DocNumSAPOCD = doc_entry_sap
-                        detalle_ocd1.save()
+                        # 2. Actualizar DocNumSAPOC en la cabecera
+                        orden_compra_cabecera.DocNumSAPOC = doc_entry_sap
+                        orden_compra_cabecera.save()
 
-                    # Verificar detalles pendientes
-                    detalles_asociados = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
-                    detalles_pendientes = detalles_asociados.filter(
-                        Q(LineStatus__in=['A', 'L']) | Q(Quantity_rest__gt=0)
-                    ).exclude(LineStatus='R').exists()
+                        # 3. Actualizar DocNumSAPOCD en los detalles
+                        detalles_ocd1 = OCD1.objects.filter(NumDocOCD=orden_compra_cabecera)
+                        for detalle_ocd1 in detalles_ocd1:
+                            detalle_ocd1.DocNumSAPOCD = doc_entry_sap
+                            detalle_ocd1.save()
 
-                    # Actualizar TipoDoc
-                    solicitud.TipoDoc = 'OC' if not detalles_pendientes else 'SOL'
-                    solicitud.save()
+                        # 4. Actualizar los detalles en PRQ1
+                        for detalle in detalles:
+                            item_data = next((item for item in items_data if str(item['Code']) == str(detalle.Code)), None)
+                            if item_data:
+                                detalle.Quantity_rest = item_data['Quantity_rest']
+                                detalle.total_rest = item_data['total_rest']
+                                if detalle.Quantity_rest == 0:
+                                    detalle.LineStatus = 'C'
+                                detalle.save()
 
-                    return JsonResponse({'message': 'Producto enviado y guardado correctamente.'}, status=200)
-                else:
-                    error_msg = f"Error en SAP: {response.get('error', 'Error desconocido')}"
-                    print(error_msg)
-                    return JsonResponse({'error': error_msg}, status=500)
+                        # 5. Verificar detalles pendientes y actualizar TipoDoc
+                        detalles_asociados = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
+                        detalles_pendientes = detalles_asociados.filter(
+                            Q(LineStatus__in=['A', 'L']) | Q(Quantity_rest__gt=0)
+                        ).exclude(LineStatus='R').exists()
+
+                        solicitud.TipoDoc = 'OC' if not detalles_pendientes else 'SOL'
+                        solicitud.save()
+
+                        return JsonResponse({'message': 'Producto enviado y guardado correctamente.'}, status=200)
+
+                    except Exception as e:
+                        # Si algo falla durante la actualización de la BD, hacer rollback
+                        transaction.set_rollback(True)
+                        raise Exception(f"Error al actualizar la base de datos: {str(e)}")
+
             else:
-                error_msg = f"Respuesta inválida de SAP: {response}"
+                # Si la migración a SAP falló, no se hace ningún cambio en la BD
+                error_msg = f"Error en SAP: {response.get('error', 'Error desconocido')}"
                 print(error_msg)
                 return JsonResponse({'error': error_msg}, status=500)
 
@@ -1962,6 +2101,114 @@ def export_data_as_jsonProductos(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+# def data_sender_productos(json_data, solicitud):
+#     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
+
+#     payload_session = json.dumps({
+#         "CompanyDB": "BDPRUEBASOCL",
+#         "Password": "m1r1",
+#         "UserName": "manager"
+#     })
+#     headers_session = {
+#         'Content-Type': 'application/json',
+#     }
+
+#     session = requests.Session()
+
+#     # Intentar iniciar sesión hasta 5 veces
+#     for attempt in range(5):
+#         try:
+#             response_session = session.post(url_session, headers=headers_session, data=payload_session, verify=False)
+
+#             if response_session.status_code == 200:
+#                 session_cookie = response_session.cookies.get('B1SESSION')
+#                 route_id_cookie = response_session.cookies.get('ROUTEID')
+#                 cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
+#                 print("Inicio de sesión exitoso!")
+#                 print(f"Código de estado de la sesión: {response_session.status_code}")
+#                 print(f"Cookies de sesión: {cookie_string}")
+#                 break
+#             else:
+#                 print(f"Intento {attempt + 1} fallido: Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
+#                 if attempt == 4:
+#                     return {
+#                         'status': 'error',
+#                         'error': f"Error al iniciar sesión después de 5 intentos: {response_session.status_code}",
+#                         'status_code': 500
+#                     }
+#                 time.sleep(2)
+#         except requests.RequestException as e:
+#             print(f"Error en el intento {attempt + 1}: {str(e)}")
+#             if attempt == 4:
+#                 return {
+#                     'status': 'error',
+#                     'error': f"Error al intentar iniciar sesión después de 5 intentos: {str(e)}",
+#                     'status_code': 500
+#                 }
+#             time.sleep(2)
+
+#     url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"
+#     headers = {
+#         'Content-Type': 'application/json',
+#         'Cookie': cookie_string
+#     }
+
+#     try:
+#         print(f"Enviando datos a SAP: {json_data}")
+#         response = session.post(url, headers=headers, data=json_data, verify=False)
+
+#         if response.status_code == 201:
+#             try:
+#                 response_json = response.json()
+                
+#                 doc_entry = response_json.get('DocEntry')
+#                 print(f"DocEntry extraído (Productos): {doc_entry}")
+                
+#                 if doc_entry:
+#                     return {
+#                         'status': 'success',
+#                         'doc_entry': doc_entry,
+#                         'response': response_json
+#                     }
+#                 else:
+#                     return {
+#                         'status': 'error',
+#                         'error': 'DocEntry no encontrado en la respuesta de SAP',
+#                         'status_code': 500,
+#                         'response': response_json
+#                     }
+#             except json.JSONDecodeError as e:
+#                 error_msg = f"Error al decodificar la respuesta de SAP: {response.text}"
+#                 print(error_msg)
+#                 return {
+#                     'status': 'error',
+#                     'error': error_msg,
+#                     'status_code': 500
+#                 }
+#         else:
+#             try:
+#                 response_dict = response.json()
+#                 value_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
+#             except json.JSONDecodeError:
+#                 value_message = f"Error al decodificar la respuesta: {response.text}"
+            
+#             error_message = f"Error en la solicitud de PurchaseOrders: {response.status_code} - {value_message}"
+#             print("Error completo en la solicitud:", error_message)
+#             return {
+#                 'status': 'error',
+#                 'error': value_message,
+#                 'status_code': response.status_code
+#             }
+
+#     except requests.RequestException as e:
+#         error_msg = f"Error en la conexión con SAP: {str(e)}"
+#         print(error_msg)
+#         return {
+#             'status': 'error',
+#             'error': error_msg,
+#             'status_code': 500
+#         }
 
 def data_sender_productos(json_data, solicitud):
     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
@@ -1984,12 +2231,87 @@ def data_sender_productos(json_data, solicitud):
 
             if response_session.status_code == 200:
                 session_cookie = response_session.cookies.get('B1SESSION')
-                route_id_cookie = response_session.cookies.get('ROUTEID')
+                route_id_cookie = response_session.cookies.get('ROUTEID', '.node1')  # Valor por defecto si es None
+                
+                # Verificar que ambas cookies existan
+                if not session_cookie or not route_id_cookie:
+                    print(f"Intento {attempt + 1}: Cookies incompletas - B1SESSION: {session_cookie}, ROUTEID: {route_id_cookie}")
+                    if attempt == 4:
+                        return {
+                            'status': 'error',
+                            'error': 'No se pudieron obtener las cookies de sesión completas',
+                            'status_code': 500
+                        }
+                    time.sleep(2)
+                    continue
+
                 cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
                 print("Inicio de sesión exitoso!")
                 print(f"Código de estado de la sesión: {response_session.status_code}")
                 print(f"Cookies de sesión: {cookie_string}")
-                break
+                
+                # Intentar la llamada a PurchaseOrders inmediatamente después del login
+                url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Cookie': cookie_string
+                }
+
+                try:
+                    print(f"Enviando datos a SAP: {json_data}")
+                    response = session.post(url, headers=headers, data=json_data, verify=False)
+
+                    if response.status_code == 201:
+                        try:
+                            response_json = response.json()
+                            doc_entry = response_json.get('DocEntry')
+                            print(f"DocEntry extraído (Productos): {doc_entry}")
+                            
+                            if doc_entry:
+                                return {
+                                    'status': 'success',
+                                    'doc_entry': doc_entry,
+                                    'response': response_json
+                                }
+                        except json.JSONDecodeError:
+                            if attempt < 4:  # Si no es el último intento, continuar el bucle
+                                print(f"Error al decodificar respuesta en intento {attempt + 1}, reintentando...")
+                                time.sleep(2)
+                                continue
+                            return {
+                                'status': 'error',
+                                'error': f"Error al decodificar la respuesta de SAP: {response.text}",
+                                'status_code': 500
+                            }
+                    else:
+                        if attempt < 4:  # Si no es el último intento, continuar el bucle
+                            print(f"Error en intento {attempt + 1}, reintentando...")
+                            time.sleep(2)
+                            continue
+                        
+                        try:
+                            response_dict = response.json()
+                            value_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
+                        except json.JSONDecodeError:
+                            value_message = f"Error al decodificar la respuesta: {response.text}"
+                        
+                        return {
+                            'status': 'error',
+                            'error': value_message,
+                            'status_code': response.status_code
+                        }
+
+                except requests.RequestException as e:
+                    if attempt < 4:
+                        print(f"Error de conexión en intento {attempt + 1}, reintentando...")
+                        time.sleep(2)
+                        continue
+                    return {
+                        'status': 'error',
+                        'error': f"Error en la conexión con SAP: {str(e)}",
+                        'status_code': 500
+                    }
+
             else:
                 print(f"Intento {attempt + 1} fallido: Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
                 if attempt == 4:
@@ -1999,6 +2321,7 @@ def data_sender_productos(json_data, solicitud):
                         'status_code': 500
                     }
                 time.sleep(2)
+
         except requests.RequestException as e:
             print(f"Error en el intento {attempt + 1}: {str(e)}")
             if attempt == 4:
@@ -2009,67 +2332,120 @@ def data_sender_productos(json_data, solicitud):
                 }
             time.sleep(2)
 
-    url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"
-    headers = {
-        'Content-Type': 'application/json',
-        'Cookie': cookie_string
+    return {
+        'status': 'error',
+        'error': 'No se pudo completar la operación después de 5 intentos',
+        'status_code': 500
     }
 
-    try:
-        print(f"Enviando datos a SAP: {json_data}")
-        response = session.post(url, headers=headers, data=json_data, verify=False)
+# def guardar_orden_compra_oc_producto(detalles_seleccionados, solicitud, tipo, proveedor, items_data):
+#     try:
+#         print(f"Items data recibidos: {items_data}")  # Log para debugging
+        
+#         # Buscar el proveedor en la base de datos
+#         proveedor_instance = OCRD.objects.get(CardCode=proveedor)
+#     except OCRD.DoesNotExist:
+#         return JsonResponse({'error': f'El proveedor con código {proveedor} no existe.'}, status=400)
 
-        if response.status_code == 201:
-            try:
-                response_json = response.json()
-                
-                doc_entry = response_json.get('DocEntry')
-                print(f"DocEntry extraído (Productos): {doc_entry}")
-                
-                if doc_entry:
-                    return {
-                        'status': 'success',
-                        'doc_entry': doc_entry,
-                        'response': response_json
-                    }
-                else:
-                    return {
-                        'status': 'error',
-                        'error': 'DocEntry no encontrado en la respuesta de SAP',
-                        'status_code': 500,
-                        'response': response_json
-                    }
-            except json.JSONDecodeError as e:
-                error_msg = f"Error al decodificar la respuesta de SAP: {response.text}"
-                print(error_msg)
-                return {
-                    'status': 'error',
-                    'error': error_msg,
-                    'status_code': 500
-                }
-        else:
-            try:
-                response_dict = response.json()
-                value_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
-            except json.JSONDecodeError:
-                value_message = f"Error al decodificar la respuesta: {response.text}"
-            
-            error_message = f"Error en la solicitud de PurchaseOrders: {response.status_code} - {value_message}"
-            print("Error completo en la solicitud:", error_message)
-            return {
-                'status': 'error',
-                'error': value_message,
-                'status_code': response.status_code
-            }
+#     # Crear cabecera OCC
+#     serie_instance = Series.objects.get(CodigoSerie=solicitud.Serie)
 
-    except requests.RequestException as e:
-        error_msg = f"Error en la conexión con SAP: {str(e)}"
-        print(error_msg)
-        return {
-            'status': 'error',
-            'error': error_msg,
-            'status_code': 500
-        }
+#     # Verificar que items_data no sea None y sea una lista
+#     if not items_data or not isinstance(items_data, list):
+#         return JsonResponse({'error': 'No se recibieron datos de items válidos'}, status=400)
+
+#     # Calcular el TotalOC usando las cantidades seleccionadas del frontend
+#     total_oc = 0
+#     for detalle in detalles_seleccionados:
+#         # Encontrar el item correspondiente en items_data
+#         item_data = next(
+#             (item for item in items_data if str(item['Code']) == str(detalle.Code)), 
+#             None
+#         )
+#         if item_data:
+#             total_oc += item_data['Quantity'] * detalle.Precio
+
+#     # Determinar el TotalImpuestosOC
+#     if solicitud.TaxCode.Code == "IGV":
+#         total_impuestos_oc = total_oc * 0.18
+#     else:
+#         total_impuestos_oc = solicitud.TotalImp
+
+#     orden_compra_cabecera = OCC.objects.create(
+#         DocNumOC=OCC.objects.count() + 1,
+#         SerieOC=serie_instance,
+#         SolicitanteOC=solicitud.ReqIdUser,
+#         DocTypeOC=tipo,
+#         DocDateOC=solicitud.DocDate,
+#         DocDueDateOC=solicitud.DocDueDate,
+#         SystemDateOC=date.today(),
+#         ProveedorOC=proveedor_instance,
+#         MonedaOC=solicitud.moneda,
+#         TaxCodeOC=solicitud.TaxCode,
+#         TotalOC=total_oc,
+#         TotalImpuestosOC=total_impuestos_oc + total_oc,
+#         CommentsOC=solicitud.Comments,
+#     )
+
+#     # Crear los detalles en OCD1
+#     detalles_ocd1 = []
+#     for detalle in detalles_seleccionados:
+#         # Encontrar el item correspondiente en items_data
+#         item_data = next(
+#             (item for item in items_data if str(item['Code']) == str(detalle.Code)), 
+#             None
+#         )
+        
+#         if not item_data:
+#             print(f"No se encontró item_data para el detalle con Code: {detalle.Code}")
+#             continue
+
+#         detalle_ocd1 = OCD1.objects.create(
+#             NumDocOCD=orden_compra_cabecera,
+#             ItemCodeOCD=detalle.ItemCode,
+#             LineVendorOCD=proveedor_instance,
+#             DescriptionOCD=detalle.Description,
+#             QuantityOCD=item_data['Quantity'],
+#             UnidadMedidaOCD=detalle.UnidadMedida,
+#             AlmacenOCD=detalle.Almacen,
+#             CuentaMayorOCD=detalle.CuentaMayor,
+#             PrecioOCD=detalle.Precio,
+#             TotalOCD=item_data['Quantity'] * detalle.Precio,
+#             LineStatusOCD='C' if item_data['Quantity_rest'] == 0 else 'L',
+#             DimensionOCD=detalle.idDimension,
+#             DocNumSAPOCD=None,
+#             BaseEntryOCD=detalle.NumDoc.DocNumSAP,
+#             BaseLineOCD=detalle.LineCount_Indexado,
+#             DocEntryOCD=detalle.NumDoc.DocEntry
+#         )
+#         detalles_ocd1.append(detalle_ocd1)
+
+#         # Actualizar PRQ1 con los valores rest
+#         detalle.Quantity_rest = item_data['Quantity_rest']
+#         detalle.total_rest = item_data['total_rest']
+#         if detalle.Quantity_rest == 0:
+#             detalle.LineStatus = 'C'
+#         detalle.save()
+
+#     # Actualizar DocNumSAPOCD después
+#     for detalle_ocd1 in detalles_ocd1:
+#         detalle_ocd1.DocNumSAPOCD = orden_compra_cabecera.DocNumSAPOC
+#         detalle_ocd1.save()
+
+#     # Actualizar el TipoDoc de las solicitudes
+#     solicitudes_actualizadas = set(detalle.NumDoc for detalle in detalles_seleccionados)
+
+#     for solicitud in solicitudes_actualizadas:
+#         detalles_pendientes = PRQ1.objects.filter(
+#             NumDoc=solicitud.DocEntry
+#         ).exclude(LineStatus='R').filter(
+#             Q(LineStatus__in=['A', 'L']) | Q(Quantity_rest__gt=0)
+#         ).exists()
+
+#         solicitud.TipoDoc = 'OC' if not detalles_pendientes else 'SOL'
+#         solicitud.save()
+
+#     return orden_compra_cabecera
 
 def guardar_orden_compra_oc_producto(detalles_seleccionados, solicitud, tipo, proveedor, items_data):
     try:
@@ -2078,14 +2454,14 @@ def guardar_orden_compra_oc_producto(detalles_seleccionados, solicitud, tipo, pr
         # Buscar el proveedor en la base de datos
         proveedor_instance = OCRD.objects.get(CardCode=proveedor)
     except OCRD.DoesNotExist:
-        return JsonResponse({'error': f'El proveedor con código {proveedor} no existe.'}, status=400)
+        raise Exception(f'El proveedor con código {proveedor} no existe.')
 
     # Crear cabecera OCC
     serie_instance = Series.objects.get(CodigoSerie=solicitud.Serie)
 
     # Verificar que items_data no sea None y sea una lista
     if not items_data or not isinstance(items_data, list):
-        return JsonResponse({'error': 'No se recibieron datos de items válidos'}, status=400)
+        raise Exception('No se recibieron datos de items válidos')
 
     # Calcular el TotalOC usando las cantidades seleccionadas del frontend
     total_oc = 0
@@ -2118,6 +2494,7 @@ def guardar_orden_compra_oc_producto(detalles_seleccionados, solicitud, tipo, pr
         TotalOC=total_oc,
         TotalImpuestosOC=total_impuestos_oc + total_oc,
         CommentsOC=solicitud.Comments,
+        DocNumSAPOC=None  # Inicialmente NULL, se actualizará después
     )
 
     # Crear los detalles en OCD1
@@ -2146,41 +2523,118 @@ def guardar_orden_compra_oc_producto(detalles_seleccionados, solicitud, tipo, pr
             TotalOCD=item_data['Quantity'] * detalle.Precio,
             LineStatusOCD='C' if item_data['Quantity_rest'] == 0 else 'L',
             DimensionOCD=detalle.idDimension,
-            DocNumSAPOCD=None,
+            DocNumSAPOCD=None,  # Inicialmente NULL, se actualizará después
             BaseEntryOCD=detalle.NumDoc.DocNumSAP,
             BaseLineOCD=detalle.LineCount_Indexado,
             DocEntryOCD=detalle.NumDoc.DocEntry
         )
         detalles_ocd1.append(detalle_ocd1)
 
-        # Actualizar PRQ1 con los valores rest
-        detalle.Quantity_rest = item_data['Quantity_rest']
-        detalle.total_rest = item_data['total_rest']
-        if detalle.Quantity_rest == 0:
-            detalle.LineStatus = 'C'
-        detalle.save()
-
-    # Actualizar DocNumSAPOCD después
-    for detalle_ocd1 in detalles_ocd1:
-        detalle_ocd1.DocNumSAPOCD = orden_compra_cabecera.DocNumSAPOC
-        detalle_ocd1.save()
-
-    # Actualizar el TipoDoc de las solicitudes
-    solicitudes_actualizadas = set(detalle.NumDoc for detalle in detalles_seleccionados)
-
-    for solicitud in solicitudes_actualizadas:
-        detalles_pendientes = PRQ1.objects.filter(
-            NumDoc=solicitud.DocEntry
-        ).exclude(LineStatus='R').filter(
-            Q(LineStatus__in=['A', 'L']) | Q(Quantity_rest__gt=0)
-        ).exists()
-
-        solicitud.TipoDoc = 'OC' if not detalles_pendientes else 'SOL'
-        solicitud.save()
-
     return orden_compra_cabecera
 
 # METODO LOGISTICA - SERVICIOS A OC
+# def export_data_as_jsonServicios(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#             items_data = data.get('items', [])
+#             proveedor_frontend = data.get('proveedor', None)
+
+#             if not items_data:
+#                 return JsonResponse({'error': 'No se enviaron servicios.'}, status=400)
+
+#             items_codes = [item['Code'] for item in items_data]
+
+#             detalles = PRQ1.objects.filter(Code__in=items_codes).select_related(
+#                 'NumDoc', 'ItemCode', 'Currency', 'CuentaMayor', 'idDimension', 'NumDoc__moneda', 'NumDoc__TaxCode', 'LineVendor'
+#             )
+
+#             if not detalles:
+#                 return JsonResponse({'error': 'No se encontraron detalles para los códigos proporcionados.'}, status=400)
+
+#             solicitud = detalles.first().NumDoc
+
+#             # Determinar el proveedor
+#             if proveedor_frontend:
+#                 proveedor = proveedor_frontend
+#             elif primera_detalle := detalles.first().LineVendor:
+#                 proveedor = primera_detalle.CardCode
+#             else:
+#                 return JsonResponse({'error': 'No se pudo determinar el proveedor para los servicios.'}, status=400)
+
+#             # Guardar orden de compra en OCC y OCD1
+#             orden_compra_cabecera = guardar_orden_compra_oc_servicio(detalles, solicitud, tipo='S', proveedor=proveedor)
+
+#             # Generar JSON para SAP
+#             oprq = {
+#                 "DocType": "dDocument_Service",
+#                 "DocDate": solicitud.DocDate.isoformat(),
+#                 "DocDueDate": solicitud.DocDueDate.isoformat(),
+#                 "TaxDate": solicitud.DocDate.isoformat(),
+#                 "CardCode": proveedor,
+#                 "DocCurrency": solicitud.moneda.MonedaAbrev,
+#                 "Series": 117,
+#                 "DocumentLines": []
+#             }
+
+#             for idx, detalle in enumerate(detalles):
+#                 oprq["DocumentLines"].append({
+#                     "LineNum": idx,
+#                     "ItemDescription": detalle.Description,
+#                     "Quantity": detalle.Quantity,
+#                     "Price": detalle.Precio,
+#                     "Currency": detalle.Currency.MonedaAbrev,
+#                     "TaxCode": solicitud.TaxCode.Code,
+#                     "CostingCode": detalle.idDimension.descripcion if detalle.idDimension else None,
+#                     "UnitPrice": detalle.Precio,
+#                     "DocTotal": detalle.Precio * detalle.Quantity,
+#                     "BaseType": 1470000113,
+#                     "BaseEntry": detalle.NumDoc.DocNumSAP, 
+#                     "BaseLine": detalle.LineCount_Indexado, 
+#                 })
+
+#             json_data = json.dumps(oprq, indent=2)
+#             response = data_sender_servicios(json_data, solicitud)
+#             print("JSON generado para Servicios para enviar:", json_data)
+
+#             if response.get('status') == 'success':
+#                 # Actualizar `DocNumSAPOC` en la cabecera
+#                 doc_entry_sap = response.get('doc_entry')
+#                 orden_compra_cabecera.DocNumSAPOC = doc_entry_sap
+#                 orden_compra_cabecera.save()
+
+#                 # Actualizar `DocNumSAPOCD` en los detalles
+#                 detalles_ocd1 = OCD1.objects.filter(NumDocOCD=orden_compra_cabecera)
+#                 for detalle_ocd1 in detalles_ocd1:
+#                     detalle_ocd1.DocNumSAPOCD = doc_entry_sap
+#                     detalle_ocd1.save()
+
+#                 # Verificar si todos los detalles tienen LineStatus 'C' antes de cambiar TipoDoc
+#                 detalles_asociados = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
+
+#                 # Verificar si hay detalles pendientes con LineStatus 'A' o 'L'
+#                 detalles_pendientes = detalles_asociados.filter(LineStatus__in=['A', 'L']).exists()
+
+#                 if not detalles_pendientes:
+#                     # Solo actualizar tipo de documento a 'OC' si NO hay detalles pendientes
+#                     solicitud.TipoDoc = 'OC'
+#                 else:
+#                     # Si hay detalles pendientes, mantener TipoDoc como 'SOL'
+#                     solicitud.TipoDoc = 'SOL'
+
+#                 solicitud.save()
+#                 return JsonResponse({'message': 'Servicio enviado y guardado correctamente.'}, status=200)
+#             else:
+#                 return JsonResponse({'error': response.get('error', 'Error al enviar a SAP')}, status=response.get('status_code', 500))
+
+#         except Exception as e:
+#             import traceback
+#             print("Error completo en export_data_as_jsonServicios:")
+#             traceback.print_exc()
+#             return JsonResponse({'error': str(e)}, status=500)
+
+#     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 def export_data_as_jsonServicios(request):
     if request.method == 'POST':
         try:
@@ -2194,7 +2648,8 @@ def export_data_as_jsonServicios(request):
             items_codes = [item['Code'] for item in items_data]
 
             detalles = PRQ1.objects.filter(Code__in=items_codes).select_related(
-                'NumDoc', 'ItemCode', 'Currency', 'CuentaMayor', 'idDimension', 'NumDoc__moneda', 'NumDoc__TaxCode', 'LineVendor'
+                'NumDoc', 'ItemCode', 'Currency', 'CuentaMayor', 'idDimension', 
+                'NumDoc__moneda', 'NumDoc__TaxCode', 'LineVendor'
             )
 
             if not detalles:
@@ -2210,10 +2665,7 @@ def export_data_as_jsonServicios(request):
             else:
                 return JsonResponse({'error': 'No se pudo determinar el proveedor para los servicios.'}, status=400)
 
-            # Guardar orden de compra en OCC y OCD1
-            orden_compra_cabecera = guardar_orden_compra_oc_servicio(detalles, solicitud, tipo='S', proveedor=proveedor)
-
-            # Generar JSON para SAP
+            # Generar JSON para SAP primero
             oprq = {
                 "DocType": "dDocument_Service",
                 "DocDate": solicitud.DocDate.isoformat(),
@@ -2237,43 +2689,66 @@ def export_data_as_jsonServicios(request):
                     "UnitPrice": detalle.Precio,
                     "DocTotal": detalle.Precio * detalle.Quantity,
                     "BaseType": 1470000113,
-                    "BaseEntry": detalle.NumDoc.DocNumSAP, 
-                    "BaseLine": detalle.LineCount_Indexado, 
+                    "BaseEntry": detalle.NumDoc.DocNumSAP,
+                    "BaseLine": detalle.LineCount_Indexado,
                 })
 
             json_data = json.dumps(oprq, indent=2)
-            response = data_sender_servicios(json_data, solicitud)
             print("JSON generado para Servicios para enviar:", json_data)
+            
+            # Intentar migración a SAP
+            response = data_sender_servicios(json_data, solicitud)
 
             if response.get('status') == 'success':
-                # Actualizar `DocNumSAPOC` en la cabecera
-                doc_entry_sap = response.get('doc_entry')
-                orden_compra_cabecera.DocNumSAPOC = doc_entry_sap
-                orden_compra_cabecera.save()
+                # Solo si la migración a SAP fue exitosa, procedemos con los cambios en la BD
+                with transaction.atomic():
+                    try:
+                        # 1. Crear orden de compra en OCC y OCD1
+                        orden_compra_cabecera = guardar_orden_compra_oc_servicio(
+                            detalles_seleccionados=detalles,
+                            solicitud=solicitud,
+                            tipo='S',
+                            proveedor=proveedor
+                        )
 
-                # Actualizar `DocNumSAPOCD` en los detalles
-                detalles_ocd1 = OCD1.objects.filter(NumDocOCD=orden_compra_cabecera)
-                for detalle_ocd1 in detalles_ocd1:
-                    detalle_ocd1.DocNumSAPOCD = doc_entry_sap
-                    detalle_ocd1.save()
+                        # 2. Actualizar DocNumSAPOC en la cabecera
+                        doc_entry_sap = response.get('doc_entry')
+                        orden_compra_cabecera.DocNumSAPOC = doc_entry_sap
+                        orden_compra_cabecera.save()
 
-                # Verificar si todos los detalles tienen LineStatus 'C' antes de cambiar TipoDoc
-                detalles_asociados = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
+                        # 3. Actualizar DocNumSAPOCD en los detalles
+                        detalles_ocd1 = OCD1.objects.filter(NumDocOCD=orden_compra_cabecera)
+                        for detalle_ocd1 in detalles_ocd1:
+                            detalle_ocd1.DocNumSAPOCD = doc_entry_sap
+                            detalle_ocd1.save()
 
-                # Verificar si hay detalles pendientes con LineStatus 'A' o 'L'
-                detalles_pendientes = detalles_asociados.filter(LineStatus__in=['A', 'L']).exists()
+                        # 4. Actualizar LineStatus en PRQ1 y TipoDoc en OPRQ
+                        for detalle in detalles:
+                            detalle.LineStatus = 'C'
+                            detalle.save()
 
-                if not detalles_pendientes:
-                    # Solo actualizar tipo de documento a 'OC' si NO hay detalles pendientes
-                    solicitud.TipoDoc = 'OC'
-                else:
-                    # Si hay detalles pendientes, mantener TipoDoc como 'SOL'
-                    solicitud.TipoDoc = 'SOL'
+                        # 5. Verificar si hay otros detalles pendientes antes de cambiar TipoDoc
+                        detalles_asociados = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
+                        detalles_pendientes = detalles_asociados.filter(
+                            LineStatus__in=['A', 'L']
+                        ).exists()
 
-                solicitud.save()
-                return JsonResponse({'message': 'Servicio enviado y guardado correctamente.'}, status=200)
+                        if not detalles_pendientes:
+                            solicitud.TipoDoc = 'OC'
+                        else:
+                            solicitud.TipoDoc = 'SOL'
+                        solicitud.save()
+
+                        return JsonResponse({'message': 'Servicio enviado y guardado correctamente.'}, status=200)
+
+                    except Exception as e:
+                        # Si algo falla durante la actualización de la BD, hacer rollback
+                        transaction.set_rollback(True)
+                        raise Exception(f"Error al actualizar la base de datos: {str(e)}")
             else:
-                return JsonResponse({'error': response.get('error', 'Error al enviar a SAP')}, status=response.get('status_code', 500))
+                return JsonResponse({
+                    'error': f"Error en SAP: {response.get('error', 'Error desconocido')}"
+                }, status=response.get('status_code', 500))
 
         except Exception as e:
             import traceback
@@ -2285,9 +2760,79 @@ def export_data_as_jsonServicios(request):
 
 
 # # DATA SENDER PARA CADA UNO
+# def data_sender_servicios(json_data, solicitud):
+#     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
+
+#     payload_session = json.dumps({
+#         "CompanyDB": "BDPRUEBASOCL",
+#         "Password": "m1r1",
+#         "UserName": "manager"
+#     })
+#     headers_session = {
+#         'Content-Type': 'application/json',
+#     }
+
+#     session = requests.Session()
+
+#     for attempt in range(5):
+#         try:
+#             response_session = session.post(url_session, headers=headers_session, data=payload_session, verify=False)
+
+#             if response_session.status_code == 200:
+#                 session_cookie = response_session.cookies.get('B1SESSION')
+#                 route_id_cookie = response_session.cookies.get('ROUTEID')
+#                 cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
+#                 print("Inicio de sesión exitoso!")
+#                 print(f"Código de estado de la sesión: {response_session.status_code}")
+#                 print(f"Cookies de sesión: {cookie_string}")
+#                 break
+#             else:
+#                 print(f"Intento {attempt + 1} fallido: Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
+#                 if attempt == 4:
+#                     return {'status': 'error', 'error': f"Error al iniciar sesión después de 5 intentos: {response_session.status_code}", 'status_code': 500}
+#                 time.sleep(2)
+#         except requests.RequestException as e:
+#             print(f"Error en el intento {attempt + 1}: {str(e)}")
+#             if attempt == 4:
+#                 return {'status': 'error', 'error': f"Error al intentar iniciar sesión después de 5 intentos: {str(e)}", 'status_code': 500}
+#             time.sleep(2)
+
+#     url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"
+#     headers = {
+#         'Content-Type': 'application/json',
+#         'Cookie': cookie_string
+#     }
+#     try:
+#         response = session.post(url, headers=headers, data=json_data, verify=False)
+
+#         if response.status_code == 201:
+#             try:
+#                 response_json = response.json()
+#                 print(f"Respuesta de SAP (Servicios): {response_json}")
+                
+#                 doc_entry = response_json.get('DocEntry')
+#                 print(f"DocEntry extraído (Servicios): {doc_entry}")
+                
+#                 return {'status': 'success', 'doc_entry': doc_entry}
+#             except json.JSONDecodeError:
+#                 return {'status': 'error', 'error': f"Error al decodificar la respuesta de SAP: {response.text}", 'status_code': 500}
+#         else:
+#             try:
+#                 response_dict = response.json()
+#                 value_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
+#             except json.JSONDecodeError:
+#                 value_message = f"Error al decodificar la respuesta: {response.text}"
+#             error_message = f"Error en la solicitud de PurchaseOrders: {response.status_code} - {response.text}"
+#             print("Error completo en la solicitud:", error_message)
+#             return {'status': 'error', 'error': value_message, 'status_code': response.status_code}
+
+#     except requests.RequestException as e:
+#         print(f"Error en la solicitud a PurchaseOrders: {str(e)}")
+#         return {'status': 'error', 'error': f"Error en la solicitud de PurchaseOrders: {str(e)}", 'status_code': 500}
+
+
 def data_sender_servicios(json_data, solicitud):
     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
-
     payload_session = json.dumps({
         "CompanyDB": "BDPRUEBASOCL",
         "Password": "m1r1",
@@ -2298,71 +2843,234 @@ def data_sender_servicios(json_data, solicitud):
     }
 
     session = requests.Session()
+    session.verify = False  # Desactivar verificación SSL
+
+    # Configurar timeouts más largos
+    session.timeout = (30, 60)  # (connect timeout, read timeout)
 
     for attempt in range(5):
         try:
-            response_session = session.post(url_session, headers=headers_session, data=payload_session, verify=False)
+            print(f"\nIntento {attempt + 1} de inicio de sesión...")
+            
+            # Esperar más tiempo entre intentos
+            if attempt > 0:
+                wait_time = attempt * 3
+                print(f"Esperando {wait_time} segundos antes del siguiente intento...")
+                time.sleep(wait_time)
+
+            response_session = session.post(url_session, headers=headers_session, data=payload_session)
 
             if response_session.status_code == 200:
                 session_cookie = response_session.cookies.get('B1SESSION')
-                route_id_cookie = response_session.cookies.get('ROUTEID')
+                route_id_cookie = response_session.cookies.get('ROUTEID', '.node1')  # Valor por defecto
+
+                if not session_cookie:
+                    print("No se obtuvo B1SESSION, reintentando...")
+                    continue
+
                 cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
-                print("Inicio de sesión exitoso!")
-                print(f"Código de estado de la sesión: {response_session.status_code}")
-                print(f"Cookies de sesión: {cookie_string}")
-                break
+                print(f"Sesión iniciada - B1SESSION: {session_cookie}, ROUTEID: {route_id_cookie}")
+
+                # Intentar la creación de la orden de compra
+                url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Cookie': cookie_string
+                }
+
+                try:
+                    print("Enviando orden de servicio a SAP...")
+                    print(f"JSON a enviar: {json_data}")
+                    
+                    for purchase_attempt in range(3):  # Intentos específicos para PurchaseOrders
+                        try:
+                            response = session.post(
+                                url, 
+                                headers=headers, 
+                                data=json_data,
+                                timeout=(30, 90)  # Aumentar timeout para esta llamada específica
+                            )
+
+                            if response.status_code == 201:
+                                try:
+                                    response_json = response.json()
+                                    doc_entry = response_json.get('DocEntry')
+                                    print(f"Orden de servicio creada exitosamente. DocEntry: {doc_entry}")
+                                    return {
+                                        'status': 'success',
+                                        'doc_entry': doc_entry
+                                    }
+                                except json.JSONDecodeError as e:
+                                    print(f"Error decodificando respuesta JSON: {str(e)}")
+                                    if purchase_attempt < 2:
+                                        print("Reintentando envío de orden...")
+                                        time.sleep(3)
+                                        continue
+                            else:
+                                try:
+                                    error_json = response.json()
+                                    error_message = error_json.get('error', {}).get('message', {}).get('value', 'Error desconocido')
+                                except json.JSONDecodeError:
+                                    error_message = response.text
+
+                                print(f"Error en respuesta SAP: Status {response.status_code} - {error_message}")
+                                if purchase_attempt < 2:
+                                    print("Reintentando envío de orden...")
+                                    time.sleep(3)
+                                    continue
+
+                                return {
+                                    'status': 'error',
+                                    'error': error_message,
+                                    'status_code': response.status_code
+                                }
+
+                        except requests.exceptions.RequestException as e:
+                            print(f"Error en intento {purchase_attempt + 1} de envío de orden: {str(e)}")
+                            if purchase_attempt < 2:
+                                print("Reintentando envío de orden...")
+                                time.sleep(3)
+                                continue
+                            if attempt < 4:  # Si aún quedan intentos de sesión
+                                raise  # Forzar reintento de sesión completa
+
+                    # Si llegamos aquí, fallaron todos los intentos de PurchaseOrders
+                    if attempt < 4:  # Si aún quedan intentos de sesión
+                        continue  # Intentar nueva sesión
+                    return {
+                        'status': 'error',
+                        'error': 'Falló el envío de la orden después de múltiples intentos',
+                        'status_code': 500
+                    }
+
+                except Exception as e:
+                    print(f"Error inesperado: {str(e)}")
+                    if attempt < 4:
+                        continue
+                    return {
+                        'status': 'error',
+                        'error': str(e),
+                        'status_code': 500
+                    }
+
             else:
-                print(f"Intento {attempt + 1} fallido: Error en la solicitud de sesión: {response_session.status_code} - {response_session.text}")
+                print(f"Error en inicio de sesión: {response_session.status_code} - {response_session.text}")
                 if attempt == 4:
-                    return {'status': 'error', 'error': f"Error al iniciar sesión después de 5 intentos: {response_session.status_code}", 'status_code': 500}
-                time.sleep(2)
-        except requests.RequestException as e:
-            print(f"Error en el intento {attempt + 1}: {str(e)}")
+                    return {
+                        'status': 'error',
+                        'error': f"Error al iniciar sesión después de 5 intentos: {response_session.status_code}",
+                        'status_code': 500
+                    }
+
+        except Exception as e:
+            print(f"Error en intento {attempt + 1}: {str(e)}")
             if attempt == 4:
-                return {'status': 'error', 'error': f"Error al intentar iniciar sesión después de 5 intentos: {str(e)}", 'status_code': 500}
+                return {
+                    'status': 'error',
+                    'error': str(e),
+                    'status_code': 500
+                }
             time.sleep(2)
 
-    url = "https://CFR-I7-1:50000/b1s/v1/PurchaseOrders"
-    headers = {
-        'Content-Type': 'application/json',
-        'Cookie': cookie_string
+    return {
+        'status': 'error',
+        'error': 'No se pudo completar la operación después de 5 intentos',
+        'status_code': 500
     }
-    try:
-        response = session.post(url, headers=headers, data=json_data, verify=False)
-
-        if response.status_code == 201:
-            try:
-                response_json = response.json()
-                print(f"Respuesta de SAP (Servicios): {response_json}")
-                
-                doc_entry = response_json.get('DocEntry')
-                print(f"DocEntry extraído (Servicios): {doc_entry}")
-                
-                return {'status': 'success', 'doc_entry': doc_entry}
-            except json.JSONDecodeError:
-                return {'status': 'error', 'error': f"Error al decodificar la respuesta de SAP: {response.text}", 'status_code': 500}
-        else:
-            try:
-                response_dict = response.json()
-                value_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
-            except json.JSONDecodeError:
-                value_message = f"Error al decodificar la respuesta: {response.text}"
-            error_message = f"Error en la solicitud de PurchaseOrders: {response.status_code} - {response.text}"
-            print("Error completo en la solicitud:", error_message)
-            return {'status': 'error', 'error': value_message, 'status_code': response.status_code}
-
-    except requests.RequestException as e:
-        print(f"Error en la solicitud a PurchaseOrders: {str(e)}")
-        return {'status': 'error', 'error': f"Error en la solicitud de PurchaseOrders: {str(e)}", 'status_code': 500}
     
     
 #FUNCION GUARDADO OCC Y OCD1
+# def guardar_orden_compra_oc_servicio(detalles_seleccionados, solicitud, tipo, proveedor):
+#     try:
+#         # Buscar el proveedor en la base de datos
+#         proveedor_instance = OCRD.objects.get(CardCode=proveedor)
+#     except OCRD.DoesNotExist:
+#         return JsonResponse({'error': f'El proveedor con código {proveedor} no existe.'}, status=400)
+
+#     # Crear cabecera OCC
+#     serie_instance = Series.objects.get(CodigoSerie=solicitud.Serie)
+
+#     # Calcular el TotalOC sumando los totales de los detalles
+#     total_oc = sum(detalle.Precio * detalle.Quantity for detalle in detalles_seleccionados)
+
+#     # Determinar el TotalImpuestosOC
+#     if solicitud.TaxCode.Code == "IGV":  # Verificar si el TaxCode es IGV
+#         total_impuestos_oc = total_oc * 0.18  # Aplicar el 18%
+#     else:
+#         total_impuestos_oc = solicitud.TotalImp  # Mantener el valor original si no es IGV
+
+#     orden_compra_cabecera = OCC.objects.create(
+#         DocNumOC=OCC.objects.count() + 1,  # Generar un DocNum incremental
+#         SerieOC=serie_instance,
+#         SolicitanteOC=solicitud.ReqIdUser,
+#         DocTypeOC=tipo,
+#         DocDateOC=solicitud.DocDate,
+#         DocDueDateOC=solicitud.DocDueDate,
+#         SystemDateOC=date.today(),
+#         ProveedorOC=proveedor_instance,  # Asignar la instancia del proveedor
+#         MonedaOC=solicitud.moneda,
+#         TaxCodeOC=solicitud.TaxCode,
+#         TotalOC=total_oc,  # Total calculado
+#         TotalImpuestosOC=total_impuestos_oc + total_oc,  # Total de impuestos calculado
+#         CommentsOC=solicitud.Comments,
+#     )
+
+#     # Crear los detalles en OCD1
+#     detalles_ocd1 = []
+#     for detalle in detalles_seleccionados:
+#         detalle_ocd1 = OCD1.objects.create(
+#             NumDocOCD=orden_compra_cabecera,
+#             ItemCodeOCD=detalle.ItemCode,
+#             LineVendorOCD=proveedor_instance,  # Asignar la instancia del proveedor
+#             DescriptionOCD=detalle.Description,
+#             QuantityOCD=detalle.Quantity,
+#             UnidadMedidaOCD=detalle.UnidadMedida,
+#             AlmacenOCD=detalle.Almacen,
+#             CuentaMayorOCD=detalle.CuentaMayor,
+#             PrecioOCD=detalle.Precio,
+#             TotalOCD=detalle.Precio * detalle.Quantity,
+#             LineStatusOCD='C',
+#             DimensionOCD=detalle.idDimension,
+#             DocNumSAPOCD=None,  # Actualizar después
+#             BaseEntryOCD=detalle.NumDoc.DocNumSAP,  # Cambiado: usar DocNumSAP en lugar de DocEntry
+#             BaseLineOCD=detalle.LineCount_Indexado,  # Usar LineCount
+#             DocEntryOCD=detalle.NumDoc.DocEntry
+#         )
+#         detalles_ocd1.append(detalle_ocd1)
+
+#         # Marcar el detalle como cerrado
+#         detalle.LineStatus = 'C'
+#         detalle.save()
+
+#     # Actualizar `DocNumSAPOCD` después de enviar a SAP
+#     for detalle_ocd1 in detalles_ocd1:
+#         detalle_ocd1.DocNumSAPOCD = orden_compra_cabecera.DocNumSAPOC
+#         detalle_ocd1.save()
+
+#     # Actualizar el `TipoDoc` de todas las solicitudes relacionadas con los detalles seleccionados
+#     solicitudes_actualizadas = set(detalle.NumDoc for detalle in detalles_seleccionados)  # Conjunto de solicitudes únicas
+
+#     for solicitud in solicitudes_actualizadas:
+#         # Verificar si hay detalles pendientes con LineStatus 'A' o 'L'
+#         detalles_pendientes = PRQ1.objects.filter(NumDoc=solicitud.DocEntry, LineStatus__in=['A', 'L']).exists()
+
+#         if not detalles_pendientes:
+#             # Solo actualizar TipoDoc a 'OC' si NO hay detalles pendientes con 'A' o 'L'
+#             solicitud.TipoDoc = 'OC'
+#         else:
+#             # Si hay detalles pendientes, mantener TipoDoc como 'SOL'
+#             solicitud.TipoDoc = 'SOL'
+
+#         solicitud.save()
+
+#     return orden_compra_cabecera
+
 def guardar_orden_compra_oc_servicio(detalles_seleccionados, solicitud, tipo, proveedor):
     try:
         # Buscar el proveedor en la base de datos
         proveedor_instance = OCRD.objects.get(CardCode=proveedor)
     except OCRD.DoesNotExist:
-        return JsonResponse({'error': f'El proveedor con código {proveedor} no existe.'}, status=400)
+        raise Exception(f'El proveedor con código {proveedor} no existe.')
 
     # Crear cabecera OCC
     serie_instance = Series.objects.get(CodigoSerie=solicitud.Serie)
@@ -2371,34 +3079,33 @@ def guardar_orden_compra_oc_servicio(detalles_seleccionados, solicitud, tipo, pr
     total_oc = sum(detalle.Precio * detalle.Quantity for detalle in detalles_seleccionados)
 
     # Determinar el TotalImpuestosOC
-    if solicitud.TaxCode.Code == "IGV":  # Verificar si el TaxCode es IGV
-        total_impuestos_oc = total_oc * 0.18  # Aplicar el 18%
+    if solicitud.TaxCode.Code == "IGV":
+        total_impuestos_oc = total_oc * 0.18
     else:
-        total_impuestos_oc = solicitud.TotalImp  # Mantener el valor original si no es IGV
+        total_impuestos_oc = solicitud.TotalImp
 
     orden_compra_cabecera = OCC.objects.create(
-        DocNumOC=OCC.objects.count() + 1,  # Generar un DocNum incremental
+        DocNumOC=OCC.objects.count() + 1,
         SerieOC=serie_instance,
         SolicitanteOC=solicitud.ReqIdUser,
         DocTypeOC=tipo,
         DocDateOC=solicitud.DocDate,
         DocDueDateOC=solicitud.DocDueDate,
         SystemDateOC=date.today(),
-        ProveedorOC=proveedor_instance,  # Asignar la instancia del proveedor
+        ProveedorOC=proveedor_instance,
         MonedaOC=solicitud.moneda,
         TaxCodeOC=solicitud.TaxCode,
-        TotalOC=total_oc,  # Total calculado
-        TotalImpuestosOC=total_impuestos_oc + total_oc,  # Total de impuestos calculado
+        TotalOC=total_oc,
+        TotalImpuestosOC=total_impuestos_oc + total_oc,
         CommentsOC=solicitud.Comments,
     )
 
     # Crear los detalles en OCD1
-    detalles_ocd1 = []
     for detalle in detalles_seleccionados:
-        detalle_ocd1 = OCD1.objects.create(
+        OCD1.objects.create(
             NumDocOCD=orden_compra_cabecera,
             ItemCodeOCD=detalle.ItemCode,
-            LineVendorOCD=proveedor_instance,  # Asignar la instancia del proveedor
+            LineVendorOCD=proveedor_instance,
             DescriptionOCD=detalle.Description,
             QuantityOCD=detalle.Quantity,
             UnidadMedidaOCD=detalle.UnidadMedida,
@@ -2408,40 +3115,13 @@ def guardar_orden_compra_oc_servicio(detalles_seleccionados, solicitud, tipo, pr
             TotalOCD=detalle.Precio * detalle.Quantity,
             LineStatusOCD='C',
             DimensionOCD=detalle.idDimension,
-            DocNumSAPOCD=None,  # Actualizar después
-            BaseEntryOCD=detalle.NumDoc.DocNumSAP,  # Cambiado: usar DocNumSAP en lugar de DocEntry
-            BaseLineOCD=detalle.LineCount_Indexado,  # Usar LineCount
+            DocNumSAPOCD=None,
+            BaseEntryOCD=detalle.NumDoc.DocNumSAP,
+            BaseLineOCD=detalle.LineCount_Indexado,
             DocEntryOCD=detalle.NumDoc.DocEntry
         )
-        detalles_ocd1.append(detalle_ocd1)
-
-        # Marcar el detalle como cerrado
-        detalle.LineStatus = 'C'
-        detalle.save()
-
-    # Actualizar `DocNumSAPOCD` después de enviar a SAP
-    for detalle_ocd1 in detalles_ocd1:
-        detalle_ocd1.DocNumSAPOCD = orden_compra_cabecera.DocNumSAPOC
-        detalle_ocd1.save()
-
-    # Actualizar el `TipoDoc` de todas las solicitudes relacionadas con los detalles seleccionados
-    solicitudes_actualizadas = set(detalle.NumDoc for detalle in detalles_seleccionados)  # Conjunto de solicitudes únicas
-
-    for solicitud in solicitudes_actualizadas:
-        # Verificar si hay detalles pendientes con LineStatus 'A' o 'L'
-        detalles_pendientes = PRQ1.objects.filter(NumDoc=solicitud.DocEntry, LineStatus__in=['A', 'L']).exists()
-
-        if not detalles_pendientes:
-            # Solo actualizar TipoDoc a 'OC' si NO hay detalles pendientes con 'A' o 'L'
-            solicitud.TipoDoc = 'OC'
-        else:
-            # Si hay detalles pendientes, mantener TipoDoc como 'SOL'
-            solicitud.TipoDoc = 'SOL'
-
-        solicitud.save()
 
     return orden_compra_cabecera
-
 
 
 # # LISTA DE ORDENES
@@ -2600,7 +3280,8 @@ def get_solicitud_detalle_producto(request, doc_num):
             'UnidadMedida__Name',
             'Almacen__WhsName',
             'total',
-            'LineStatus'
+            'LineStatus',
+            'Quantity_rest',
         )
         print(f"Detalles encontrados: {detalles.count()}")
         return JsonResponse(list(detalles), safe=False)
