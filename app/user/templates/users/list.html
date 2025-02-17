@@ -56,5 +56,25 @@
         </div>
     </form>
 
-{% endblock %}
+    <!-- Modal para confirmación de eliminación -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1" id="deleteMessage">¿Eliminar registro?</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            
+                            <button type="button" class="btn btn-danger" id="confirmDelete">Si, Eliminar</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+{% endblock %}

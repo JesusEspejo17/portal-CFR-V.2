@@ -448,11 +448,11 @@ function tablaDetalleServicio(docNum) {
         autoWidth: false,
         "language": {
             "sProcessing": "Procesando...",
-            "sLengthMenu": "Mostrar _MENU_ registros",
+            "sLengthMenu": "",
             "sZeroRecords": "No se encontraron resultados",
             "sEmptyTable": "Ningún dato disponible en esta tabla",
-            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-            "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+            "sInfo": "",
+            "sInfoEmpty": "",
             "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
             "sInfoPostFix": "",
             "sSearch": "Buscar:",
@@ -518,6 +518,36 @@ function tablaDetalleServicio(docNum) {
             //         return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
             //     }
             // }
+
+
+
+
+            // {
+            //     targets: [-1],
+            //     class: "text-center",
+            //     orderable: false,
+            //     render: function (data, type, row) {
+            //         var checked = '';
+            //         var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
+
+            //         // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
+            //         if (isHeadofBudget) {
+            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
+            //             //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+            //             return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
+            //         }
+
+            //         // Para otros roles, mantener la lógica existente
+            //         if (row.LineStatus === 'P') {
+            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
+            //         } else {
+            //             //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
+            //             return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
+            //         }
+            //         //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+            //         return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
+            //     }
+            // },
             {
                 targets: [-1],
                 class: "text-center",
@@ -525,25 +555,32 @@ function tablaDetalleServicio(docNum) {
                 render: function (data, type, row) {
                     var checked = '';
                     var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
-
+                    var isHeadOfArea = userGroups.includes('Jefe_De_Area');
+            
+                    // Verificar si el LineStatus es "A" o "C"
+                    var hasLineStatusAorC = row.LineStatus === 'A' || row.LineStatus === 'C' || row.LineStatus === 'L';
+            
                     // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
                     if (isHeadofBudget) {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
-                        //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
                         return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                     }
-
+            
+                    // Si es Jefe de Área y el LineStatus es "A" o "C", deshabilitar checkboxes
+                    if (isHeadOfArea && hasLineStatusAorC) {
+                        return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" disabled></div>`;
+                    }
+            
                     // Para otros roles, mantener la lógica existente
                     if (row.LineStatus === 'P') {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
                     } else {
-                        //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
                         return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                     }
-                    //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
+            
                     return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                 }
-            },
+            }
         ],
         createdRow: function (row, data, dataIndex) {
             if (data.LineStatus != 'P') {
@@ -609,11 +646,11 @@ function tablaDetalleProducto(docNum) {
         autoWidth: false,
         "language": {
             "sProcessing": "Procesando...",
-            "sLengthMenu": "Mostrar _MENU_ registros",
+            "sLengthMenu": "",
             "sZeroRecords": "No se encontraron resultados",
             "sEmptyTable": "Ningún dato disponible en esta tabla",
-            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-            "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+            "sInfo": "",
+            "sInfoEmpty": "",
             "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
             "sInfoPostFix": "",
             "sSearch": "Buscar:",
@@ -677,6 +714,36 @@ function tablaDetalleProducto(docNum) {
             //         return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
             //     }
             // }
+
+
+
+
+
+            // {
+            //     targets: [-1],
+            //     class: "text-center",
+            //     orderable: false,
+            //     render: function (data, type, row) {
+            //         var checked = '';
+            //         var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
+
+            //         //AGREGUE NAME Y VALUE A LOS TRES CHECKBOX, FALTA SERVICIO
+
+            //         // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
+            //         if (isHeadofBudget) {
+            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
+            //             return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
+            //         }
+
+            //         // Para otros roles, mantener la lógica existente
+            //         if (row.LineStatus === 'P') {
+            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
+            //         } else {
+            //             return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
+            //         }
+            //         return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
+            //     }
+            // }
             {
                 targets: [-1],
                 class: "text-center",
@@ -684,21 +751,29 @@ function tablaDetalleProducto(docNum) {
                 render: function (data, type, row) {
                     var checked = '';
                     var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
-
-                    //AGREGUE NAME Y VALUE A LOS TRES CHECKBOX, FALTA SERVICIO
-
+                    var isHeadOfArea = userGroups.includes('Jefe_De_Area');
+            
+                    // Verificar si el LineStatus es "A" o "C"
+                    var hasLineStatusAorC = row.LineStatus === 'A' || row.LineStatus === 'C' || row.LineStatus === 'L';
+            
                     // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
                     if (isHeadofBudget) {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
                         return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                     }
-
+            
+                    // Si es Jefe de Área y el LineStatus es "A" o "C", deshabilitar checkboxes
+                    if (isHeadOfArea && hasLineStatusAorC) {
+                        return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" disabled></div>`;
+                    }
+            
                     // Para otros roles, mantener la lógica existente
                     if (row.LineStatus === 'P') {
                         checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
                     } else {
                         return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                     }
+            
                     return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
                 }
             }

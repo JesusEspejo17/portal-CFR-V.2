@@ -9,6 +9,8 @@ from django.http import JsonResponse, HttpResponseRedirect
 from user.forms import UserForm, UserEditForm
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import IntegrityError
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
 
 # Create your views here.
 
@@ -139,3 +141,19 @@ class UserEditView(ValidatePermissionRequiredMixin, UpdateView):
         self.object = self.get_object()
         return super().dispatch(request, *args, **kwargs)
 
+class UserDeleteView(DeleteView):
+    model = User
+    success_url = reverse_lazy('user:userlist')
+    
+    @method_decorator(csrf_exempt)
+    @method_decorator(require_POST)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            self.object.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'error': str(e)})

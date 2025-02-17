@@ -193,6 +193,13 @@
                     </thead>
                     <tbody>
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="9" style="text-align:right">SUBTOTAL:</th>
+                            <th><span id="subtotalProducts">0.00</span></th>
+                            <th colspan="2"></th>
+                        </tr>
+                    </tfoot>
                 </table>
 
                 <table class="table table-bordered table-hover" id="tblServicios" style="display: none;">
@@ -212,6 +219,13 @@
                     </thead>
                     <tbody>
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="8" style="text-align:right">SUBTOTAL:</th>
+                            <th><span id="subtotalServicios">0.00</span></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
                 </table>
 
                 <!-- Campos ocultos para enviar datos de vents y servs -->
@@ -348,20 +362,31 @@
         }
     };
 
-    function setTotales(valor) {
+    {% comment %} function setTotales(valor) {
         var subtotal = parseFloat($("#idTotal").val());
         if (isNaN(subtotal)) {
             subtotal = 0;
         }
         subtotal += parseFloat(valor);
         $("#idTotal").val(subtotal.toFixed(2));
+        
+        // Actualiza el subtotal en el pie de página
+        if ($("#tblProducts").is(":visible")) {
+            $("#subtotalProducts").text(subtotal.toFixed(2));
+        } else if ($("#tblServicios").is(":visible")) {
+            $("#subtotalServicios").text(subtotal.toFixed(2));
+        }
     }
-
+    
     function restartTotales() {
         subtotal = 0.00;
         $("#idTotal").val(subtotal.toFixed(2));
+        
+        // Reinicia el subtotal en el pie de página
+        $("#subtotalProducts").text(subtotal.toFixed(2));
+        $("#subtotalServicios").text(subtotal.toFixed(2));
     }
-
+    
     function reducirTotales(valor) {
         var subtotal = parseFloat($("#idTotal").val());
         if (isNaN(subtotal)) {
@@ -369,8 +394,137 @@
         }
         subtotal -= valor;
         $("#idTotal").val(subtotal.toFixed(2));
-    }
+        
+        // Actualiza el subtotal en el pie de página
+        if ($("#tblProducts").is(":visible")) {
+            $("#subtotalProducts").text(subtotal.toFixed(2));
+        } else if ($("#tblServicios").is(":visible")) {
+            $("#subtotalServicios").text(subtotal.toFixed(2));
+        }
+    } {% endcomment %}
 
+    function setTotales(valor) {
+        var subtotal = parseFloat($("#idTotal").val());
+        if (isNaN(subtotal)) {
+            subtotal = 0;
+        }
+        subtotal += parseFloat(valor);
+        $("#idTotal").val(subtotal.toFixed(2));
+        
+        // Actualiza el subtotal en el pie de página
+        if ($("#tblProducts").is(":visible")) {
+            $("#subtotalProducts").text(subtotal.toFixed(2));
+        } else if ($("#tblServicios").is(":visible")) {
+            $("#subtotalServicios").text(subtotal.toFixed(2));
+        }
+    }
+    
+    function restartTotales() {
+        subtotal = 0.00;
+        $("#idTotal").val(subtotal.toFixed(2));
+        
+        // Reinicia el subtotal en el pie de página
+        $("#subtotalProducts").text(subtotal.toFixed(2));
+        $("#subtotalServicios").text(subtotal.toFixed(2));
+    }
+    
+    function reducirTotales(valor) {
+        var subtotal = parseFloat($("#idTotal").val());
+        if (isNaN(subtotal)) {
+            subtotal = 0;
+        }
+        subtotal -= valor;
+        $("#idTotal").val(subtotal.toFixed(2));
+        
+        // Actualiza el subtotal en el pie de página
+        if ($("#tblProducts").is(":visible")) {
+            $("#subtotalProducts").text(subtotal.toFixed(2));
+        } else if ($("#tblServicios").is(":visible")) {
+            $("#subtotalServicios").text(subtotal.toFixed(2));
+        }
+    }
+    
+    // Función para actualizar subtotales en tiempo real
+    function actualizarSubtotales() {
+        var total = 0;
+        
+        if ($("#tblProducts").is(":visible")) {
+            $("#tblProducts tbody tr").each(function() {
+                var precioTotal = parseFloat($(this).find('td:eq(9)').text().trim());
+                if (!isNaN(precioTotal)) {
+                    total += precioTotal;
+                }
+            });
+            $("#subtotalProducts").text(total.toFixed(2));
+        } else if ($("#tblServicios").is(":visible")) {
+            $("#tblServicios tbody tr").each(function() {
+                var precioTotal = parseFloat($(this).find('td:eq(8)').text().trim());
+                if (!isNaN(precioTotal)) {
+                    total += precioTotal;
+                }
+            });
+            $("#subtotalServicios").text(total.toFixed(2));
+        }
+    
+        $("#idTotal").val(total.toFixed(2));
+    }
+    
+    // Evento para detectar cambios en celdas editables y actualizar subtotales
+    $('#tblProducts tbody, #tblServicios tbody').on('change', '.editable-cell input[type="number"], .editable-cell select', function () {
+        setTimeout(actualizarSubtotales, 100); // Actualiza subtotales con un pequeño retardo para asegurar que los valores se hayan actualizado
+    });
+    
+    $('#tblProducts tbody').on('click', 'a[rel="remove"]', function () {
+        var tr = $(this).closest('tr');
+        var precioTotal = parseFloat(tr.find('td:eq(9)').text().trim());
+        reducirTotales(precioTotal);
+        var tr = tblProducts.cell($(this).closest('td, li')).index();
+        vents.items.products.splice(tr.row, 1);
+        actualizarSubtotales();
+        if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
+        vents.list();
+    });
+    
+    $('#tblServicios tbody').on('click', 'a[rel="remove"]', function () {
+        var tr = $(this).closest('tr');
+        var precioTotal = parseFloat(tr.find('td:eq(8)').text().trim());
+        reducirTotales(precioTotal);
+        var tr = tblServicios.cell($(this).closest('td, li')).index();
+        servs.items.servicios.splice(tr.row, 1);
+        actualizarSubtotales();
+        if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
+        servs.list();
+    });
+    
+    $('#tblProducts tbody, #tblServicios tbody').on('change', '.editable-cell input[type="number"], .editable-cell select', function () {
+        var type = $(this).attr('data-type');
+        var rowIndex = $(this).closest('tr').index();
+        var newValue = $(this).val();
+    
+        if ($("#tblProducts").is(":visible")) {
+            var producto = vents.items.products[rowIndex];
+            if (type === 'cant') {
+                producto.cant = newValue;
+                producto.precio_total = (newValue * parseFloat(producto.price)).toFixed(2);
+            } else if (type === 'price') {
+                producto.price = newValue;
+                producto.precio_total = (newValue * parseFloat(producto.cant)).toFixed(2);
+            }
+            vents.list();
+        } else if ($("#tblServicios").is(":visible")) {
+            var servicio = servs.items.servicios[rowIndex];
+            if (type === 'cant') {
+                servicio.cant = newValue;
+                servicio.precio_total = (newValue * parseFloat(servicio.price)).toFixed(2);
+            } else if (type === 'price') {
+                servicio.price = newValue;
+                servicio.precio_total = (newValue * parseFloat(servicio.cant)).toFixed(2);
+            }
+            servs.list();
+        }
+    
+        actualizarSubtotales();
+    });
 
     $("#btnAgregar").click(function (e) {
         var option = document.getElementById("selectDetalle").value;

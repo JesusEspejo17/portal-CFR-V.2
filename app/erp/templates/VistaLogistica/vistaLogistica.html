@@ -198,74 +198,70 @@
                         <div class="card-body">
                             <div class="row g-5 g-xl-8">
                                 <!-- Campo oculto -->
-                                <label type="text" aria-readonly="true" id="InputDocEntry" class="form-control form-control-user" style="text-align:right;" hidden></label>
-
-                                <!-- Primera fila -->
-                                <div class="row mb-5" style="margin-top: 20px;">
-                                    <div class="col-sm-4 d-flex align-items-center">
-                                        <label for="detallesDocNum" id="lblDetDocNum" class="col-form-label flex-shrink-0" style="width: 200px;">Número de Documento:</label>
-                                        <label type="text" aria-readonly="true" id="detallesDocNum" class="form-control form-control-solid flex-grow-1 ms-3"></label>
-                                    </div>
-                                    <div class="col-sm-4 d-flex align-items-center">
-                                        <label for="detalleSerie" class="col-form-label flex-shrink-0" style="width: 200px;">Serie:</label>
-                                        <label type="text" aria-readonly="true" id="detalleSerie" class="form-control form-control-solid flex-grow-1 ms-3"></label>
-                                    </div>
-                                    <div class="col-sm-4 d-flex align-items-center">
-                                        <label for="detallesDocStatus" id="lblDocStatus" class="col-form-label flex-shrink-0" style="width: 200px;">Estado de Documento:</label>
-                                        <label type="text" aria-readonly="true" id="detallesDocStatus" class="form-control form-control-solid flex-grow-1 ms-3"></label>
-                                    </div>
-                                </div>
-
-                                <!-- Fechas -->
-                                <div class="row mb-5" style="margin-top: 20px;">
-                                    <div class="col-sm-6 d-flex align-items-center">
-                                        <label for="detallesDocDate" id="lblDocDate" class="col-form-label flex-shrink-0" style="width: 200px;">Fecha del Documento:</label>
-                                        <label type="text" aria-readonly="true" id="detallesDocDate" class="form-control form-control-solid flex-grow-1 ms-3"></label>
-                                    </div>
-                                    <div class="col-sm-6 d-flex align-items-center">
-                                        <label for="detallesDocDueDate" id="lblDueDate" class="col-form-label flex-shrink-0" style="width: 200px;">Fecha de vencimiento:</label>
-                                        <label type="text" aria-readonly="true" id="detallesDocDueDate" class="form-control form-control-solid flex-grow-1 ms-3"></label>
-                                    </div>
-                                </div>
-
-                                <!-- Detalles -->
-                                <div class="row mb-5" style="margin-top: 20px;">
-                                    <div class="col-sm-4 d-flex align-items-center">
-                                        <label for="detallesMoneda" id="lblMoneda" class="col-form-label flex-shrink-0" style="width: 200px;">Moneda:</label>
-                                        <label type="text" aria-readonly="true" id="detallesMoneda" class="form-control form-control-solid flex-grow-1 ms-3"></label>
-                                    </div>
-                                    <div class="col-sm-4 d-flex align-items-center">
-                                        <label for="detallesTaxCode" id="lblTaxCode" class="col-form-label flex-shrink-0" style="width: 200px;">Impuesto:</label>
-                                        <label type="text" aria-readonly="true" id="detallesTaxCode" class="form-control form-control-solid flex-grow-1 ms-3"></label>
-                                    </div>
-                                    <div class="col-sm-4 d-flex align-items-center">
-                                        <label for="detallesDocType" id="lblDocType" class="col-form-label flex-shrink-0" style="width: 200px;">Tipo:</label>
-                                        <label type="text" aria-readonly="true" id="detallesDocType" class="form-control form-control-solid flex-grow-1 ms-3"></label>
-                                    </div>
-                                </div>
-
-                                <!-- Totales -->
-                                <div class="row mb-5" style="margin-top: 20px;">
-                                    <div class="col-sm-6">
-                                        <!-- Columna vacía -->
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <label for="detallesTotal" id="lblTotal" class="col-form-label flex-shrink-0" style="width: 200px;">Total:</label>
-                                            <label type="text" aria-readonly="true" id="detallesTotal" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                <input type="text" aria-readonly="true" id="InputDocEntry" class="form-control form-control-user" style="text-align:right;" hidden>
+                        
+                                <!-- Two Column Layout -->
+                                <div class="row">
+                                    <!-- Left Column -->
+                                    <div class="col-md-6">
+                                        <!-- First Section - Left -->
+                                        <div class="mb-5">
+                                            <div class="d-flex align-items-center mb-3" style="margin-top: 10px;">
+                                                <label for="detallesDocNum" id="lblDetDocNum" class="col-form-label flex-shrink-0" style="width: 200px;">Número de Documento:</label>
+                                                <label type="text" aria-readonly="true" id="detallesDocNum" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <label for="detalleSerie" class="col-form-label flex-shrink-0" style="width: 200px;">Serie:</label>
+                                                <label type="text" aria-readonly="true" id="detalleSerie" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <label for="detallesDocType" id="lblDocType" class="col-form-label flex-shrink-0" style="width: 200px;">Tipo:</label>
+                                                <label type="text" aria-readonly="true" id="detallesDocType" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <label for="detallesDocDate" id="lblDocDate" class="col-form-label flex-shrink-0" style="width: 200px;">Fecha del Documento:</label>
+                                                <label type="text" aria-readonly="true" id="detallesDocDate" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3" >
+                                                <label for="detallesDocDueDate" id="lblDueDate" class="col-form-label flex-shrink-0" style="width: 200px;">Fecha de vencimiento:</label>
+                                                <label type="text" aria-readonly="true" id="detallesDocDueDate" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
                                         </div>
-                                        <div class="d-flex align-items-center">
-                                            <label for="detallesTotalImp" id="lblTotalImp" class="col-form-label flex-shrink-0" style="width: 200px;">Total con impuestos:</label>
-                                            <label type="text" aria-readonly="true" id="detallesTotalImp" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                    </div>
+                        
+                                    <!-- Right Column -->
+                                    <div class="col-md-6">
+                                        <!-- First Section - Right -->
+                                        <div class="mb-5">
+                                            <div class="d-flex align-items-center mb-3" style="margin-top: 10px;">
+                                                <label for="detallesTaxCode" id="lblTaxCode" class="col-form-label flex-shrink-0" style="width: 200px;">Impuesto:</label>
+                                                <label type="text" aria-readonly="true" id="detallesTaxCode" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <label for="detallesMoneda" id="lblMoneda" class="col-form-label flex-shrink-0" style="width: 200px;">Moneda:</label>
+                                                <label type="text" aria-readonly="true" id="detallesMoneda" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <label for="detallesTotal" id="lblTotal" class="col-form-label flex-shrink-0" style="width: 200px;">Total:</label>
+                                                <label type="text" aria-readonly="true" id="detallesTotal" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <label for="detallesTotalImp" id="lblTotalImp" class="col-form-label flex-shrink-0" style="width: 200px;">Total con impuestos:</label>
+                                                <label type="text" aria-readonly="true" id="detallesTotalImp" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <label for="detallesDocStatus" id="lblDocStatus" class="col-form-label flex-shrink-0" style="width: 200px;">Estado de Documento:</label>
+                                                <label type="text" aria-readonly="true" id="detallesDocStatus" class="form-control form-control-solid flex-grow-1 ms-3"></label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Usuario Solicitante -->
-                                <h3 class="card-title align-items-start flex-column mb-5">
+                        
+                                <!-- Usuario Solicitante Section -->
+                                <h3 class="card-title align-items-start flex-column mb-5" style="margin-top: 14px;">
                                     <span class="card-label fw-bold text-dark">Usuario Solicitante</span>
                                 </h3>
-
+                        
                                 <div class="row mb-5">
                                     <div class="col-sm-6 d-flex align-items-center">
                                         <label for="detallesReqIdUser" id="lblReqIdUser" class="col-form-label flex-shrink-0" style="width: 200px;">Usuario:</label>
@@ -276,12 +272,12 @@
                                         <label type="text" aria-readonly="true" id="departmentUser" class="form-control form-control-solid flex-grow-1 ms-3"></label>
                                     </div>
                                 </div>
-
-                                <!-- Tabla de detalles -->
+                        
+                                <!-- Tables Section -->
                                 <div class="card cardmodaltabla card-flush mt-6">
-                                    <div class="card-body">
-                                        <table class="table table-striped" 
-                                            id="tblDetallesProd" style="width: 100%;">
+                                    <div class="card-body" style="padding-top: 20px;padding-bottom: 1px;">
+                                        <!-- Tabla de Productos -->
+                                        <table class="table table-striped" id="tblDetallesProd" style="width: 100%;">
                                             <thead>
                                                 <tr class="fw-bold text-muteddet">
                                                     <th>Cod. Item</th>
@@ -298,9 +294,9 @@
                                             <tbody>
                                             </tbody>
                                         </table>
-
-                                        <table class="table table-striped" 
-                                            id="tblDetallesServ" style="width: 100%; display: none;">
+                        
+                                        <!-- Tabla de Servicios -->
+                                        <table class="table table-striped" id="tblDetallesServ" style="width: 100%; display: none;">
                                             <thead>
                                                 <tr class="fw-bold text-muteddet">
                                                     <th>Cod. Item</th>
@@ -308,8 +304,8 @@
                                                     <th>Descripción</th>
                                                     <th>Cantidad</th>
                                                     <th>Precio</th>
-                                                    <th>Cuenta Mayor</th>
-                                                    <th>Total</th>
+                                                    <th style="text-align: center;">Cuenta Mayor</th>
+                                                    <th style="text-align: center;">Total</th>
                                                     <th>Seleccionar</th>
                                                 </tr>
                                             </thead>

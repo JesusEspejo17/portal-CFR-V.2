@@ -1,5 +1,8 @@
 //nuevo filtrado para bootstrap, con documentacion: https://preview.keenthemes.com/html/metronic/docs/general/datatables/advanced
 $(function(){
+    var userIdToDelete;
+    var userNameToDelete;
+
     $('#tblUsers').DataTable({
         responsive: true,
         autoWidth: false,
@@ -47,11 +50,10 @@ $(function(){
                 class: "text-center",
                 orderable: false,
                 render: function(data, type, row){
-                    return '<a href="/users/delete/'+row.id +'/"" type="button" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
+                    return '<button type="button" class="btn btn-danger btn-xs btn-flat btn-delete" data-id="'+row.id+'" data-username="'+row.username+'"><i class="fas fa-trash-alt"></i></button>';
                 },
             }
         ],
-        // Configuración avanzada de DOM Positioning
         "dom":
             "<'row mb-2'" +
             "<'col-sm-6 d-flex align-items-center justify-content-start dt-toolbar'l>" +
@@ -63,7 +65,6 @@ $(function(){
             "<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
             ">",
 
-        // Lenguaje en español para etiquetas
         "language": {
             "lengthMenu": "Mostrar _MENU_",
             "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
@@ -78,5 +79,29 @@ $(function(){
         },
         initComplete: function(settings, json){
         }
+    });
+
+    $('#tblUsers tbody').on('click', 'button.btn-delete', function(){
+        userIdToDelete = $(this).data('id');
+        userNameToDelete = $(this).data('username');
+        $('#deleteMessage').text('¿Eliminar registro de ' + userNameToDelete + '?');
+        $('#deleteModal').modal('show');
+    });
+
+    $('#confirmDelete').on('click', function(){
+        $.ajax({
+            url: '/users/delete/' + userIdToDelete + '/',
+            type: 'POST',
+            data: {
+                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+            },
+            success: function(response){
+                $('#deleteModal').modal('hide');
+                $('#tblUsers').DataTable().ajax.reload();
+            },
+            error: function(error){
+                console.log(error);
+            }
+        });
     });
 });

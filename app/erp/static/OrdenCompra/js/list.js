@@ -227,9 +227,14 @@ $(document).ready(function () {
         // Llenar modal con datos 
         $('#idOrden').text(data.DocNumOC);
         $('#detallesDocNum').text(data.DocNumOC);
-        $('#detalleSerie').text(data.SerieOC);
+        if (data.SerieOC === "OrdenCompra") {
+            $('#detalleSerie').text("117");
+        } else {
+            $('#detalleSerie').text(data.SerieOC);
+        }
         $('#detallesDocDate').text(data.DocDateOC);
         $('#detallesDocDueDate').text(data.DocDueDateOC);
+        $('#detallesSystemDate').text(data.SystemDateOC);
         $('#detallesMoneda').text(data.MonedaOC);
         $('#detallesSolicitante').text(data.SolicitanteOC);
         $('#detallesProveedor').text(data.ProveedorOC);
@@ -351,8 +356,8 @@ function tablaSolicitudDetalleProducto(docNum) {
         language: {
             "sEmptyTable": "No hay datos disponibles en la tabla",
             "sInfo": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-            "sInfoEmpty": "Mostrando 0 a 0 de 0 entradas",
-            "sInfoFiltered": "(filtrado de _MAX_ entradas totales)",
+            "sInfoEmpty": "",
+            "sInfoFiltered": "",
             "sLengthMenu": "",
             "sLoadingRecords": "Cargando...",
             "sProcessing": "Procesando...",
@@ -436,8 +441,8 @@ function tablaSolicitudDetalleServicio(docNum) {
         ],
         language: {
             "sEmptyTable": "No hay datos disponibles en la tabla",
-            "sInfo": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-            "sInfoEmpty": "Mostrando 0 a 0 de 0 entradas",
+            "sInfo": "",
+            "sInfoEmpty": "",
             "sInfoFiltered": "(filtrado de _MAX_ entradas totales)",
             "sLengthMenu": "",
             "sLoadingRecords": "Cargando...",
