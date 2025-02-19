@@ -220,12 +220,34 @@
                 },
                 initComplete: function (settings, json) {
                     $(function () {
-                        $('#tblServSeleccionados').find('select').select2();
+                        var selects = $('#tblServSeleccionados').find('select');
+                
+                        selects.each(function() {
+                            $(this).select2({
+                                allowClear: false,
+                                placeholder: "Selecciona una opción",
+                                dropdownParent: $(this).closest('.modal-content') // Agregar esta línea
+                            });
+                
+                
+                            // Verificar si Select2 se inicializó correctamente
+                            if ($(this).data('select2')) {
+                            } else {
+                                console.error("Error al inicializar Select2 para:", this);
+                            }
+                        });
                     });
                 },
-                drawBackcalldrawCallback: function (settings) {
-                    $('#tblServSeleccionados').find('select').select2();
-                },
+                drawCallback: function (settings) {
+                        $(this).find('select:not(.select2-hidden-accessible)').each(function () {
+                
+                            $(this).select2({
+                                allowClear: true, // Allows clearing the selection
+                                placeholder: "Select an option",
+                                dropdownParent: $(this).closest('.modal-content') // Agregar esta línea
+                            });
+                        });
+                    },
                 rowCallback: function (row, data, index) {
                     // Asignar select2 a los select dentro de la fila actual
                     $(row).find('select').each(function () {
@@ -360,6 +382,26 @@
             });
         }
     }
+
+    $('#tblServSeleccionados').on('input', 'input[type="number"][data-type="precioSlt"]', function () {
+        var precio = parseFloat($(this).val()).toFixed(2);  // Convertir a número flotante con 2 decimales
+        var rowIndex = tblSlctServices.cell($(this).closest('td')).index().row;  // Obtener el índice de la fila
+        var row = selectedSrv.items.serv[rowIndex];  // Acceder al servicio en la fila
+    
+        if (precio == 0 || precio < 0.01) {
+            // Muestra un mensaje de advertencia si el precio es 0 o menor a 0.01
+            $.alert({
+                title: 'Error',
+                theme: 'modern',
+                type: 'red',
+                content: `El precio no puede ser 0.00 para el Servicio: ${row.descripcion}`,
+            });
+    
+            // Resetea el valor del input a 0.01 o al valor previo
+            $(this).val(0.01);
+        }
+    });
+    
 
     $('#tblServSeleccionados')
         .on('click', 'a[rel="remove"]', function () {

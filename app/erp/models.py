@@ -267,6 +267,13 @@ class PRQ1(models.Model):
     Quantity_rest = models.IntegerField(null=True, blank=True)  # Quitar el default
     total_rest = models.FloatField(null=True, blank=True)
     
+    idAreaGeneral = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='idAreaGeneral')
+    DateAreaGeneral = models.DateTimeField(null=True, blank=True)
+    idJefePresupuestos = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='idJefePresupuestos')
+    DateJefePresupuestos = models.DateTimeField(null=True, blank=True)
+    idLogistica = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='idLogistica')
+    DateLogistica = models.DateTimeField(null=True, blank=True)
+    
     def __str__(self):
         return self.Code
 
@@ -402,7 +409,14 @@ class OCD1(models.Model):
     BaseEntryOCD = models.IntegerField(null=True)
     BaseLineOCD = models.IntegerField(null=True)
     DocEntryOCD = models.IntegerField(null=True) 
-
+    
+    idAreaGeneralOCD = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='idAreaGeneralOCD')
+    DateAreaGeneralOCD = models.DateTimeField(null=True, blank=True)
+    idJefePresupuestosOCD = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='idJefePresupuestosOCD')
+    DateJefePresupuestosOCD = models.DateTimeField(null=True, blank=True)
+    idLogisticaOCD = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='idLogisticaOCD')
+    DateLogisticaOCD = models.DateTimeField(null=True, blank=True)
+    
     def __str__(self):
         return f"Detalle OC {self.NumDocOCD.DocNumOC} - {self.ItemCodeOCD.ItemCode}"
 
@@ -433,4 +447,20 @@ class OCD1(models.Model):
             'BaseEntryOCD': self.BaseEntryOCD,
             'BaseLineOCD': self.BaseLineOCD,
             'DocEntryOCD': self.DocEntryOCD,
+            
+            'idAreaGeneralOCD': {
+            'username': str(self.idAreaGeneralOCD) if self.idAreaGeneralOCD else None,
+            'full_name': self.idAreaGeneralOCD.first_name if self.idAreaGeneralOCD else None
+            },
+            'DateAreaGeneralOCD': self.DateAreaGeneralOCD.strftime('%Y-%m-%d %H:%M:%S') if self.DateAreaGeneralOCD else None,
+            'idJefePresupuestosOCD': {
+                'username': str(self.idJefePresupuestosOCD) if self.idJefePresupuestosOCD else None,
+                'full_name': self.idJefePresupuestosOCD.first_name if self.idJefePresupuestosOCD else None
+            },
+            'DateJefePresupuestosOCD': self.DateJefePresupuestosOCD.strftime('%Y-%m-%d %H:%M:%S') if self.DateJefePresupuestosOCD else None,
+            'idLogisticaOCD': {
+                'username': str(self.idLogisticaOCD) if self.idLogisticaOCD else None,
+                'full_name': self.idLogisticaOCD.first_name if self.idLogisticaOCD else None
+            },
+            'DateLogisticaOCD': self.DateLogisticaOCD.strftime('%Y-%m-%d %H:%M:%S') if self.DateLogisticaOCD else None,
         }

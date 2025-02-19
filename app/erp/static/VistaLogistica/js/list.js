@@ -9,15 +9,15 @@ function iniciarTabla() {
         order: [[0, 'asc']],
         scrollX: true,
         "dom":
-            "<'row mb-2'" +
-            "<'col-sm-6 d-flex align-items-center justify-content-start'l>" +
-            "<'col-sm-6 d-flex align-items-center justify-content-end'f>" +
-            ">" +
-            "<'table-responsive'tr>" +
-            "<'row'" +
-            "<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
-            "<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
-            ">",
+        "<'row mb-2'" +
+        "<'col-sm-6 d-flex align-items-center justify-content-start'l>" +
+        "<'col-sm-6 search-container d-flex align-items-center justify-content-end'f>" + // Modificado: se agregó search-container
+        ">" +
+        "<'table-responsive'tr>" +
+        "<'row'" +
+        "<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
+        "<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
+        ">",
         "language": {
             "lengthMenu": "",
             "sProcessing": "Procesando...",
@@ -95,7 +95,7 @@ function iniciarTabla() {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row, meta) {
-                    return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" style="width: 20px; height: 50px; vertical-align: center;" ></input></div>';
+                    return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" style="width: 20px; height: 50px; vertical-align: center;" ></input></div>';
                 },
             },
             {
@@ -107,140 +107,6 @@ function iniciarTabla() {
                 },
             },
         ],
-        // initComplete: function (settings, json) {
-        //     $('#tblContabilizados').on('change', 'input[type="checkbox"]', function () {
-        //         var $checkbox = $(this);
-        //         var table = $('#tblContabilizados').DataTable();
-        //         var rowDataC = table.row($checkbox.closest('tr')).data();
-        //         if ($checkbox.is(':checked')) {
-        //             if (rowDataC.DocType === 'I') {
-        //                 $.ajax({
-        //                     url: window.location.pathname,
-        //                     type: 'POST',
-        //                     data: {
-        //                         'action': 'getDetails',
-        //                         'code': rowDataC.DocEntry
-        //                     },
-        //                     dataSrc: "",
-        //                     success: function (response) {
-        //                         for (var j = 0; j < response.length; j++) {
-        //                             var founded = false;
-        //                             var index = checked.findIndex(function (item) {
-        //                                 return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
-        //                             });
-        //                             if (index === -1) {
-        //                                 if (orden.items.item.length > 0) {
-        //                                     for (var i = 0; i < orden.items.item.length; i++) {
-        //                                         if (orden.items.item[i].ItemCode == response[j].ItemCode && orden.items.item[i].Almacen == response[j].Almacen && orden.items.item[i].LineVendor == response[j].LineVendor && orden.items.item[i].UnidadMedida == response[j].UnidadMedida) {
-        //                                             orden.items.item[i].Quantity = orden.items.item[i].Quantity + response[j].Quantity;
-        //                                             orden.items.item[i].total = orden.items.item[i].total + response[j].total;
-        //                                             founded = true;
-        //                                             break;
-        //                                         }
-        //                                     }
-        //                                     if (founded == false) {
-        //                                         orden.add(response[j]);
-        //                                         orden.list();
-        //                                     } else {
-        //                                         orden.list();
-        //                                     }
-        //                                 } else {
-        //                                     orden.add(response[j]);
-        //                                     orden.list();
-        //                                 }
-        //                                 checked.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
-        //                             }
-        //                         }
-        //                     },
-        //                     error: function (xhr, status, error) {
-        //                         // Maneja cualquier error aquí
-        //                         console.error('Error en la solicitud:', status, error);
-        //                     }
-        //                 });
-        //             } else if (rowDataC.DocType === 'S') {
-        //                 $.ajax({
-        //                     url: window.location.pathname,
-        //                     type: 'POST',
-        //                     data: {
-        //                         'action': 'getDetails',
-        //                         'code': rowDataC.DocEntry
-        //                     },
-        //                     dataSrc: "",
-        //                     success: function (response) {
-        //                         for (var j = 0; j < response.length; j++) {
-        //                             var founded = false;
-        //                             var index = checkedSv.findIndex(function (item) {
-        //                                 return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
-        //                             });
-        //                             if (index === -1) {
-        //                                 if (ordenServ.items.item.length > 0) {
-        //                                     for (var i = 0; i < ordenServ.items.item.length; i++) {
-        //                                         if (ordenServ.items.item[i].ItemCode == response[j].ItemCode && ordenServ.items.item[i].Almacen == response[j].Almacen && ordenServ.items.item[i].LineVendor == response[j].LineVendor && ordenServ.items.item[i].UnidadMedida == response[j].UnidadMedida) {
-        //                                             ordenServ.items.item[i].Quantity = ordenServ.items.item[i].Quantity + response[j].Quantity;
-        //                                             ordenServ.items.item[i].total = ordenServ.items.item[i].total + response[j].total;
-        //                                             founded = true;
-        //                                             break;
-        //                                         }
-        //                                     }
-        //                                     if (founded == false) {
-        //                                         ordenServ.add(response[j]);
-        //                                         ordenServ.list();
-        //                                     } else {
-        //                                         ordenServ.list();
-        //                                     }
-        //                                 } else {
-        //                                     ordenServ.add(response[j]);
-        //                                     ordenServ.list();
-        //                                 }
-        //                                 checkedSv.push({ Code: response[j].Code, ItemCode: response[j].ItemCode });
-        //                             }
-        //                         }
-        //                     },
-        //                     error: function (xhr, status, error) {
-        //                         // Maneja cualquier error aquí
-        //                         console.error('Error en la solicitud:', status, error);
-        //                     }
-        //                 });
-        //             }
-        //         } else {
-        //             if (rowDataC.DocType === 'I') {
-        //                 $.ajax({
-        //                     url: window.location.pathname,
-        //                     type: 'POST',
-        //                     data: {
-        //                         'action': 'getDetails',
-        //                         'code': rowDataC.DocEntry
-        //                     },
-        //                     dataSrc: "",
-        //                     success: function (response) {
-        //                         for (var j = 0; j < response.length; j++) {
-        //                             if (orden.items.item.length > 0) {
-        //                                 for (var i = 0; i < orden.items.item.length; i++) {
-        //                                     if (orden.items.item[i].ItemCode == response[j].ItemCode && orden.items.item[i].Almacen == response[j].Almacen && orden.items.item[i].LineVendor == response[j].LineVendor && orden.items.item[i].UnidadMedida == response[j].UnidadMedida) {
-        //                                         orden.items.item[i].Quantity = orden.items.item[i].Quantity - response[j].Quantity;
-        //                                         orden.items.item[i].total = orden.items.item[i].total - response[j].total;
-        //                                         if (orden.items.item[i].Quantity === 0 && orden.items.item[i].total === 0) {
-        //                                             orden.items.item.splice(i, 1);
-        //                                         }
-        //                                         orden.list();
-        //                                         break;
-        //                                     }
-        //                                 }
-        //                             }
-        //                             var index = checked.findIndex(function (item) {
-        //                                 return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
-        //                             });
-        //                             if (index > -1) {
-        //                                 checked.splice(index, 1);
-        //                             }
-        //                         }
-        //                     },
-        //                     error: function (xhr, status, error) {
-        //                         // Maneja cualquier error aquí
-        //                         console.error('Error en la solicitud:', status, error);
-        //                     }
-        //                 });
-        //             } else if (rowDataC.DocType === 'S'){
         initComplete: function (settings, json) {
             $('#tblContabilizados').on('change', 'input[type="checkbox"]', function () {
                 var $checkbox = $(this);
@@ -595,23 +461,69 @@ var orden = {
         //     }
         // });
 
+        // $('#tblOrdenProd').on('change', '.quantity-input', function() {
+        //     var $input = $(this);
+        //     var newQuantity = parseInt($input.val());
+        //     var row = tblOrdenProd.row($input.closest('tr')).data();
+            
+        //     // Validar contra la cantidad original disponible
+        //     if (newQuantity > row.originalQuantity) {
+        //         $.alert({
+        //             title: 'Error',
+        //             content: `La cantidad no puede exceder ${row.originalQuantity} unidades disponibles del Producto: ${row.Description} `,
+        //             type: 'red',
+        //             theme: 'modern'
+        //         });
+        //         $input.val(row.originalQuantity);
+        //         newQuantity = row.originalQuantity;
+        //     }
+        
+        //     // Actualizar cantidad y totales
+        //     row.Quantity = newQuantity;
+        //     row.total = newQuantity * row.Precio;
+            
+        //     // Calcular valores rest
+        //     row.Quantity_rest = Math.max(0, row.originalQuantity - newQuantity);
+        //     row.total_rest = row.Quantity_rest * row.Precio;
+            
+        //     // Actualizar la tabla
+        //     tblOrdenProd.row($input.closest('tr')).data(row).draw(false);
+            
+        //     // Actualizar el objeto orden
+        //     var index = orden.items.item.findIndex(item => item.Code === row.Code);
+        //     if (index !== -1) {
+        //         orden.items.item[index] = row;
+        //     }
+        // });
+
         $('#tblOrdenProd').on('change', '.quantity-input', function() {
             var $input = $(this);
             var newQuantity = parseInt($input.val());
             var row = tblOrdenProd.row($input.closest('tr')).data();
             
-            // Validar contra la cantidad original disponible
-            if (newQuantity > row.originalQuantity) {
+            // Validar si la cantidad es 0
+            if (newQuantity === 0) {
                 $.alert({
                     title: 'Error',
-                    content: `La cantidad no puede exceder ${row.originalQuantity} unidades disponibles`,
+                    content: `La cantidad no puede ser menor a 1 para el Producto: ${row.Description}`,
                     type: 'red',
                     theme: 'modern'
                 });
                 $input.val(row.originalQuantity);
                 newQuantity = row.originalQuantity;
             }
-        
+            // Validar contra la cantidad original disponible
+            else if (newQuantity > row.originalQuantity) {
+                $.alert({
+                    title: 'Error',
+                    content: `La cantidad no puede exceder ${row.originalQuantity} unidades disponibles del Producto: ${row.Description}`,
+                    type: 'red',
+                    theme: 'modern'
+                });
+                $input.val(row.originalQuantity);
+                newQuantity = row.originalQuantity;
+            }
+            
             // Actualizar cantidad y totales
             row.Quantity = newQuantity;
             row.total = newQuantity * row.Precio;

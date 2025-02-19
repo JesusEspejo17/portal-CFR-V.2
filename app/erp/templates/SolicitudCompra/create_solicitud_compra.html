@@ -187,8 +187,8 @@
                             <th style="width: 10%;">Precio Unitario</th>
                             <th style="width: 6%;">Cantidad</th>
                             <th style="width: 7%;">Precio Total</th>
-                            <th style="width: 13%;">Proveedor</th>
                             <th style="width: 10%;">Dimensión</th>
+                            <th style="width: 13%;">Proveedor</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -212,9 +212,9 @@
                             <th>Descripción</th>
                             <th>Cuenta Contable</th>
                             <th>Precio Unitario</th>
-                            <th>Proveedor</th>
-                            <th>Precio Total</th>
                             <th>Dimensión</th>
+                            <th>Precio Total</th>
+                            <th>Proveedor</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -293,7 +293,6 @@
 
 
     $('select').select2({
-        minimumResultsForSearch: Infinity,
         placeholder: function () {
             return $(this).data('placeholder');  // Asegúrate de devolver el valor.
         }
@@ -660,8 +659,8 @@
                     { "data": "price" },
                     { "data": "cant" },
                     { "data": "precio_total" },
-                    { "data": "proveedor" },
                     { "data": "dimension" },
+                    { "data": "proveedor" },
                 ],
                 columnDefs: [
                     {
@@ -671,7 +670,7 @@
                         }
                     },
                     {
-                        targets: [-1],
+                        targets: [-2],  // Changed from -1 (dimension was last, now second to last)
                         render: function (data, type, row) {
                             var dimensiones = JSON.parse('{{ dimension|escapejs }}');
                             var options = '<select class="form-control select" data-type="dimension" name="iddimension" id="iddimension" style="width: 100%;">';
@@ -684,7 +683,7 @@
                         }
                     },
                     {
-                        targets: [-2],
+                        targets: [-1],  // Changed from -2 (proveedor was second to last, now last)
                         render: function (data, type, row) {
                             var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
                             var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
@@ -751,7 +750,7 @@
                         },
                     },
                     {
-                        targets: [-1],
+                        targets: [-2],  // Changed from -1
                         class: "editable-cell",
                         orderable: false,
                         render: function (data, type, row) {
@@ -761,7 +760,7 @@
                         editable: true,
                     },
                     {
-                        targets: [-2],
+                        targets: [-1],  // Changed from -2
                         class: "editable-cell",
                         orderable: false,
                         render: function (data, type, row) {
@@ -957,119 +956,119 @@
                     { "data": "description" },
                     { "data": "cuenta_contable" },
                     { "data": "price" },
-                    { "data": "proveedor" },
+                    { "data": "dimension" },
                     { "data": "precio_total" },
-                    { "data": "dimension" }
+                    { "data": "proveedor" },
                 ],
                 columnDefs: [
-                    {
-                        targets: [6],
-                        render: function (data, type, row) {
-                            return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
+                {
+                    targets: [6],
+                    render: function (data, type, row) {
+                        return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
+                    }
+                },
+                {
+                    targets: [6],
+                    class: "editable-cell",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return data;
+                    },
+                    editField: "price",
+                    editable: true,
+                },
+                {
+                    targets: [5],
+                    render: function (data, type, row) {
+                        var cuenta_contable = JSON.parse('{{ cuenta_contable|escapejs }}');
+                        var options = '<select class="form-control select" data-type="cuenta_contable" name="idCC" id="idCC" style="width: 100%;">';
+                        for (var i = 0; i < cuenta_contable.length; i++) {
+                            var selected = (cuenta_contable[i].AcctName === data) ? 'selected' : '';
+                            options += '<option value="' + cuenta_contable[i].AcctName + '" ' + selected + '>' + cuenta_contable[i].AcctName + '</option>';
                         }
+                        options += '</select>';
+                        return options;
+                    }
+                },
+                {
+                    targets: [5],
+                    class: "editable-cell",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return data;
                     },
-                    {
-                        targets: [6],
-                        class: "editable-cell",
-                        orderable: false,
-                        render: function (data, type, row) {
-                            return data;
-                        },
-                        editField: "price",
-                        editable: true,
-                    },
-                    {
-                        targets: [5],
-                        render: function (data, type, row) {
-                            var cuenta_contable = JSON.parse('{{ cuenta_contable|escapejs }}');
-                            var options = '<select class="form-control select" data-type="cuenta_contable" name="idCC" id="idCC" style="width: 100%;">';
-                            for (var i = 0; i < cuenta_contable.length; i++) {
-                                var selected = (cuenta_contable[i].AcctName === data) ? 'selected' : '';
-                                options += '<option value="' + cuenta_contable[i].AcctName + '" ' + selected + '>' + cuenta_contable[i].AcctName + '</option>';
-                            }
-                            options += '</select>';
-                            return options;
+                    editField: "cuenta_contable",
+                    editable: true,
+                },
+                {
+                    targets: [-1],
+                    render: function (data, type, row) {
+                        var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
+                        var options = '<select class="form-control select" data-type="socio_negocio" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
+                        for (var i = 0; i < socios_de_negocio.length; i++) {
+                            var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
+                            options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
                         }
+                        options += '</select>';
+                        return options;
+                    }
+                },
+                {
+                    targets: [-1],
+                    class: "editable-cell",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return data;
                     },
-                    {
-                        targets: [5],
-                        class: "editable-cell",
-                        orderable: false,
-                        render: function (data, type, row) {
-                            return data;
-                        },
-                        editField: "cuenta_contable",
-                        editable: true,
-                    },
-                    {
-                        targets: [-3],
-                        render: function (data, type, row) {
-                            var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
-                            var options = '<select class="form-control select" data-type="socio_negocio" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
-                            for (var i = 0; i < socios_de_negocio.length; i++) {
-                                var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
-                                options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
-                            }
-                            options += '</select>';
-                            return options;
+                    editField: "proveedor",
+                    editable: true,
+                },
+                {
+                    targets: [7],
+                    render: function (data, type, row) {
+                        var dimensiones = JSON.parse('{{ dimension|escapejs }}');
+                        var options = '<select class="form-control select" data-type="dimension" name="iddimension" id="iddimension" style="width: 100%;">';
+                        for (var i = 0; i < dimensiones.length; i++) {
+                            var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
+                            options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
                         }
+                        options += '</select>';
+                        return options;
+                    }
+                },
+                {
+                    targets: [7],
+                    class: "editable-cell",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return data;
                     },
-                    {
-                        targets: [-3],
-                        class: "editable-cell",
-                        orderable: false,
-                        render: function (data, type, row) {
-                            return data;
-                        },
-                        editField: "proveedor",
-                        editable: true,
+                    editField: "dimension",
+                    editable: true,
+                },
+                {
+                    targets: [0],
+                    class: "text-center",
+                    orderable: false,
+                    render: function (data, type, row) {
+                        return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
                     },
-                    {
-                        targets: [-1],
-                        render: function (data, type, row) {
-                            var dimensiones = JSON.parse('{{ dimension|escapejs }}');
-                            var options = '<select class="form-control select" data-type="dimension" name="iddimension" id="iddimension" style="width: 100%;">';
-                            for (var i = 0; i < dimensiones.length; i++) {
-                                var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
-                                options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
-                            }
-                            options += '</select>';
-                            return options;
-                        }
+                },
+                {
+                    targets: [1],
+                    class: "text-center",
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return meta.row + 1;
                     },
-                    {
-                        targets: [-1],
-                        class: "editable-cell",
-                        orderable: false,
-                        render: function (data, type, row) {
-                            return data;
-                        },
-                        editField: "dimension",
-                        editable: true,
-                    },
-                    {
-                        targets: [0],
-                        class: "text-center",
-                        orderable: false,
-                        render: function (data, type, row) {
-                            return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
-                        },
-                    },
-                    {
-                        targets: [1],
-                        class: "text-center",
-                        orderable: false,
-                        render: function (data, type, row, meta) {
-                            return meta.row + 1;
-                        },
-                    },
-                    {
-                        targets: [5],
-                        render: function (data, type, row) {
-                            return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
-                        }
-                    },
-                ],
+                },
+                {
+                    targets: [5],
+                    render: function (data, type, row) {
+                        return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
+                    }
+                },
+            ],
                 language: {
                     "sEmptyTable": "No hay datos disponibles en la tabla",
                     "sInfo": "",

@@ -79,7 +79,7 @@ $(document).ready(function () {
             + "<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>"
             + ">",
         language: {
-            lengthMenu: "Mostrar _MENU_",
+            lengthMenu: "",
             info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
             search: "Buscar:",
             paginate: {
@@ -121,30 +121,130 @@ $(document).ready(function () {
         // Ordenar los origins por BaseEntryOCD para agruparlos
         data.origins.sort((a, b) => a.BaseEntryOCD - b.BaseEntryOCD);
 
+        // data.origins.forEach(function(origin) {
+        //     if (currentDocNum !== origin.BaseEntryOCD) {
+        //         // Encabezado de SOLICITUD con el botón Ver y la información adicional
+        //         originsHtml += `
+        //             <div class="d-flex align-items-center justify-content-between mb-3">
+        //                 <div>
+        //                     <div class="text-gray-800 text-hover-primary fw-bold fs-6">
+        //                         SOLICITUD #${origin.BaseEntryOCD}
+        //                     </div>
+        //                 </div>
+        //                 <a href="#" class="badge badge-primary fs-8 fw-bold">Ver</a>
+        //             </div>
+        //             <div class="mb-3">
+        //                 <span class="text-muted fw-semibold d-block">${origin.DescriptionOCD}</span>
+        //                 <span class="badge badge-success">
+        //                         Aprobado por: ${origin.idAreaGeneralOCD.full_name}
+        //                 </span>
+        //                 <span class="badge badge-success">
+        //                         Contabilizado por: ${origin.idJefePresupuestosOCD.full_name}
+        //                 </span>
+        //                 <span class="badge badge-success">
+        //                         Generado por: ${origin.idLogisticaOCD.full_name}
+        //                 </span>
+        //             </div>`;
+        //         currentDocNum = origin.BaseEntryOCD;
+        //     } else {
+        //         // Si es el mismo número de solicitud, solo mostrar la descripción
+        //         originsHtml += `
+        //             <div class="d-flex align-items-center mb-3">
+        //                 <div class="flex-grow-1">
+        //                     <span class="text-muted fw-semibold d-block">${origin.DescriptionOCD}</span>
+        //                         <span class="badge badge-success">
+        //                                 Aprobado por: ${origin.idAreaGeneralOCD.full_name}
+        //                         </span>
+        //                         <span class="badge badge-success">
+        //                                 Contabilizado por: ${origin.idJefePresupuestosOCD.full_name}
+        //                         </span>
+        //                         <span class="badge badge-success">
+        //                                 Generado por: ${origin.idLogisticaOCD.full_name}
+        //                         </span>
+        //                 </div>
+        //             </div>`;
+        //     }
+        // });
+
+        
+        let descriptions = [];
+        let lastApprovers = null;
+
         data.origins.forEach(function(origin) {
             if (currentDocNum !== origin.BaseEntryOCD) {
-                // Encabezado de SOLICITUD con el botón Ver alineado a la derecha
+                // Si hay descripciones acumuladas y aprobadores del documento anterior, mostrarlos
+                if (descriptions.length > 0 && lastApprovers) {
+                    originsHtml += descriptions.map(desc => 
+                        `<div class="mb-3">
+                            <span class="text-muted fw-semibold d-block">${desc}</span>
+                        </div>`
+                    ).join('');
+                    
+                    // Mostrar los badges después de todas las descripciones
+                    originsHtml += `
+                        <div class="mb-3">
+                            <span class="badge badge-success">
+                                Aprobado por: ${lastApprovers.areaGeneral}
+                            </span>
+                            <span class="badge badge-success">
+                                Contabilizado por: ${lastApprovers.jefePresupuestos}
+                            </span>
+                            <span class="badge badge-success">
+                                Generado por: ${lastApprovers.logistica}
+                            </span>
+                        </div>`;
+                    
+                    // Limpiar las descripciones para el nuevo documento
+                    descriptions = [];
+                }
+
+                // Encabezado de nueva SOLICITUD
                 originsHtml += `
                     <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="text-gray-800 text-hover-primary fw-bold fs-6">
-                            SOLICITUD #${origin.BaseEntryOCD}
+                        <div>
+                            <div class="text-gray-800 text-hover-primary fw-bold fs-6">
+                                SOLICITUD #${origin.BaseEntryOCD}
+                            </div>
                         </div>
                         <a href="#" class="badge badge-primary fs-8 fw-bold">Ver</a>
-                    </div>
-                    <div class="mb-3">
-                        <span class="text-muted fw-semibold d-block">${origin.DescriptionOCD}</span>
                     </div>`;
+                
                 currentDocNum = origin.BaseEntryOCD;
-            } else {
-                // Si es el mismo número de solicitud, solo mostrar la descripción
-                originsHtml += `
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="flex-grow-1"> <!-- Añadimos padding-left para indentar -->
-                            <span class="text-muted fw-semibold d-block">${origin.DescriptionOCD}</span>
-                        </div>
-                    </div>`;
             }
+
+            // Añadir la descripción al array
+            descriptions.push(origin.DescriptionOCD);
+            
+            // Actualizar los últimos aprobadores
+            lastApprovers = {
+                areaGeneral: origin.idAreaGeneralOCD.full_name,
+                jefePresupuestos: origin.idJefePresupuestosOCD.full_name,
+                logistica: origin.idLogisticaOCD.full_name
+            };
         });
+
+        // No olvidar procesar el último grupo de descripciones
+        if (descriptions.length > 0 && lastApprovers) {
+            originsHtml += descriptions.map(desc => 
+                `<div class="mb-3">
+                    <span class="text-muted fw-semibold d-block">${desc}</span>
+                </div>`
+            ).join('');
+            
+            originsHtml += `
+                <div class="mb-3">
+                    <span class="badge badge-success">
+                        Aprobado por: ${lastApprovers.areaGeneral}
+                    </span>
+                    <span class="badge badge-success">
+                        Contabilizado por: ${lastApprovers.jefePresupuestos}
+                    </span>
+                    <span class="badge badge-success">
+                        Generado por: ${lastApprovers.logistica}
+                    </span>
+                </div>`;
+        }
+        
         $('#container-origins').html(originsHtml);
 
         $('#container-origins').on('click', '.badge-primary', function() {

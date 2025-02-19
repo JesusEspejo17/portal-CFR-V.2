@@ -50,10 +50,10 @@
                                                         <td style="width: 20%;">Descripción</td>
                                                         <td style="width: 10%;">Precio</td>
                                                         <td style="width: 13%;">Almacén</td>
-                                                        <td style="width: 15%;">Proveedor</td>
                                                         <td style="width: 8%;">Cantidad</td>
                                                         <td style="width: 12%;">Unidad</td>
                                                         <td style="width: 12%;">Dimensión</td>
+                                                        <td style="width: 15%;">Proveedor</td>
                                                         <td style="width: 5%;">Eliminar</td>
                                                     </thead>
                                                 </table>
@@ -94,10 +94,10 @@
             'descripcion': descripcion,
             'precio': precio,
             'almacen': '',
-            'proveedor': '',
             'cantidad': 1,
             'unidad': '',
             'dimension': '',
+            'proveedor': '',
             'idAlmacen': idAlmacen
         }
         console.log(context);
@@ -125,10 +125,10 @@
                     { "data": "descripcion" },
                     { "data": "precio" },
                     { "data": "almacen" },
-                    { "data": "proveedor" },
                     { "data": "cantidad" },
                     { "data": "unidad" },
                     { "data": "dimension" },
+                    { "data": "proveedor" },
                     { "data": null },
                 ],
                 columnDefs: [
@@ -139,7 +139,7 @@
                         }
                     },
                     {
-                        targets: [-2],
+                        targets: [-3],
                         render: function (data, type, row) {
                             var dimensiones = JSON.parse('{{ dimension_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="dimensionslt" name="idDimensionSlt" id="idDimensionSlt-' + 1 + '" style="width: 100%;">';
@@ -152,7 +152,7 @@
                         },
                     },
                     {
-                        targets: [-3],
+                        targets: [-4],
                         render: function (data, type, row) {
                             var medidas = JSON.parse('{{ medida_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="medidaslt" name="idMedidaSlt" id="idMedidaSlt-' + 1 + '" style="width: 100%;">';
@@ -165,15 +165,14 @@
                         },
                     },
                     {
-                        targets: [-4],
+                        targets: [-5],
                         render: function (data, type, row) {
                             return '<input type="number" data-type="cantSlt" min="1" value="' + data + '" class="form-control editable-input" name="cantTxtSlt" id="cantTxtSlt-' + 1 + '" required>';
                         },
                     },
                     {
-                        targets: [-5],
+                        targets: [-2],
                         render: function (data, type, row) {
-                            //Pasamos todos los almacenes a elementos HTML
                             var socios_de_negocio = JSON.parse('{{ proveedor_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="proveedorslt" name="idSocioNegociosSlt" id="idSocioNegociosSlt-' + 1 + '" style="width: 100%;">';
                             for (var i = 0; i < socios_de_negocio.length; i++) {
@@ -187,7 +186,6 @@
                     {
                         targets: [-6],
                         render: function (data, type, row) {
-                            //Pasamos todos los almacenes a elementos HTML
                             var almacenes = JSON.parse('{{ almacenes_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="almacenslt" name="idAlmacenSlt" id="idAlmacenSlt-' + 1 + '" style="width: 100%;">';
                             if (row.idAlmacen != 'None'){
@@ -195,7 +193,6 @@
                                 options += '<option value="' + row.idAlmacen + '" selected>' + row.idAlmacen + '</option>';
                             }   
                             for (var i = 0; i < almacenes.length; i++) {
-                                console.log('Entra');
                                 var selected = (almacenes[i].WhsName === data) ? 'selected' : '';
                                 options += '<option value="' + almacenes[i].WhsName + '" ' + selected + '>' + almacenes[i].WhsName + '</option>';
                             }
@@ -211,8 +208,9 @@
                             return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
                         },
                     },
+                    // Editable cell definitions
                     {
-                        targets: [-2],
+                        targets: [-3],
                         class: "editable-cell",
                         orderable: false,
                         render: function (data, type, row) {
@@ -222,7 +220,7 @@
                         editable: true,
                     },
                     {
-                        targets: [-3],
+                        targets: [-4],
                         class: "editable-cell",
                         orderable: false,
                         render: function (data, type, row) {
@@ -232,23 +230,13 @@
                         editable: true,
                     },
                     {
-                        targets: [-6],
+                        targets: [-2],
                         class: "editable-cell",
                         orderable: false,
                         render: function (data, type, row) {
                             return data;
                         },
-                        editField: "unidad",
-                        editable: true,
-                    },
-                    {
-                        targets: [-5],
-                        class: "editable-cell",
-                        orderable: false,
-                        render: function (data, type, row) {
-                            return data;
-                        },
-                        editField: "unidad",
+                        editField: "proveedor",
                         editable: true,
                     },
                     {
@@ -262,7 +250,7 @@
                         editable: true,
                     },
                     {
-                        targets: [-4],
+                        targets: [-5],
                         class: "editable-cell",
                         orderable: false,
                         render: function (data, type, row) {
@@ -289,20 +277,33 @@
                 },
                 initComplete: function (settings, json) {
                     $(function () {
-                        $('#tblProdSeleccionados').find('select').select2();
+                        $('#tblProdSeleccionados').find('select').each(function() {
+                            $(this).select2({
+                                allowClear: false,
+                                placeholder: "Selecciona una opción",
+                                dropdownParent: $(this).closest('.modal-content')
+                            });
+                            if ($(this).data('select2')) {
+                            } else {
+                                console.error("Error al inicializar Select2 para:", this);
+                            }
+                        });
                     });
                 },
-                drawBackcalldrawCallback: function (settings) {
-                    $('#tblProdSeleccionados').find('select').select2();
+                drawCallback: function (settings) {
+                    $('#tblProdSeleccionados').find('select:not(.select2-hidden-accessible)').each(function () {
+                        $(this).select2({
+                            placeholder: "Selecciona una opción",
+                            dropdownParent: $(this).closest('.modal-content')
+                        });
+                    });
                 },
                 rowCallback: function (row, data, index) {
-                    // Asignar select2 a los select dentro de la fila actual
                     $(row).find('select').each(function () {
                         $(this).attr('id', $(this).attr('id') + '-' + index);
                         $(this).select2();
                     });
                 }
-
             });
         },
         remove: function (index) {
@@ -372,6 +373,44 @@
             }
         })
 
+        $('#tblProdSeleccionados').on('input', 'input[type="number"][data-type="cantSlt"]', function () {
+            var cantidad = $(this).val();
+            var rowIndex = tblSlctProducts.cell($(this).closest('td')).index().row;  // Obtener el índice de la fila
+            var row = selectedPdct.items.prod[rowIndex];  // Acceder al producto en la fila
+        
+            if (cantidad == 0) {
+                // Muestra un mensaje de advertencia si la cantidad es 0
+                $.alert({
+                    title: 'Error',
+                    theme: 'modern',
+                    type: 'red',
+                    content: `La cantidad no puede ser menor a 1 para el Producto: ${row.descripcion}`,
+                });
+        
+                // Resetea el valor del input a 1
+                $(this).val(1);
+            }
+        });
+
+        $('#tblProdSeleccionados').on('input', 'input[type="number"][data-type="priceSlt"]', function () {
+            var precio = parseFloat($(this).val()).toFixed(2);  // Convertir a float y asegurar 2 decimales
+            var rowIndex = tblSlctProducts.cell($(this).closest('td')).index().row;  // Obtener el índice de la fila
+            var row = selectedPdct.items.prod[rowIndex];  // Acceder al producto en la fila
+        
+            if (precio == 0 || precio < 0.01) {
+                // Muestra un mensaje de advertencia si el precio es 0 o menor a 0.01
+                $.alert({
+                    title: 'Error',
+                    theme: 'modern',
+                    type: 'red',
+                    content: `El precio no puede ser 0.00 para el Producto: ${row.descripcion}`,
+                });
+        
+                // Resetea el valor del input a 0.01 o al valor previo
+                $(this).val(0.01);
+            }
+        });
+        
     $('#tblBuscarProd').DataTable({
         width: '100%',
         bDestroy: true,

@@ -40,6 +40,26 @@
         font-weight: 550;
         color: #000000;
     }
+    .form-control-filter{
+        display: inline; 
+        width: 80%;
+    } 
+    .search-container {
+        /* Tus estilos aquí */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+    
+    }
+    .search-container input[type="search"] {
+        width: 77%; /* Controla el ancho del input de búsqueda */
+        display: inline-block;
+    }
+    
+    .search-container label {
+        white-space: nowrap;
+         margin-right: .5rem; /* Espacio entre la etiqueta y el input */
+    }
 </style>
 <form id="Solicitudes" method="post">
     <div class="card-body">
@@ -90,7 +110,7 @@
                         </div>
                         <div class="card cardlo card-body">
                             <div class="form-group row">
-                                <div class="col-sm-5">Nombre del Solicitante: </div>
+                                <div class="col-sm-5">Usuario de Logistica: </div>
                                 <div class="col-sm-7">
                                     <input type="text" readonly="true" class="form-control form-control-user"
                                         value="{{user.first_name}}" id="NombreSolicitanteProductos">
@@ -100,7 +120,7 @@
                                 <div class="col-sm-5">Selección de Proveedor: </div>
                                 <div class="col-sm-7">
                                     <select class="form-select form-select-solid" data-control="select2" name="SelectProveedor" id="SelectProveedorProductos"
-                                        data-placeholder="Seleccione un Proveedor" required data-hide-search="true">
+                                        data-placeholder="Seleccione un Proveedor" required >
                                         <option></option>
                                         {% for socio in socio_negocio %}
                                         <option value="{{ socio.CardCode }}">{{ socio.CardName }}</option>
@@ -148,7 +168,7 @@
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <div class="col-sm-5">Nombre del Solicitante: </div>
+                                <div class="col-sm-5">Usuario de Logistica: </div>
                                 <div class="col-sm-7">
                                     <input type="text" readonly="true" class="form-control form-control-user"
                                         value="{{user.first_name}}" id="NombreSolicitanteServicios">
@@ -342,5 +362,6 @@
             },
         });
     });
+    
 </script>
 {% endblock %}
