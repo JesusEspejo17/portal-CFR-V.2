@@ -494,8 +494,8 @@
         if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
         servs.list();
     });
-    
-    $('#tblProducts tbody, #tblServicios tbody').on('change', '.editable-cell input[type="number"], .editable-cell select', function () {
+    //aca el error del select, se tenia que quitar para que dejara seleccionar
+    $('#tblProducts tbody, #tblServicios tbody').on('change', '.editable-cell input[type="number"]', function () {
         var type = $(this).attr('data-type');
         var rowIndex = $(this).closest('tr').index();
         var newValue = $(this).val();

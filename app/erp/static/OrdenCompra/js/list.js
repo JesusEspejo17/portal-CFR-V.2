@@ -504,9 +504,19 @@ function tablaSolicitudDetalleServicio(docNum) {
             { data: 'LineVendor__CardName' },
             { data: 'Description' },
             { data: 'Quantity' },
-            { data: 'Precio' },
+            {
+                data: 'Precio',
+                render: function(data, type, row) {
+                    return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                }
+            },
             { data: 'CuentaMayor__AcctName' },
-            { data: 'total' },
+            {
+                data: 'total',
+                render: function(data, type, row) {
+                    return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                }
+            },
             {
                 data: 'LineStatus',
                 class: "text-center",
