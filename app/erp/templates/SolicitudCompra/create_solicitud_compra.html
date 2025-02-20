@@ -699,6 +699,10 @@
                                 options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
                             }
                             options += '</select>';
+                            // Inicializar Select2
+                            setTimeout(function() {
+                                $('#iddimension_' + rowIdx).select2();
+                            }, 0);
                             return options;
                         }
                     },
@@ -713,6 +717,10 @@
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
                             }
                             options += '</select>';
+                            // Inicializar Select2
+                            setTimeout(function() {
+                                $('#idSocioNegocios_' + rowIdx).select2();
+                            }, 0);
                             return options;
                         }
                     },
@@ -727,6 +735,10 @@
                                 options += '<option value="' + almacenes[i].WhsName + '" ' + selected + '>' + almacenes[i].WhsName + '</option>';
                             }
                             options += '</select>';
+                            // Inicializar Select2
+                            setTimeout(function() {
+                                $('#idAlmacen_' + rowIdx).select2();
+                            }, 0);
                             return options;
                         }
                     },
@@ -741,6 +753,10 @@
                                 options += '<option value="' + medidas[i].Code + '" ' + selected + '>' + medidas[i].Code + '</option>';
                             }
                             options += '</select>';
+                            // Inicializar Select2
+                            setTimeout(function() {
+                                $('#idMedida_' + rowIdx).select2();
+                            }, 0);
                             return options;
                         }
                     },
@@ -1028,6 +1044,10 @@
                             options += '<option value="' + cuenta_contable[i].AcctName + '" ' + selected + '>' + cuenta_contable[i].AcctName + '</option>';
                         }
                         options += '</select>';
+                        // Inicializar Select2
+                        setTimeout(function() {
+                            $('#idCC_' + rowIdx).select2();
+                        }, 0);
                         return options;
                     }
                 },
@@ -1052,6 +1072,10 @@
                             options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
                         }
                         options += '</select>';
+                        // Inicializar Select2
+                        setTimeout(function() {
+                            $('#idSocioNegocios_' + rowIdx).select2();
+                        }, 0);
                         return options;
                     }
                 },
@@ -1076,6 +1100,10 @@
                             options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
                         }
                         options += '</select>';
+                        // Inicializar Select2
+                        setTimeout(function() {
+                            $('#iddimension_' + rowIdx).select2();
+                        }, 0);
                         return options;
                     }
                 },
