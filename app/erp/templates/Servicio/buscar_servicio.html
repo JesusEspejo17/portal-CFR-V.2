@@ -49,8 +49,8 @@
                                                         <td style="width: 25%;">Descripción</td>
                                                         <td style="width: 10%;">Precio</td>
                                                         <td style="width: 20%;">Cuenta Cont.</td>
-                                                        <td style="width: 20%;">Proveedor</td>
                                                         <td style="width: 15%;">Dimensión</td>
+                                                        <td style="width: 20%;">Proveedor</td>
                                                         <td style="width: 5%;">Eliminar</td>
                                                     </thead>
                                                 </table>
@@ -102,17 +102,19 @@
                     { "data": "descripcion" },
                     { "data": "precio" },
                     { "data": "cuenta_contable", "defaultContent": "" },
-                    { "data": "proveedor", "defaultContent": "" },
                     { "data": "dimension", "defaultContent": "" },
+                    { "data": "proveedor", "defaultContent": "" },
                     { "data": null }
                 ],
                 columnDefs: [
+                    // The precio definition stays the same (target: [2])
                     {
                         targets: [2],
                         render: function (data, type, row) {
                             return '<input type="number" class="form-control editable-input" data-type="precioSlt" name="precio" id="precio" value="' + data + '">';
                         }
                     },
+                    // Delete button stays the same (target: [-1])
                     {
                         targets: [-1],
                         class: "text-center",
@@ -121,24 +123,10 @@
                             return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
                         }
                     },
+                    // Proveedor moves to -2
                     {
                         targets: [-2],
                         render: function (data, type, row) {
-                            //Pasamos todos los almacenes a elementos HTML
-                            var dimensiones = JSON.parse('{{ dimension_json|escapejs }}');
-                            var options = '<select class="form-control select" data-type="dimensionSlt" name="iddimension" id="iddimension" style="width: 100%;">';
-                            for (var i = 0; i < dimensiones.length; i++) {
-                                var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
-                                options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
-                            }
-                            options += '</select>';
-                            return options;
-                        }
-                    },
-                    {
-                        targets: [-3],
-                        render: function (data, type, row) {
-                            //Pasamos todos los almacenes a elementos HTML
                             var socios_de_negocio = JSON.parse('{{ socioNegocio_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="proveedorSlt" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
                             for (var i = 0; i < socios_de_negocio.length; i++) {
@@ -149,6 +137,21 @@
                             return options;
                         }
                     },
+                    // Dimension moves to -3
+                    {
+                        targets: [-3],
+                        render: function (data, type, row) {
+                            var dimensiones = JSON.parse('{{ dimension_json|escapejs }}');
+                            var options = '<select class="form-control select" data-type="dimensionSlt" name="iddimension" id="iddimension" style="width: 100%;">';
+                            for (var i = 0; i < dimensiones.length; i++) {
+                                var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
+                                options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
+                            }
+                            options += '</select>';
+                            return options;
+                        }
+                    },
+                    // Cuenta contable stays at -4
                     {
                         targets: [-4],
                         render: function (data, type, row) {
@@ -162,6 +165,7 @@
                             return options;
                         }
                     },
+                    // Update the editable cell definitions to match new positions
                     {
                         targets: [-2],
                         class: "editable-cell",
@@ -169,7 +173,7 @@
                         render: function (data, type, row) {
                             return data;
                         },
-                        editField: "dimension",
+                        editField: "proveedor",
                         editable: true,
                     },
                     {
@@ -179,7 +183,7 @@
                         render: function (data, type, row) {
                             return data;
                         },
-                        editField: "proveedor",
+                        editField: "dimension",
                         editable: true,
                     },
                     {
@@ -192,6 +196,7 @@
                         editField: "cuenta_contable",
                         editable: true,
                     },
+                    // The precio editable definition stays the same
                     {
                         targets: [2],
                         class: "editable-cell",
