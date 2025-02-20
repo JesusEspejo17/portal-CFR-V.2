@@ -125,10 +125,11 @@
                     },
                     // Proveedor moves to -2
                     {
-                        targets: [-2],
+                        targets: [-2],  // Campo proveedor
                         render: function (data, type, row) {
                             var socios_de_negocio = JSON.parse('{{ socioNegocio_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="proveedorSlt" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
+                            options += '<option value="" disabled selected hidden>Seleccione proveedor (Opcional)</option>';
                             for (var i = 0; i < socios_de_negocio.length; i++) {
                                 var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
@@ -248,7 +249,7 @@
                 
                             $(this).select2({
                                 allowClear: true, // Allows clearing the selection
-                                placeholder: "Select an option",
+                                placeholder: "Selecciona una opción",
                                 dropdownParent: $(this).closest('.modal-content') // Agregar esta línea
                             });
                         });

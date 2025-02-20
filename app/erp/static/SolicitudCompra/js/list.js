@@ -726,7 +726,15 @@ function tablaDetalleServicio(docNum) {
         },
         columns: [
             { "data": "ItemCode" },
-            { "data": "LineVendor" },
+            {
+                "data": "LineVendor",
+                "render": function(data, type, row) {
+                    if (!data || data.toLowerCase() === "none") {
+                        return '<span class="badge badge-dark">No Asignado</span>';
+                    }
+                    return data;
+                }
+            },
             { "data": "Description" },
             { "data": "Quantity" },
             { "data": "Precio" },
@@ -924,7 +932,15 @@ function tablaDetalleProducto(docNum) {
         },
         columns: [
             { "data": "ItemCode" },
-            { "data": "LineVendor" },
+            {
+                "data": "LineVendor",
+                "render": function(data, type, row) {
+                    if (!data || data.toLowerCase() === "none") {
+                        return '<span class="badge badge-dark">No Asignado</span>';
+                    }
+                    return data;
+                }
+            },
             { "data": "Description" },
             { "data": "Quantity" },
             { "data": "Precio" },

@@ -171,10 +171,11 @@
                         },
                     },
                     {
-                        targets: [-2],
+                        targets: [-2],  // Campo proveedor
                         render: function (data, type, row) {
                             var socios_de_negocio = JSON.parse('{{ proveedor_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="proveedorslt" name="idSocioNegociosSlt" id="idSocioNegociosSlt-' + 1 + '" style="width: 100%;">';
+                            options += '<option value="">Seleccione proveedor (Opcional)</option>';
                             for (var i = 0; i < socios_de_negocio.length; i++) {
                                 var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';

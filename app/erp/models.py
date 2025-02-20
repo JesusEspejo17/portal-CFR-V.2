@@ -251,7 +251,7 @@ class PRQ1(models.Model):
     Code = models.AutoField(primary_key=True)
     NumDoc = models.ForeignKey(OPRQ, on_delete=models.CASCADE, max_length=150)
     ItemCode = models.ForeignKey(OITM, on_delete=models.CASCADE, max_length=150)
-    LineVendor = models.ForeignKey(OCRD, on_delete=models.CASCADE, max_length=150)
+    LineVendor = models.ForeignKey(OCRD, on_delete=models.SET_NULL, max_length=150, null=True, blank=True)  # Permitir valores nulos
     Currency = models.ForeignKey(Moneda, on_delete=models.CASCADE, null=True)
     Description = models.TextField()
     Quantity = models.IntegerField()

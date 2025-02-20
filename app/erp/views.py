@@ -199,21 +199,59 @@ def solicitudcompra(request):
                 print(f"Encabezado creado con ID: {encabezado.pk}")
                 #Save detalle
                 #Si el arreglo de servicios está vacío, se está agregando un producto
-                if (servs == [] and len(vents) > 0):
+                # if (servs == [] and len(vents) > 0):
+                #     print("Procesando productos...")
+                #     for i in vents:
+                #         try:
+                #             print(f"Creando detalle para producto: {i['code']}")
+                #             detalle = PRQ1()
+                #             item = OITM.objects.get(ItemCode=i['code'])
+                #             proveedor = OCRD.objects.get(CardName=i['proveedor'])
+                #             uni_med = OUOM.objects.get(Code=i['medida'])
+                #             almacen = OWHS.objects.get(WhsName=i['almacen'])
+                #             cuentaContable = OACT.objects.get(AcctName="Sin Cuenta Contable")
+                #             dimension = Dimensiones.objects.get(descripcion=i['dimension'])
+                #             detalle.NumDoc = encabezado
+                #             detalle.ItemCode = item
+                #             detalle.LineVendor = proveedor
+                #             detalle.Description = i['description']
+                #             detalle.Quantity = i['cant']
+                #             detalle.UnidadMedida = uni_med
+                #             detalle.Currency = moneda
+                #             detalle.Almacen = almacen
+                #             detalle.CuentaMayor = cuentaContable
+                #             detalle.total = i['precio_total']
+                #             if 'price' in i:
+                #                 try:
+                #                     detalle.Precio = float(i['price'])
+                #                     print("Precio asignado:", detalle.Precio)
+                #                 except ValueError:
+                #                     detalle.Precio = 0.0 
+                #             else:
+                #                 detalle.Precio = 0.0
+                #                 print("Advertencia: 'precio' no encontrado en item:", i)
+                #             detalle.idDimension = dimension
+                #             detalle.save()
+                #         except Exception as e:
+                #                 print(f"Error al guardar detalle de producto: {str(e)}")
+                #                 raise
+                if servs == [] and len(vents) > 0:
                     print("Procesando productos...")
                     for i in vents:
                         try:
                             print(f"Creando detalle para producto: {i['code']}")
                             detalle = PRQ1()
                             item = OITM.objects.get(ItemCode=i['code'])
-                            proveedor = OCRD.objects.get(CardName=i['proveedor'])
+                            proveedor = None
+                            if i['proveedor']:
+                                proveedor = OCRD.objects.get(CardName=i['proveedor'])
                             uni_med = OUOM.objects.get(Code=i['medida'])
                             almacen = OWHS.objects.get(WhsName=i['almacen'])
                             cuentaContable = OACT.objects.get(AcctName="Sin Cuenta Contable")
                             dimension = Dimensiones.objects.get(descripcion=i['dimension'])
                             detalle.NumDoc = encabezado
                             detalle.ItemCode = item
-                            detalle.LineVendor = proveedor
+                            detalle.LineVendor = proveedor if proveedor else None
                             detalle.Description = i['description']
                             detalle.Quantity = i['cant']
                             detalle.UnidadMedida = uni_med
@@ -233,24 +271,62 @@ def solicitudcompra(request):
                             detalle.idDimension = dimension
                             detalle.save()
                         except Exception as e:
-                                print(f"Error al guardar detalle de producto: {str(e)}")
-                                raise
+                            print(f"Error al guardar detalle de producto: {str(e)}")
+                            raise
                 #Si el arreglo de productos está vacío, se está agregando un servicio
                 elif(vents == [] and len(servs) > 0):
+                    # print("Procesando servicios...")
+                    # for i in servs:
+                    #     try:
+                    #         print(f"Creando detalle para servicio: {i['code']}")
+                    #         detalle = PRQ1()
+                    #         item = OITM.objects.get(ItemCode=i['code'])
+                    #         proveedor = OCRD.objects.get(CardName=i['proveedor'])
+                    #         cuentaContable = OACT.objects.get(AcctName=i['cuenta_contable'])
+                    #         uni_med = OUOM.objects.get(Code="Sin Unidad")
+                    #         almacen = OWHS.objects.get(WhsName="Sin Almacen")
+                    #         dimension = Dimensiones.objects.get(descripcion=i['dimension'])
+                    #         detalle.NumDoc = encabezado
+                    #         detalle.ItemCode = item
+                    #         detalle.LineVendor = proveedor
+                    #         detalle.Description = i['description']
+                    #         detalle.Quantity = i['cant']
+                    #         detalle.UnidadMedida = uni_med
+                    #         detalle.Currency = moneda
+                    #         detalle.Almacen = almacen
+                    #         detalle.CuentaMayor = cuentaContable
+                    #         detalle.total = i['precio_total']
+                    #         if 'price' in i:
+                    #             try:
+                    #                 detalle.Precio = float(i['price'])
+                    #                 print("Precio asignado:", detalle.Precio)
+                    #             except ValueError:
+                    #                 detalle.Precio = 0.0  # O manejar de otra manera
+                    #         else:
+                    #             detalle.Precio = 0.0
+                    #             print("Advertencia: 'precio' no encontrado en item:", i)
+                    #         detalle.idDimension = dimension
+                    #         detalle.save()
+                    #         print(f"Detalle de servicio guardado con ID: {detalle.pk}")
+                    #     except Exception as e:
+                    #             print(f"Error al guardar detalle de servicio: {str(e)}")
+                    #             raise
                     print("Procesando servicios...")
                     for i in servs:
                         try:
                             print(f"Creando detalle para servicio: {i['code']}")
                             detalle = PRQ1()
                             item = OITM.objects.get(ItemCode=i['code'])
-                            proveedor = OCRD.objects.get(CardName=i['proveedor'])
+                            proveedor = None
+                            if i['proveedor']:
+                                proveedor = OCRD.objects.get(CardName=i['proveedor'])
                             cuentaContable = OACT.objects.get(AcctName=i['cuenta_contable'])
                             uni_med = OUOM.objects.get(Code="Sin Unidad")
                             almacen = OWHS.objects.get(WhsName="Sin Almacen")
                             dimension = Dimensiones.objects.get(descripcion=i['dimension'])
                             detalle.NumDoc = encabezado
                             detalle.ItemCode = item
-                            detalle.LineVendor = proveedor
+                            detalle.LineVendor = proveedor if proveedor else None
                             detalle.Description = i['description']
                             detalle.Quantity = i['cant']
                             detalle.UnidadMedida = uni_med
@@ -271,8 +347,8 @@ def solicitudcompra(request):
                             detalle.save()
                             print(f"Detalle de servicio guardado con ID: {detalle.pk}")
                         except Exception as e:
-                                print(f"Error al guardar detalle de servicio: {str(e)}")
-                                raise
+                            print(f"Error al guardar detalle de servicio: {str(e)}")
+                            raise
                 #Actualizar modelo Series
                 if serie:
                     serie.NumeroSiguiente +=1
@@ -377,152 +453,6 @@ class ListLogistica(ValidatePermissionRequiredMixin2, ListView):
     def get_queryset(self):
         return OPRQ.objects.order_by('DocNum')
 
-# class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
-#     model: OPRQ
-#     template_name = 'SolicitudCompra/listar_solicitud_compra.html'
-#     required_groups = ['Empleado', 'Validador', 'Jefe_De_Area', 'Jefe_de_Presupuestos']
-#     @method_decorator(csrf_exempt)
-#     def dispatch(self, request, *args, **kwargs):
-#         return super().dispatch(request, *args, **kwargs)
-#     def post(self, request, *args, **kwargs):
-#         data = {}
-#         try:
-#             action = request.POST['action']
-#             if action == "searchSolicitudes":
-#                 estado = request.POST['estado']
-#                 data = []
-#                 user = self.request.user
-#                 if user.groups.filter(name__in=['Administrador', 'Validador']).exists():
-#                     if estado == '0':
-#                         solicitudes = OPRQ.objects.order_by('DocEntry')
-#                     else:
-#                         solicitudes = OPRQ.objects.filter(DocStatus=estado).order_by('DocEntry')
-#                 elif user.groups.filter(name__in=['Jefe_De_Area']).exists():
-#                     depto = Departamento.objects.get(Name=user.departamento)
-#                     if estado == '0':
-#                         solicitudes = OPRQ.objects.filter(Department=depto.Code).order_by('DocEntry')
-#                     else:
-#                         solicitudes = OPRQ.objects.filter(DocStatus=estado).filter(Department=depto.Code).order_by('DocEntry')
-#                 elif user.groups.filter(name__in=['Empleado']).exists():
-#                     if estado == '0':
-#                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).order_by('DocEntry')
-#                     else:
-#                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).filter(DocStatus=estado).order_by('DocEntry')
-#                 elif user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
-#                     solicitudes = OPRQ.objects.filter(DocStatus='A').order_by('DocEntry')          
-#                 for i in solicitudes:
-#                     data.append(i.toJSON())
-#             elif action == "showDetails":
-#                 data = []
-#                 for i in PRQ1.objects.filter(NumDoc=request.POST['id']):
-#                     data.append(i.toJSON())
-#             elif action=="getDetails":
-#                 data = []
-#                 for i in PRQ1.objects.filter(NumDoc=request.POST['code']):
-#                     data.append(i.toJSON())
-#             else:
-#                 data['error'] = 'Ha ocurrido un error'
-#         except Exception as e:
-#             data['error'] = {{str(e)}}
-#         return JsonResponse(data, safe=False)
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['title'] = 'Listado de Solicitudes'
-#         context['entity'] = 'OPRQ'
-#         context['edition_permissions'] = self.request.user.has_perm('erp.change_oprq')
-#         return context
-    
-#     def get_queryset(self):
-#         return OPRQ.objects.order_by('DocNum')
-    
-# @login_required
-# def get_user_groups(request):
-#     if request.user.is_authenticated:
-#         user_groups = list(request.user.groups.values_list('name', flat=True))
-#         return JsonResponse(user_groups, safe=False)
-#     else:
-#         return JsonResponse({'error': 'User not authenticated'}, status=401)
-
-##ULTIMO LIST ANTES DE MODIFICACION DE NO LISTARSE C
-# class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
-#     model = OPRQ
-#     template_name = 'SolicitudCompra/listar_solicitud_compra.html'
-#     required_groups = ['Empleado', 'Validador', 'Jefe_De_Area', 'Jefe_de_Presupuestos']
-
-#     @method_decorator(csrf_exempt)
-#     def dispatch(self, request, *args, **kwargs):
-#         return super().dispatch(request, *args, **kwargs)
-
-#     def post(self, request, *args, **kwargs):
-#         data = {}
-#         try:
-#             action = request.POST['action']
-#             if action == "searchSolicitudes":
-#                 estado = request.POST['estado']
-#                 data = []
-#                 user = self.request.user
-#                 if user.groups.filter(name__in=['Administrador', 'Validador']).exists():
-#                     if estado == '0':
-#                         solicitudes = OPRQ.objects.order_by('DocEntry')
-#                     else:
-#                         solicitudes = OPRQ.objects.filter(DocStatus=estado).order_by('DocEntry')
-#                 elif user.groups.filter(name__in=['Jefe_De_Area']).exists():
-#                     depto = Departamento.objects.get(Name=user.departamento)
-#                     if estado == '0':
-#                         solicitudes = OPRQ.objects.filter(Department=depto.Code).order_by('DocEntry')
-#                     else:
-#                         solicitudes = OPRQ.objects.filter(DocStatus=estado).filter(Department=depto.Code).order_by('DocEntry')
-#                 elif user.groups.filter(name__in=['Empleado']).exists():
-#                     if estado == '0':
-#                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).order_by('DocEntry')
-#                     else:
-#                         solicitudes = OPRQ.objects.filter(ReqIdUser=user.id).filter(DocStatus=estado).order_by('DocEntry')
-#                 elif user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
-#                     solicitudes = OPRQ.objects.filter(DocStatus__in=['A', 'C', 'CP']).order_by('DocEntry')  # Filtrar por 'A', 'C', 'CP'
-#                 for i in solicitudes:
-#                     data.append(i.toJSON())
-#             elif action == "showDetails":
-#                 data = []
-#                 user = self.request.user
-#                 if user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
-#                     for i in PRQ1.objects.filter(NumDoc=request.POST['id'], LineStatus='A'):  # Filtrar por LineStatus 'A'
-#                         data.append(i.toJSON())
-#                 else:
-#                     for i in PRQ1.objects.filter(NumDoc=request.POST['id']):
-#                         data.append(i.toJSON())
-#             elif action == "getDetails":
-#                 data = []
-#                 user = self.request.user
-#                 if user.groups.filter(name__in=['Jefe_de_Presupuestos']).exists():
-#                     for i in PRQ1.objects.filter(NumDoc=request.POST['code'], LineStatus='A'):  # Filtrar por LineStatus 'A'
-#                         data.append(i.toJSON())
-#                 else:
-#                     for i in PRQ1.objects.filter(NumDoc=request.POST['code']):
-#                         data.append(i.toJSON())
-#             else:
-#                 data['error'] = 'Ha ocurrido un error'
-#         except Exception as e:
-#             data['error'] = str(e)
-#         return JsonResponse(data, safe=False)
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['title'] = 'Listado de Solicitudes'
-#         context['entity'] = 'OPRQ'
-#         context['edition_permissions'] = self.request.user.has_perm('erp.change_oprq')
-#         return context
-
-#     def get_queryset(self):
-#         return OPRQ.objects.order_by('DocNum')
-
-# @login_required
-# def get_user_groups(request):
-#     if request.user.is_authenticated:
-#         user_groups = list(request.user.groups.values_list('name', flat=True))
-#         return JsonResponse(user_groups, safe=False)
-#     else:
-#         return JsonResponse({'error': 'User not authenticated'}, status=401)
 
 class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
     model = OPRQ
@@ -604,56 +534,7 @@ def get_user_groups(request):
         return JsonResponse({'error': 'User not authenticated'}, status=401)
 
 
-##CONTABILIZAR FALTA FUNCION ACTUALIZAR A C
-
-# def solicitudContabilizar(request, id):
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-#             usuario = data.get('usuario', None)
-#             items_contabilizados = data.get('arrcheckedProd', [])
-            
-#             if not items_contabilizados:
-#                 return JsonResponse({'error': 'Debe seleccionar al menos un item para contabilizar'}, status=400)
-
-#             solicitud = OPRQ.objects.filter(pk=id).first()
-#             if not solicitud:
-#                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
-
-#             with transaction.atomic():
-#                 # Actualizar items seleccionados a 'L'
-#                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_contabilizados)
-#                 detalles_actualizados = detalles.update(LineStatus='L')
-
-#                 # Verificar si todos los detalles están en 'L'
-#                 todos_contabilizados = not PRQ1.objects.filter(NumDoc=id).exclude(LineStatus='L').exists()
-                
-#                 if todos_contabilizados:
-#                     OPRQ.objects.filter(pk=id).update(DocStatus="C")
-#                 else:
-#                     OPRQ.objects.filter(pk=id).update(DocStatus="CP")
-
-#                 # Verificar si todos los detalles están contabilizados y no hay detalles pendientes
-#                 detalles_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus__in=['A', 'P']).exists()
-#                 if not detalles_pendientes:
-#                     OPRQ.objects.filter(pk=id).update(DocStatus="C")
-
-#                 validate = Validaciones()
-#                 validate.codReqUser = usuario
-#                 validate.codValidador = request.user.username
-#                 validate.fecha = timezone.now()
-#                 validate.estado = "Contabilizado"
-#                 validate.save()
-                
-#                 send_email_to_user(1)
-#                 return HttpResponse("OK")
-
-#         except Exception as e:
-#             msg = f"Error al insertar datos maestros: {str(e)}"
-#             return JsonResponse({'error': msg}, status=500)
-            
-#     return JsonResponse({'error': 'Método no permitido'}, status=405)
-
+##CONTABILIZAR 
 def solicitudContabilizar(request, id):
     if request.method == "POST":
         try:
@@ -709,50 +590,6 @@ def solicitudContabilizar(request, id):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
-# def solicitudContabilizarMasivo(request):
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-#             arrSolicitudes = data.get('ids', None)
-#             if not arrSolicitudes:
-#                 return JsonResponse({'error': 'No se recibieron IDs'}, status=400)
-#             with transaction.atomic():
-#                 for id in arrSolicitudes:
-#                     solicitud_actual = OPRQ.objects.get(pk=id)
-#                     Solicitud_object = OPRQ.objects.filter(pk=id)
-                    
-#                     # Actualizar items seleccionados a 'L'
-#                     detalles = PRQ1.objects.filter(NumDoc=id, LineStatus='A')
-#                     detalles_actualizados = detalles.update(LineStatus='L')
-
-#                     # Verificar si todos los detalles están en 'L'
-#                     todos_contabilizados = not PRQ1.objects.filter(NumDoc=id).exclude(LineStatus='L').exists()
-                    
-#                     if todos_contabilizados:
-#                         Solicitud_object.update(DocStatus="C")
-#                     else:
-#                         Solicitud_object.update(DocStatus="CP")
-
-#                     # Verificar si todos los detalles están contabilizados y no hay detalles pendientes
-#                     detalles_pendientes = PRQ1.objects.filter(NumDoc=id, LineStatus__in=['A', 'P']).exists()
-#                     if not detalles_pendientes:
-#                         Solicitud_object.update(DocStatus="C")
-
-#                     validate = Validaciones()
-#                     usuario = solicitud_actual.ReqIdUser
-#                     usuario_solicitante = User.objects.get(username=usuario)
-#                     validate.codReqUser = usuario_solicitante.first_name + ' ' + usuario.last_name
-#                     validate.codValidador = request.user.username
-#                     validate.fecha = timezone.now()
-#                     validate.estado = "Contabilizado"
-#                     validate.save()
-#             return HttpResponse("OK")
-#         except Exception as e:
-#             msg = f"Error al insertar datos maestros: {str(e)}"
-#             return JsonResponse({'error': msg}, status=500)
-#     return JsonResponse({'error': 'Metodo no permitido'}, status=405)
-
-
 def solicitudContabilizarMasivo(request):
     if request.method == "POST":
         try:
@@ -804,80 +641,6 @@ def solicitudContabilizarMasivo(request):
             return JsonResponse({'error': msg}, status=500)
     return JsonResponse({'error': 'Metodo no permitido'}, status=405)
     
-
-# def solicitudAprobarMasivo(request):
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-#             arrSolicitudes = data.get('ids', None)
-#             checked_prod = data.get('arrcheckedProd', [])
-            
-#             if not arrSolicitudes:
-#                 return JsonResponse({'error': 'No se recibieron IDs'}, status=400)
-
-#             with transaction.atomic():
-#                 for id in arrSolicitudes:
-#                     Solicitud = OPRQ.objects.filter(pk=id)
-#                     if not Solicitud:
-#                         return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
-
-#                     detalles = PRQ1.objects.filter(NumDoc=id)
-#                     if detalles.exists():
-#                         original_status = {detalle.pk: detalle.LineStatus for detalle in detalles}
-#                         checked_codes = {item.get('Code') for item in checked_prod}
-#                     else:
-#                         return JsonResponse({'error': 'Detalle no encontrado'}, status=404)
-
-#                     # 1. Actualizar LineStatus de los detalles
-#                     for detalle in detalles:
-#                         if detalle.Code in checked_codes:
-#                             if detalle.LineStatus != 'A':
-#                                 detalle.LineStatus = 'A'
-#                                 detalle.save()
-#                         else:
-#                             if detalle.LineStatus != 'R':
-#                                 detalle.LineStatus = 'R'
-#                                 detalle.save()
-
-#                     # 2. Reindexar LineCount_Indexado solo para los detalles aprobados (LineStatus = 'A')
-#                     detalles_aprobados = detalles.filter(LineStatus='A').order_by('LineCount')
-#                     for idx, detalle in enumerate(detalles_aprobados):
-#                         detalle.LineCount_Indexado = idx  # Reindexar desde 0
-#                         detalle.save()
-
-#                     # 3. Enviar la solicitud a SAP
-#                     response = export_data_as_json(id)
-#                     response_content = json.loads(response.content)
-#                     error_message = response_content.get('error', 'Error desconocido')
-
-#                     # 4. Manejar errores de SAP
-#                     if response.status_code != 200:
-#                         for detalle in detalles:
-#                             detalle.LineStatus = original_status.get(detalle.pk, detalle.LineStatus)
-#                             detalle.save()
-#                         return JsonResponse({'error': error_message}, status=response.status_code)
-#                     else:
-#                         # 5. Actualizar el estado de la solicitud y registrar la validación
-#                         solicitud_actual = OPRQ.objects.get(pk=id)
-#                         Solicitud_object = OPRQ.objects.filter(pk=id)
-#                         validate = Validaciones()
-#                         Solicitud_object.update(DocStatus="A")
-#                         usuario = solicitud_actual.ReqIdUser
-#                         usuario_solicitante = User.objects.get(username=usuario)
-#                         validate.codReqUser = usuario_solicitante.first_name + ' ' + usuario.last_name
-#                         validate.codValidador = request.user.username
-#                         validate.fecha = timezone.now()
-#                         validate.estado = "Aprobado"
-#                         validate.save()
-
-#                 # 6. Retornar éxito si todas las solicitudes se aprobaron correctamente
-#                 return JsonResponse({'success': "Éxito"}, status=200)
-
-#         except Exception as e:
-#             msg = f"Error al insertar datos maestros: {str(e)}"
-#             return JsonResponse({'error': msg}, status=500)
-
-#     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 def solicitudAprobarMasivo(request):
     if request.method == "POST":
@@ -1028,71 +791,6 @@ def solicitudRechazarMasivo(request):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
-#ultimo aprobar antes de guardado
-# def solicitudAprobar(request, id):
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-#             checked_prod = data.get('arrcheckedProd', [])
-#             usuario = data.get('usuario', None)
-#             Solicitud = OPRQ.objects.filter(pk=id)
-            
-#             if not Solicitud:
-#                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
-
-#             with transaction.atomic():
-#                 detalles = PRQ1.objects.filter(NumDoc=id)
-#                 if detalles.exists():
-#                     original_status = {detalle.pk: detalle.LineStatus for detalle in detalles}
-#                     checked_codes = {item.get('Code') for item in checked_prod}
-#                 else:
-#                     return JsonResponse({'error': 'Detalle no encontrado'}, status=404)
-
-#                 # 1. Actualizar LineStatus de los detalles
-#                 for detalle in detalles:
-#                     if detalle.Code in checked_codes:
-#                         if detalle.LineStatus != 'A':
-#                             detalle.LineStatus = 'A'
-#                             detalle.save()
-#                     else:
-#                         if detalle.LineStatus != 'R':
-#                             detalle.LineStatus = 'R'
-#                             detalle.save()
-
-#                 # 2. Reindexar LineCount_Indexado solo para los detalles aprobados (LineStatus = 'A')
-#                 detalles_aprobados = detalles.filter(LineStatus='A').order_by('LineCount')
-#                 for idx, detalle in enumerate(detalles_aprobados):
-#                     detalle.LineCount_Indexado = idx  # Reindexar desde 0
-#                     detalle.save()
-
-#                 # 3. Enviar la solicitud a SAP
-#                 response = export_data_as_json(id)
-#                 response_content = json.loads(response.content)
-#                 error_message = response_content.get('error', 'Error desconocido')
-
-#                 # 4. Manejar errores de SAP
-#                 if response.status_code != 200:
-#                     for detalle in detalles:
-#                         detalle.LineStatus = original_status.get(detalle.pk, detalle.LineStatus)
-#                         detalle.save()
-#                     return JsonResponse({'error': error_message}, status=response.status_code)
-#                 else:
-#                     validate = Validaciones()
-#                     Solicitud.update(DocStatus="A")
-#                     validate.codReqUser = usuario
-#                     validate.codValidador = request.user.username
-#                     validate.fecha = timezone.now()
-#                     validate.estado = "Aprobado"
-#                     validate.save()
-#                     send_email_to_user(1)
-#                     return JsonResponse({'success': "Éxito"}, status=200)
-
-#         except Exception as e:
-#             msg = f"Error al insertar datos maestros: {str(e)}"
-#             return JsonResponse({'error': msg}, status=500)
-    
-#     return JsonResponse({'error': 'Método no permitido'}, status=405)
-
 def solicitudAprobar(request, id):
     if request.method == "POST":
         try:
@@ -1228,6 +926,67 @@ def solicitudRechazar(request, id):
             
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+# def export_data_as_json(id):
+#     solicitudes = OPRQ.objects.filter(pk=id)
+
+#     if not solicitudes:
+#         return JsonResponse({'error': 'No se encontraron solicitudes'}, status=404)
+
+#     data = []
+#     for solicitud in solicitudes:
+#         if not solicitudes:
+#             return  # No hay solicitudes que procesar
+#         oprq = {
+#             "Requester": solicitud.ReqCode if solicitud.ReqCode else '1',
+#             "ReqType": solicitud.ReqType,
+#             "DocType": "dDocument_Items" if solicitud.DocType == 'I' else ("dDocument_Service" if solicitud.DocType == 'S' else None),
+#             "DocDate": solicitud.DocDate,
+#             "DocCurrency": solicitud.moneda.MonedaAbrev,
+#             "Comments": solicitud.Comments,
+#             "TaxDate": solicitud.DocDate,
+#             "Series": solicitud.Serie,
+#             "RequriedDate": solicitud.ReqDate,
+#             "DocumentLines": []
+#         }
+#         detalle = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
+#         for det in detalle:
+#             #print(f"Detalle Code: {det.Code}, LineStatus: {det.LineStatus}")
+#             if det.LineStatus=='A' and solicitud.DocType == 'I':
+#                 detalle_list = {
+#                     "LineNum": det.LineCount_Indexado,
+#                     'ItemCode': det.ItemCode.ItemCode,
+#                     'LineVendor': det.LineVendor.CardCode,
+#                     "TaxCode": solicitud.TaxCode.Code,
+#                     'Quantity': det.Quantity,
+#                     "UnitPrice":det.Precio,
+#                     'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
+#                     'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
+#                 }
+#                 oprq['DocumentLines'].append(detalle_list)
+#             elif det.LineStatus=='A' and solicitud.DocType == 'S' :
+#                 detalle_list = {
+#                 ##  'ItemCode': det.ItemCode.ItemCode,
+#                     "ItemDescription":  det.ItemCode.ItemCode,
+#                     'LineVendor': det.LineVendor.CardCode,
+#                     "RequiredDate": solicitud.ReqDate,
+#                     "TaxCode": solicitud.TaxCode.Code,
+#                     'Quantity': det.Quantity,
+#                     "Price":det.Precio,
+#                     "UnitPrice":det.Precio,
+#                     "DocTotalFC":det.Precio*det.Quantity,
+#                     "AccountCode": det.CuentaMayor.AcctCode,
+#                     'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
+#                     'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
+#                 }
+#                 oprq['DocumentLines'].append(detalle_list)
+#         data.append(oprq)
+#     json_data = json.dumps(data[0], indent=2, default=lambda o: o.isoformat() if isinstance(o, date) else None)
+#     print(json_data)
+#     response = data_sender(json_data, id)
+#     if isinstance(response, JsonResponse):
+#         return response
+#     return JsonResponse({'error': 'Error al enviar datos'}, status=500)
+
 def export_data_as_json(id):
     solicitudes = OPRQ.objects.filter(pk=id)
 
@@ -1252,36 +1011,45 @@ def export_data_as_json(id):
         }
         detalle = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
         for det in detalle:
-            #print(f"Detalle Code: {det.Code}, LineStatus: {det.LineStatus}")
-            if det.LineStatus=='A' and solicitud.DocType == 'I':
-                detalle_list = {
-                    "LineNum": det.LineCount_Indexado,
-                    'ItemCode': det.ItemCode.ItemCode,
-                    'LineVendor': det.LineVendor.CardCode,
-                    "TaxCode": solicitud.TaxCode.Code,
-                    'Quantity': det.Quantity,
-                    "UnitPrice":det.Precio,
-                    'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
-                    'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
-                }
-                oprq['DocumentLines'].append(detalle_list)
-            elif det.LineStatus=='A' and solicitud.DocType == 'S' :
-                detalle_list = {
-                ##  'ItemCode': det.ItemCode.ItemCode,
-                    "ItemDescription":  det.ItemCode.ItemCode,
-                    'LineVendor': det.LineVendor.CardCode,
-                    "RequiredDate": solicitud.ReqDate,
-                    "TaxCode": solicitud.TaxCode.Code,
-                    'Quantity': det.Quantity,
-                    "Price":det.Precio,
-                    "UnitPrice":det.Precio,
-                    "DocTotalFC":det.Precio*det.Quantity,
-                    "AccountCode": det.CuentaMayor.AcctCode,
-                    'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
-                    'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
-                }
-                oprq['DocumentLines'].append(detalle_list)
+            # Solo agregamos la línea si el estado de la línea es "A" (Activo)
+            if det.LineStatus == 'A':
+                if solicitud.DocType == 'I':  # Tipo de documento "Items"
+                    detalle_list = {
+                        "LineNum": det.LineCount_Indexado,
+                        'ItemCode': det.ItemCode.ItemCode,
+                        'LineVendor': det.LineVendor.CardCode if det.LineVendor else None,  # Se agrega solo si LineVendor no es nulo
+                        "TaxCode": solicitud.TaxCode.Code,
+                        'Quantity': det.Quantity,
+                        "UnitPrice": det.Precio,
+                        'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
+                        'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
+                    }
+                    # Si LineVendor es None, lo eliminamos del diccionario antes de agregarlo
+                    if detalle_list['LineVendor'] is None:
+                        del detalle_list['LineVendor']
+                    oprq['DocumentLines'].append(detalle_list)
+
+                elif solicitud.DocType == 'S':  # Tipo de documento "Service"
+                    detalle_list = {
+                        "ItemDescription": det.ItemCode.ItemCode,
+                        'LineVendor': det.LineVendor.CardCode if det.LineVendor else None,  # Se agrega solo si LineVendor no es nulo
+                        "RequiredDate": solicitud.ReqDate,
+                        "TaxCode": solicitud.TaxCode.Code,
+                        'Quantity': det.Quantity,
+                        "Price": det.Precio,
+                        "UnitPrice": det.Precio,
+                        "DocTotalFC": det.Precio * det.Quantity,
+                        "AccountCode": det.CuentaMayor.AcctCode,
+                        'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
+                        'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
+                    }
+                    # Si LineVendor es None, lo eliminamos del diccionario antes de agregarlo
+                    if detalle_list['LineVendor'] is None:
+                        del detalle_list['LineVendor']
+                    oprq['DocumentLines'].append(detalle_list)
+
         data.append(oprq)
+
     json_data = json.dumps(data[0], indent=2, default=lambda o: o.isoformat() if isinstance(o, date) else None)
     print(json_data)
     response = data_sender(json_data, id)

@@ -234,7 +234,7 @@
                             <th>Precio Unitario</th>
                             <th>Dimensión</th>
                             <th>Precio Total</th>
-                            <th>Proveedor</th>
+                            <th style="text-align:">Proveedor</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -712,6 +712,7 @@
                             var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
                             var rowIdx = meta.row;
                             var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
+                            options += '<option value="" disabled selected hidden>Seleccione proveedor (Opcional)</option>';
                             for (var i = 0; i < socios_de_negocio.length; i++) {
                                 var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
@@ -1062,11 +1063,12 @@
                     editable: true,
                 },
                 {
-                    targets: [-1],
+                    targets: [-1],  // Campo proveedor
                     render: function (data, type, row, meta) {
                         var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
                         var rowIdx = meta.row;
                         var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
+                        options += '<option value="" disabled selected hidden>Seleccione Proveedor (Opcional)</option>';
                         for (var i = 0; i < socios_de_negocio.length; i++) {
                             var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
                             options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';

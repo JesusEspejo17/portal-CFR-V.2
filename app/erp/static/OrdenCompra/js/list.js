@@ -395,7 +395,16 @@ function tablaSolicitudDetalleProducto(docNum) {
         },
         columns: [
             { data: 'ItemCode__ItemCode' },
-            { data: 'LineVendor__CardName' },
+            {
+                "data": "LineVendor__CardName",
+                "render": function(data, type, row) {
+                    // Verifica si LineVendor está vacío o es "none"
+                    if (!data || data.toLowerCase() === "none") {
+                        return '<span class="badge badge-dark">No se Asignó</span>'; // Clase para badge negro
+                    }
+                    return data; // Devuelve el valor original si no está vacío
+                }
+            },
             { data: 'Description' },
             { data: 'Quantity' },
             {
