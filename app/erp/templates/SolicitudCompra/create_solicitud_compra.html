@@ -28,6 +28,26 @@
     .form-group{
         margin-bottom: 8px;
     }
+    /* Añade esto en la sección de <style> en el head */
+.form-control.select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px;
+    padding-right: 2.5rem;
+}
+
+/* Para los select que usan Select2 */
+.select2-container--bootstrap4 .select2-selection--single {
+    padding-right: 2.5rem !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px;
+}
 </style>
 {% endblock head_list %}
 
@@ -638,8 +658,7 @@
         },
         list: function () {
             if ($.fn.DataTable.isDataTable('#tblProducts')) {
-                tblProducts = $('#tblProducts').DataTable();
-                tblProducts.clear().destroy();
+                $('#tblProducts').DataTable().destroy();
             }
             tblProducts = $('#tblProducts').DataTable({
                 bDestroy: true,
@@ -671,9 +690,10 @@
                     },
                     {
                         targets: [-2],  // Changed from -1 (dimension was last, now second to last)
-                        render: function (data, type, row) {
+                        render: function (data, type, row, meta) {
                             var dimensiones = JSON.parse('{{ dimension|escapejs }}');
-                            var options = '<select class="form-control select" data-type="dimension" name="iddimension" id="iddimension" style="width: 100%;">';
+                            var rowIdx = meta.row;
+                            var options = '<select class="form-control select" data-type="dimension" name="iddimension_' + rowIdx + '" id="iddimension_' + rowIdx + '" style="width: 100%;">';
                             for (var i = 0; i < dimensiones.length; i++) {
                                 var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
                                 options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
@@ -684,9 +704,10 @@
                     },
                     {
                         targets: [-1],  // Changed from -2 (proveedor was second to last, now last)
-                        render: function (data, type, row) {
+                        render: function (data, type, row, meta) {
                             var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
-                            var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
+                            var rowIdx = meta.row;
+                            var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
                             for (var i = 0; i < socios_de_negocio.length; i++) {
                                 var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
@@ -696,10 +717,11 @@
                         }
                     },
                     {
-                        targets: [5],
-                        render: function (data, type, row) {
+                        targets: [5], // Almacén
+                        render: function (data, type, row, meta) {
                             var almacenes = JSON.parse('{{ almacen|escapejs }}');
-                            var options = '<select class="form-control select" data-type="almacen" name="idAlmacen" id="idAlmacen" style="width: 100%;">';
+                            var rowIdx = meta.row;
+                            var options = '<select class="form-control select" data-type="almacen" name="idAlmacen_' + rowIdx + '" id="idAlmacen_' + rowIdx + '" style="width: 100%;">';
                             for (var i = 0; i < almacenes.length; i++) {
                                 var selected = (almacenes[i].WhsName === data) ? 'selected' : '';
                                 options += '<option value="' + almacenes[i].WhsName + '" ' + selected + '>' + almacenes[i].WhsName + '</option>';
@@ -710,9 +732,10 @@
                     },
                     {
                         targets: [6],
-                        render: function (data, type, row) {
+                        render: function (data, type, row, meta) {
                             var medidas = JSON.parse('{{ medida|escapejs }}');
-                            var options = '<select class="form-control select" data-type="medida" name="idMedida" id="idMedida" style="width: 100%;">';
+                            var rowIdx = meta.row;
+                            var options = '<select class="form-control select" data-type="medida" name="idMedida_' + rowIdx + '" id="idMedida_' + rowIdx + '" style="width: 100%;">';
                             for (var i = 0; i < medidas.length; i++) {
                                 var selected = (medidas[i].Code === data) ? 'selected' : '';
                                 options += '<option value="' + medidas[i].Code + '" ' + selected + '>' + medidas[i].Code + '</option>';
@@ -825,7 +848,20 @@
                         "sSortDescending": ": Activar para ordenar la columna de manera descendente"
                     }
                 },
-                initComplete: function (settings, json) {
+                drawCallback: function(settings) {
+                    reinicializarSelect2EnTabla('#tblProducts');
+                },
+                createdRow: function(row, data, dataIndex) {
+                    $(row).find('select').each(function() {
+                        if (!$(this).hasClass('select2-hidden-accessible')) {
+                            $(this).select2({
+                                theme: 'bootstrap5',
+                                width: '100%',
+                                dropdownAutoWidth: true,
+                                dropdownParent: $(this).parent()
+                            });
+                        }
+                    });
                 }
             });
         },
@@ -920,6 +956,7 @@
         if (document.getElementById("idImpuestos").value.trim() !== "") actualizarTotalConImpuesto();
     }
 
+    var tblServicios;
     var servs = {
         items: {
             cli: '',
@@ -941,6 +978,9 @@
             return true;
         },
         list: function () {
+            if ($.fn.DataTable.isDataTable('#tblServicios')) {
+                $('#tblServicios').DataTable().destroy();
+            }
             tblServicios = $('#tblServicios').DataTable({
                 bDestroy: true,
                 responsive: true,
@@ -979,9 +1019,10 @@
                 },
                 {
                     targets: [5],
-                    render: function (data, type, row) {
+                    render: function (data, type, row, meta) {
                         var cuenta_contable = JSON.parse('{{ cuenta_contable|escapejs }}');
-                        var options = '<select class="form-control select" data-type="cuenta_contable" name="idCC" id="idCC" style="width: 100%;">';
+                        var rowIdx = meta.row;
+                        var options = '<select class="form-control select" data-type="cuenta_contable" name="idCC_' + rowIdx + '" id="idCC_' + rowIdx + '" style="width: 100%;">';
                         for (var i = 0; i < cuenta_contable.length; i++) {
                             var selected = (cuenta_contable[i].AcctName === data) ? 'selected' : '';
                             options += '<option value="' + cuenta_contable[i].AcctName + '" ' + selected + '>' + cuenta_contable[i].AcctName + '</option>';
@@ -1002,9 +1043,10 @@
                 },
                 {
                     targets: [-1],
-                    render: function (data, type, row) {
+                    render: function (data, type, row, meta) {
                         var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
-                        var options = '<select class="form-control select" data-type="socio_negocio" name="idSocioNegocios" id="idSocioNegocios" style="width: 100%;">';
+                        var rowIdx = meta.row;
+                        var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
                         for (var i = 0; i < socios_de_negocio.length; i++) {
                             var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
                             options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
@@ -1025,9 +1067,10 @@
                 },
                 {
                     targets: [7],
-                    render: function (data, type, row) {
+                    render: function (data, type, row, meta) {
                         var dimensiones = JSON.parse('{{ dimension|escapejs }}');
-                        var options = '<select class="form-control select" data-type="dimension" name="iddimension" id="iddimension" style="width: 100%;">';
+                        var rowIdx = meta.row;
+                        var options = '<select class="form-control select" data-type="dimension" name="iddimension_' + rowIdx + '" id="iddimension_' + rowIdx + '" style="width: 100%;">';
                         for (var i = 0; i < dimensiones.length; i++) {
                             var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
                             options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
@@ -1084,8 +1127,20 @@
                         "sSortDescending": ": Activar para ordenar la columna de manera descendente"
                     }
                 },
-                initComplete: function (settings, json) {
-
+                drawCallback: function(settings) {
+                    reinicializarSelect2EnTabla('#tblServicios');
+                },
+                createdRow: function(row, data, dataIndex) {
+                    $(row).find('select').each(function() {
+                        if (!$(this).hasClass('select2-hidden-accessible')) {
+                            $(this).select2({
+                                theme: 'bootstrap5',
+                                width: '100%',
+                                dropdownAutoWidth: true,
+                                dropdownParent: $(this).parent()
+                            });
+                        }
+                    });
                 }
             });
         },
@@ -1098,6 +1153,47 @@
         }
     };
 
+    // Función para inicializar Select2 en todas las filas de las tablas
+    function initSelect2() {
+        console.log("Inicializando Select2...");
+
+        // Primero, destruir las instancias existentes de Select2
+        $('#tblProducts .select, #tblServicios .select').each(function() {
+            if ($(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2('destroy');
+            }
+        });
+
+        // Luego, inicializar Select2 en los selectores limpios
+        $('#tblProducts .select, #tblServicios .select').each(function() {
+            console.log("Inicializando nuevo select:", $(this).attr('id'));
+            $(this).select2({
+                width: '100%',
+                theme: 'bootstrap5',
+                placeholder: "Seleccione una opción",
+                allowClear: true,
+                dropdownParent: $(this).parent() // Importante para el posicionamiento correcto
+            });
+        });
+    }
+
+    // Modificar las funciones list de vents y servs
+    function reinicializarSelect2EnTabla(tabla) {
+        $(tabla + ' tbody select').each(function() {
+            // Destruir instancia previa si existe
+            if ($(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2('destroy');
+            }
+            // Crear nueva instancia
+            $(this).select2({
+                width: '100%',
+                theme: 'bootstrap5',
+                placeholder: "Seleccione una opción",
+                allowClear: true,
+                dropdownParent: $(this).parent()
+            });
+        });
+    }
 
     $('#tblProducts tbody')
         .on('click', 'a[rel="remove"]', function () {
@@ -1177,5 +1273,15 @@
             actualizarTotalConImpuesto();
         });
     });
+
+    //para quitar el error de hidden en consola
+    document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener('hide.bs.modal', function (event) {
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+        });
+    });
+
 </script>
 {% endblock page_content %}
