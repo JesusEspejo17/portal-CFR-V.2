@@ -62,6 +62,38 @@ function iniciarTabla() {
         ],
         columnDefs: [
             {
+                targets: [4],
+                class: "text-center",
+                orderable: false,
+                render: function (data, type, row) {
+                    if (row.DocStatus === 'P' || row.DocStatus === 'R') {
+                        return 'S/. ' + data;
+                    } else if (row.DocStatus === 'A' || row.DocStatus === 'C' || row.DocStatus === 'CP') {
+                        var totalImp = 0;
+                        $.ajax({
+                            url: '/erp/getLineDetails/', // URL para obtener los detalles de las líneas
+                            type: 'POST',
+                            data: {
+                                'docEntry': row.DocEntry,
+                                'lineStatus': 'L'
+                            },
+                            headers: { "X-CSRFToken": csrftoken },  // Incluir el token CSRF
+                            async: false, // Esto es importante para que la llamada sea síncrona
+                            success: function (response) {
+                                for (var i = 0; i < response.length; i++) {
+                                    totalImp += response[i].totalimpdet;
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error al obtener los detalles de las líneas:', error);
+                            }
+                        });
+                        return 'S/. ' + totalImp.toFixed(2);
+                    }
+                    return 'S/. 0.00';
+                },
+            },
+            {
                 targets: [0],
                 class: "text-center",
                 orderable: true,

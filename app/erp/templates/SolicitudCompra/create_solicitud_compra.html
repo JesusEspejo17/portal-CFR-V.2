@@ -209,6 +209,7 @@
                             <th style="width: 7%;">Precio Total</th>
                             <th style="width: 10%;">Dimensión</th>
                             <th style="width: 13%;">Proveedor</th>
+                            <th style="width: 10%;">Total con Impuesto</th> <!-- Nueva columna -->
                         </tr>
                     </thead>
                     <tbody>
@@ -235,6 +236,7 @@
                             <th>Dimensión</th>
                             <th>Precio Total</th>
                             <th style="text-align:">Proveedor</th>
+                            <th style="width: 10%;">Total con Impuesto</th> <!-- Nueva columna -->
                         </tr>
                     </thead>
                     <tbody>
@@ -680,6 +682,7 @@
                     { "data": "precio_total" },
                     { "data": "dimension" },
                     { "data": "proveedor" },
+                    { "data": null } 
                 ],
                 columnDefs: [
                     {
@@ -689,7 +692,7 @@
                         }
                     },
                     {
-                        targets: [-2],  // Changed from -1 (dimension was last, now second to last)
+                        targets: [-3],  // Changed from -2 (dimension was last, now third to last)
                         render: function (data, type, row, meta) {
                             var dimensiones = JSON.parse('{{ dimension|escapejs }}');
                             var rowIdx = meta.row;
@@ -707,7 +710,7 @@
                         }
                     },
                     {
-                        targets: [-1],  // Changed from -2 (proveedor was second to last, now last)
+                        targets: [-2],  // Changed from -1 (proveedor was second to last, now second to last)
                         render: function (data, type, row, meta) {
                             var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
                             var rowIdx = meta.row;
@@ -790,7 +793,7 @@
                         },
                     },
                     {
-                        targets: [-2],  // Changed from -1
+                        targets: [-3],  // Changed from -2
                         class: "editable-cell",
                         orderable: false,
                         render: function (data, type, row) {
@@ -800,7 +803,7 @@
                         editable: true,
                     },
                     {
-                        targets: [-1],  // Changed from -2
+                        targets: [-2],  // Changed from -1
                         class: "editable-cell",
                         orderable: false,
                         render: function (data, type, row) {
@@ -808,6 +811,18 @@
                         },
                         editField: "proveedor",
                         editable: true,
+                    },
+                    {
+                        targets: [-1],  // Nueva columna para Total con Impuesto
+                        class: "text-right",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            // Obtener la tasa de impuesto, o 0 si no hay selección
+                            const tasaImpuesto = parseFloat($("#idImpuestos option:selected").data('rate')) || 0;
+                            // Calcular el total con impuesto
+                            const totalConImpuesto = row.precio_total * (1 + tasaImpuesto);
+                            return '<span class="total-con-impuesto">' + totalConImpuesto.toFixed(2) + '</span>';
+                        },
                     },
                     {
                         targets: [5],
@@ -1016,132 +1031,139 @@
                     { "data": "dimension" },
                     { "data": "precio_total" },
                     { "data": "proveedor" },
+                    { "data": null }  // Nueva columna para Total con Impuesto
                 ],
                 columnDefs: [
-                {
-                    targets: [6],
-                    render: function (data, type, row) {
-                        return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
-                    }
-                },
-                {
-                    targets: [6],
-                    class: "editable-cell",
-                    orderable: false,
-                    render: function (data, type, row) {
-                        return data;
-                    },
-                    editField: "price",
-                    editable: true,
-                },
-                {
-                    targets: [5],
-                    render: function (data, type, row, meta) {
-                        var cuenta_contable = JSON.parse('{{ cuenta_contable|escapejs }}');
-                        var rowIdx = meta.row;
-                        var options = '<select class="form-control select" data-type="cuenta_contable" name="idCC_' + rowIdx + '" id="idCC_' + rowIdx + '" style="width: 100%;">';
-                        for (var i = 0; i < cuenta_contable.length; i++) {
-                            var selected = (cuenta_contable[i].AcctName === data) ? 'selected' : '';
-                            options += '<option value="' + cuenta_contable[i].AcctName + '" ' + selected + '>' + cuenta_contable[i].AcctName + '</option>';
+                    {
+                        targets: [6],
+                        render: function (data, type, row) {
+                            return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
                         }
-                        options += '</select>';
-                        // Inicializar Select2
-                        setTimeout(function() {
-                            $('#idCC_' + rowIdx).select2();
-                        }, 0);
-                        return options;
-                    }
-                },
-                {
-                    targets: [5],
-                    class: "editable-cell",
-                    orderable: false,
-                    render: function (data, type, row) {
-                        return data;
                     },
-                    editField: "cuenta_contable",
-                    editable: true,
-                },
-                {
-                    targets: [-1],  // Campo proveedor
-                    render: function (data, type, row, meta) {
-                        var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
-                        var rowIdx = meta.row;
-                        var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
-                        options += '<option value="" disabled selected hidden>Seleccione Proveedor (Opcional)</option>';
-                        for (var i = 0; i < socios_de_negocio.length; i++) {
-                            var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
-                            options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
+                    {
+                        targets: [6],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "price",
+                        editable: true,
+                    },
+                    {
+                        targets: [5],
+                        render: function (data, type, row, meta) {
+                            var cuenta_contable = JSON.parse('{{ cuenta_contable|escapejs }}');
+                            var rowIdx = meta.row;
+                            var options = '<select class="form-control select" data-type="cuenta_contable" name="idCC_' + rowIdx + '" id="idCC_' + rowIdx + '" style="width: 100%;">';
+                            for (var i = 0; i < cuenta_contable.length; i++) {
+                                var selected = (cuenta_contable[i].AcctName === data) ? 'selected' : '';
+                                options += '<option value="' + cuenta_contable[i].AcctName + '" ' + selected + '>' + cuenta_contable[i].AcctName + '</option>';
+                            }
+                            options += '</select>';
+                            // Inicializar Select2
+                            setTimeout(function() {
+                                $('#idCC_' + rowIdx).select2();
+                            }, 0);
+                            return options;
                         }
-                        options += '</select>';
-                        // Inicializar Select2
-                        setTimeout(function() {
-                            $('#idSocioNegocios_' + rowIdx).select2();
-                        }, 0);
-                        return options;
-                    }
-                },
-                {
-                    targets: [-1],
-                    class: "editable-cell",
-                    orderable: false,
-                    render: function (data, type, row) {
-                        return data;
                     },
-                    editField: "proveedor",
-                    editable: true,
-                },
-                {
-                    targets: [7],
-                    render: function (data, type, row, meta) {
-                        var dimensiones = JSON.parse('{{ dimension|escapejs }}');
-                        var rowIdx = meta.row;
-                        var options = '<select class="form-control select" data-type="dimension" name="iddimension_' + rowIdx + '" id="iddimension_' + rowIdx + '" style="width: 100%;">';
-                        for (var i = 0; i < dimensiones.length; i++) {
-                            var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
-                            options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
+                    {
+                        targets: [5],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "cuenta_contable",
+                        editable: true,
+                    },
+                    {
+                        targets: [-2],  // Campo proveedor
+                        render: function (data, type, row, meta) {
+                            var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
+                            var rowIdx = meta.row;
+                            var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
+                            options += '<option value="" disabled selected hidden>Seleccione Proveedor (Opcional)</option>';
+                            for (var i = 0; i < socios_de_negocio.length; i++) {
+                                var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
+                                options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
+                            }
+                            options += '</select>';
+                            // Inicializar Select2
+                            setTimeout(function() {
+                                $('#idSocioNegocios_' + rowIdx).select2();
+                            }, 0);
+                            return options;
                         }
-                        options += '</select>';
-                        // Inicializar Select2
-                        setTimeout(function() {
-                            $('#iddimension_' + rowIdx).select2();
-                        }, 0);
-                        return options;
-                    }
-                },
-                {
-                    targets: [7],
-                    class: "editable-cell",
-                    orderable: false,
-                    render: function (data, type, row) {
-                        return data;
                     },
-                    editField: "dimension",
-                    editable: true,
-                },
-                {
-                    targets: [0],
-                    class: "text-center",
-                    orderable: false,
-                    render: function (data, type, row) {
-                        return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
+                    {
+                        targets: [-2],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "proveedor",
+                        editable: true,
                     },
-                },
-                {
-                    targets: [1],
-                    class: "text-center",
-                    orderable: false,
-                    render: function (data, type, row, meta) {
-                        return meta.row + 1;
+                    {
+                        targets: [7],
+                        render: function (data, type, row, meta) {
+                            var dimensiones = JSON.parse('{{ dimension|escapejs }}');
+                            var rowIdx = meta.row;
+                            var options = '<select class="form-control select" data-type="dimension" name="iddimension_' + rowIdx + '" id="iddimension_' + rowIdx + '" style="width: 100%;">';
+                            for (var i = 0; i < dimensiones.length; i++) {
+                                var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
+                                options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
+                            }
+                            options += '</select>';
+                            // Inicializar Select2
+                            setTimeout(function() {
+                                $('#iddimension_' + rowIdx).select2();
+                            }, 0);
+                            return options;
+                        }
                     },
-                },
-                {
-                    targets: [5],
-                    render: function (data, type, row) {
-                        return '<input type="number" class="form-control editable-input" data-type="price" id="price" value="' + data + '">';
-                    }
-                },
-            ],
+                    {
+                        targets: [7],
+                        class: "editable-cell",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return data;
+                        },
+                        editField: "dimension",
+                        editable: true,
+                    },
+                    {
+                        targets: [0],
+                        class: "text-center",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
+                        },
+                    },
+                    {
+                        targets: [1],
+                        class: "text-center",
+                        orderable: false,
+                        render: function (data, type, row, meta) {
+                            return meta.row + 1;
+                        },
+                    },
+                    {
+                        targets: [-1],  // Nueva columna para Total con Impuesto
+                        class: "text-right",
+                        orderable: false,
+                        render: function (data, type, row) {
+                            // Obtener la tasa de impuesto, o 0 si no hay selección
+                            const tasaImpuesto = parseFloat($("#idImpuestos option:selected").data('rate')) || 0;
+                            // Calcular el total con impuesto
+                            const totalConImpuesto = row.precio_total * (1 + tasaImpuesto);
+                            return '<span class="total-con-impuesto">' + totalConImpuesto.toFixed(2) + '</span>';
+                        },
+                    },
+                ],
                 language: {
                     "sEmptyTable": "No hay datos disponibles en la tabla",
                     "sInfo": "",
@@ -1253,7 +1275,7 @@
         })
 
 
-    function actualizarTotalConImpuesto() {
+    {% comment %} function actualizarTotalConImpuesto() {
         var impuestoSeleccionado = $("#idImpuestos").val();
         var nombreImpuesto = impuestoSeleccionado.split(" - ")[0].trim();
         var url_obtener_impuesto = $("#url-data").data("url");
@@ -1272,6 +1294,49 @@
             error: function (xhr, status, error) {
                 console.error('Error al obtener el porcentaje del impuesto:', error);
             }
+        });
+    } {% endcomment %}
+
+    function actualizarTotalConImpuesto() {
+        var impuestoSeleccionado = $("#idImpuestos").val();
+        var nombreImpuesto = impuestoSeleccionado.split(" - ")[0].trim();
+        var url_obtener_impuesto = $("#url-data").data("url");
+        $.ajax({
+            url: url_obtener_impuesto,
+            type: 'GET',
+            data: {
+                nombre_impuesto: nombreImpuesto
+            },
+            success: function (response) {
+                var porcentajeImpuesto = parseFloat(response.rate);
+                var subtotal = parseFloat($("#idTotal").val());
+                var totalConImpuesto = subtotal * (1 + (porcentajeImpuesto));
+                $("#idTotalConImpuesto").val(totalConImpuesto.toFixed(2));
+
+                // Actualizar el total con impuesto por cada detalle
+                actualizarTotalImpuestoDetalle(porcentajeImpuesto);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al obtener el porcentaje del impuesto:', error);
+            }
+        });
+    }
+
+    function actualizarTotalImpuestoDetalle(porcentajeImpuesto) {
+        // Actualizar los productos
+        $('#tblProducts tbody tr').each(function () {
+            var $row = $(this);
+            var precioTotal = parseFloat($row.find('td:eq(9)').text().trim());
+            var totalConImpuesto = precioTotal * (1 + porcentajeImpuesto);
+            $row.find('.total-con-impuesto').text(totalConImpuesto.toFixed(2));
+        });
+
+        // Actualizar los servicios
+        $('#tblServicios tbody tr').each(function () {
+            var $row = $(this);
+            var precioTotal = parseFloat($row.find('td:eq(8)').text().trim());
+            var totalConImpuesto = precioTotal * (1 + porcentajeImpuesto);
+            $row.find('.total-con-impuesto').text(totalConImpuesto.toFixed(2));
         });
     }
 

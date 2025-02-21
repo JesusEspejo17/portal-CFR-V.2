@@ -259,6 +259,7 @@ class PRQ1(models.Model):
     Almacen = models.ForeignKey(OWHS, on_delete=models.CASCADE, max_length=150)
     CuentaMayor = models.ForeignKey(OACT, on_delete=models.CASCADE, max_length=150)
     total = models.FloatField(default=0.0, null=False)
+    totalimpdet = models.FloatField(default=0.0, verbose_name='TotalImpuestosDetalle')  #Se almacena el impuesto por linea
     idDimension = models.ForeignKey(Dimensiones, on_delete=models.CASCADE, blank=True, null=True)
     LineStatus = models.CharField(max_length=1, default='P',null=True, blank=True)
     Precio = models.FloatField(default=0.0, null=False)

@@ -371,6 +371,7 @@ function setupCheckboxChangeListener() {
 // });
 
 
+
 $(function initializeDataTable() {
     tblSol = $('#tblSolicitudes').DataTable({
         responsive: true,
@@ -499,14 +500,49 @@ $(function initializeDataTable() {
                     return data; // Para otros tipos, devolver el dato sin cambios
                 }
             },
+            // {
+            //     targets: [9],
+            //     class: "text-center",
+            //     orderable: false,
+            //     render: function (data, type, row) {
+            //         var value = row.TotalImp;
+            //         var sol = 'S/. ';
+            //         return sol + value;
+            //     },
+            // },
             {
                 targets: [9],
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
-                    var value = row.TotalImp;
-                    var sol = 'S/. ';
-                    return sol + value;
+                    if (row.DocStatus === 'P' || row.DocStatus === 'R') {
+                        return 'S/. ' + data;
+                    } else if (row.DocStatus === 'A' || row.DocStatus === 'C' || row.DocStatus === 'CP') {
+                        var totalImp = 0;
+                        $.ajax({
+                            url: '/erp/getLineDetails/',
+                            type: 'POST',
+                            data: {
+                                'docEntry': row.DocEntry,
+                                'lineStatus': 'A,C,L'
+                            },
+                            headers: { "X-CSRFToken": csrftoken },
+                            async: false,
+                            success: function (response) {
+                                console.log('Response from getLineDetails:', response); // Verificar la respuesta del backend
+                                for (var i = 0; i < response.length; i++) {
+                                    console.log('Processing line item:', response[i]); // Verificar cada línea procesada
+                                    totalImp += response[i].totalimpdet;
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error al obtener los detalles de las líneas:', error);
+                            }
+                        });
+                        console.log('Total Impuesto Calculado:', totalImp); // Verificar el total calculado
+                        return 'S/. ' + totalImp.toFixed(2);
+                    }
+                    return 'S/. 0.00';
                 },
             },
             {
