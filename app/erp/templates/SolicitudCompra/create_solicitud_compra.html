@@ -491,8 +491,13 @@
     }
     
     // Evento para detectar cambios en celdas editables y actualizar subtotales
-    $('#tblProducts tbody, #tblServicios tbody').on('change', '.editable-cell input[type="number"], .editable-cell select', function () {
-        setTimeout(actualizarSubtotales, 100); // Actualiza subtotales con un pequeño retardo para asegurar que los valores se hayan actualizado
+    $('#tblProducts tbody, #tblServicios tbody').on('change', '.editable-cell input[type="number"]', function () {
+        setTimeout(() => {
+            actualizarSubtotales();
+            if ($("#idImpuestos").val().trim() !== "") {
+                actualizarTotalConImpuesto();
+            }
+        }, 100);
     });
     
     $('#tblProducts tbody').on('click', 'a[rel="remove"]', function () {
@@ -1274,28 +1279,6 @@
             abrir_modal("{% url 'erp:listar_serv' %}");
         })
 
-
-    {% comment %} function actualizarTotalConImpuesto() {
-        var impuestoSeleccionado = $("#idImpuestos").val();
-        var nombreImpuesto = impuestoSeleccionado.split(" - ")[0].trim();
-        var url_obtener_impuesto = $("#url-data").data("url");
-        $.ajax({
-            url: url_obtener_impuesto,
-            type: 'GET',
-            data: {
-                nombre_impuesto: nombreImpuesto
-            },
-            success: function (response) {
-                var porcentajeImpuesto = parseFloat(response.rate);
-                var subtotal = parseFloat($("#idTotal").val());
-                var totalConImpuesto = subtotal * (1 + (porcentajeImpuesto));
-                $("#idTotalConImpuesto").val(totalConImpuesto.toFixed(2));
-            },
-            error: function (xhr, status, error) {
-                console.error('Error al obtener el porcentaje del impuesto:', error);
-            }
-        });
-    } {% endcomment %}
 
     function actualizarTotalConImpuesto() {
         var impuestoSeleccionado = $("#idImpuestos").val();
