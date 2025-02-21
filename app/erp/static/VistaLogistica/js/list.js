@@ -1297,12 +1297,26 @@ $(document).ready(function () {
             });
             return false;
         }
-        console.log("Enviando Servicios:", ordenServ.items.item); // Depuración 
-        // Preparación de los datos
+
+        // Validación del proveedor
+        var proveedorSeleccionadoServicio = $('#SelectProveedorServicios').val();
+        if (!proveedorSeleccionadoServicio) {
+            $.alert({
+                title: 'Aviso',
+                content: 'Por favor, seleccione un proveedor.',
+                type: 'red',
+                theme: 'modern'
+            });
+            return false;
+        }
+
+        // Preparación de los datos 
         var data = {
-            items: ordenServ.items.item
+            items: ordenServ.items.item,
+            proveedorServicio: proveedorSeleccionadoServicio
         };
-        console.log("Datos enviados para servicios:", JSON.stringify(data));
+
+        console.log("Datos enviados para servicios:", JSON.stringify(data)); // Verificar los datos aquí
         var token = $('input[name="csrfmiddlewaretoken"]').val();
 
         $.confirm({
@@ -1323,7 +1337,6 @@ $(document).ready(function () {
                         success: function (response) {
                             console.log("Respuesta del servidor:", response);  // Para depuración
                             if (response.message === "Servicio enviado y guardado correctamente.") {
-                            //if (response === "OK") {
                                 $.confirm({
                                     title: 'Éxito',
                                     content: 'Los servicios se han guardado correctamente.',
@@ -1343,7 +1356,6 @@ $(document).ready(function () {
                                     theme: 'modern',
                                     type: 'red',
                                     content: response.error || "Error al guardar los servicios. Intente nuevamente."
-                                    //content: "Error al guardar los servicios. Intente nuevamente."
                                 });
                             }
                         },

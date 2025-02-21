@@ -1618,97 +1618,6 @@ def data_sender_productos(json_data, solicitud):
     }
 
 
-# def guardar_orden_compra_oc_producto(detalles_seleccionados, solicitud, tipo, proveedor, items_data):
-#     try:
-#         print(f"Items data recibidos: {items_data}")  # Log para debugging
-        
-#         # Buscar el proveedor en la base de datos
-#         proveedor_instance = OCRD.objects.get(CardCode=proveedor)
-#     except OCRD.DoesNotExist:
-#         raise Exception(f'El proveedor con código {proveedor} no existe.')
-
-#     # Obtener la serie de OrdenCompra y el siguiente número
-#     serie_instance = Series.objects.get(Nombre='OrdenCompra')
-#     doc_num_oc = serie_instance.NumeroSiguiente
-
-#     # Verificar que items_data no sea None y sea una lista
-#     if not items_data or not isinstance(items_data, list):
-#         raise Exception('No se recibieron datos de items válidos')
-
-#     # Calcular el TotalOC usando las cantidades seleccionadas del frontend
-#     total_oc = 0
-#     for detalle in detalles_seleccionados:
-#         # Encontrar el item correspondiente en items_data
-#         item_data = next(
-#             (item for item in items_data if str(item['Code']) == str(detalle.Code)), 
-#             None
-#         )
-#         if item_data:
-#             total_oc += item_data['Quantity'] * detalle.Precio
-
-#     # Determinar el TotalImpuestosOC
-#     if solicitud.TaxCode.Code == "IGV":
-#         total_impuestos_oc = total_oc * 0.18
-#     else:
-#         total_impuestos_oc = solicitud.TotalImp
-
-#     orden_compra_cabecera = OCC.objects.create(
-#         DocNumOC=doc_num_oc,
-#         SerieOC=serie_instance,
-#         SolicitanteOC=solicitud.ReqIdUser,
-#         DocTypeOC=tipo,
-#         DocDateOC=solicitud.DocDate,
-#         DocDueDateOC=solicitud.DocDueDate,
-#         SystemDateOC=date.today(),
-#         ProveedorOC=proveedor_instance,
-#         MonedaOC=solicitud.moneda,
-#         TaxCodeOC=solicitud.TaxCode,
-#         TotalOC=total_oc,
-#         TotalImpuestosOC=total_impuestos_oc + total_oc,
-#         CommentsOC=solicitud.Comments,
-#         DocNumSAPOC=None  # Inicialmente NULL, se actualizará después
-#     )
-
-#     # Crear los detalles en OCD1
-#     detalles_ocd1 = []
-#     for detalle in detalles_seleccionados:
-#         # Encontrar el item correspondiente en items_data
-#         item_data = next(
-#             (item for item in items_data if str(item['Code']) == str(detalle.Code)), 
-#             None
-#         )
-        
-#         if not item_data:
-#             print(f"No se encontró item_data para el detalle con Code: {detalle.Code}")
-#             continue
-
-#         detalle_ocd1 = OCD1.objects.create(
-#             NumDocOCD=orden_compra_cabecera,
-#             ItemCodeOCD=detalle.ItemCode,
-#             LineVendorOCD=proveedor_instance,
-#             DescriptionOCD=detalle.Description,
-#             QuantityOCD=item_data['Quantity'],
-#             UnidadMedidaOCD=detalle.UnidadMedida,
-#             AlmacenOCD=detalle.Almacen,
-#             CuentaMayorOCD=detalle.CuentaMayor,
-#             PrecioOCD=detalle.Precio,
-#             TotalOCD=item_data['Quantity'] * detalle.Precio,
-#             LineStatusOCD='C' if item_data['Quantity_rest'] == 0 else 'L',
-#             DimensionOCD=detalle.idDimension,
-#             DocNumSAPOCD=None,  # Inicialmente NULL, se actualizará después
-#             BaseEntryOCD=detalle.NumDoc.DocNumSAP,
-#             BaseLineOCD=detalle.LineCount_Indexado,
-#             DocEntryOCD=detalle.NumDoc.DocEntry
-#         )
-#         detalles_ocd1.append(detalle_ocd1)
-
-#     # Incrementar el NumeroSiguiente en la serie
-#     serie_instance.NumeroSiguiente += 1
-#     serie_instance.save()
-
-#     return orden_compra_cabecera
-
-
 def guardar_orden_compra_oc_producto(detalles_seleccionados, solicitud, tipo, proveedor, items_data, request):
     try:
         print(f"Items data recibidos: {items_data}")  # Log para debugging
@@ -1820,8 +1729,9 @@ def export_data_as_jsonServicios(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            print("Datos recibidos:", data)  # Añadir esta línea para depuración
             items_data = data.get('items', [])
-            proveedor_frontend = data.get('proveedor', None)
+            proveedor_servicio = data.get('proveedorServicio', None)  # Cambiado a 'proveedorServicio'
 
             if not items_data:
                 return JsonResponse({'error': 'No se enviaron servicios.'}, status=400)
@@ -1839,8 +1749,8 @@ def export_data_as_jsonServicios(request):
             solicitud = detalles.first().NumDoc
 
             # Determinar el proveedor
-            if proveedor_frontend:
-                proveedor = proveedor_frontend
+            if proveedor_servicio:
+                proveedor = proveedor_servicio
             elif primera_detalle := detalles.first().LineVendor:
                 proveedor = primera_detalle.CardCode
             else:
@@ -1933,7 +1843,6 @@ def export_data_as_jsonServicios(request):
                 }, status=response.get('status_code', 500))
 
         except Exception as e:
-            import traceback
             print("Error completo en export_data_as_jsonServicios:")
             traceback.print_exc()
             return JsonResponse({'error': str(e)}, status=500)
@@ -2087,71 +1996,6 @@ def data_sender_servicios(json_data, solicitud):
         'error': 'No se pudo completar la operación después de 5 intentos',
         'status_code': 500
     }
-
-
-# def guardar_orden_compra_oc_servicio(detalles_seleccionados, solicitud, tipo, proveedor):
-#     try:
-#         # Buscar el proveedor en la base de datos
-#         proveedor_instance = OCRD.objects.get(CardCode=proveedor)
-#     except OCRD.DoesNotExist:
-#         raise Exception(f'El proveedor con código {proveedor} no existe.')
-
-#     # Obtener la serie de OrdenCompra y el siguiente número
-#     serie_instance = Series.objects.get(Nombre='OrdenCompra')
-#     doc_num_oc = serie_instance.NumeroSiguiente
-
-#     # Calcular el TotalOC sumando los totales de los detalles
-#     total_oc = sum(detalle.Precio * detalle.Quantity for detalle in detalles_seleccionados)
-
-#     # Determinar el TotalImpuestosOC
-#     if solicitud.TaxCode.Code == "IGV":
-#         total_impuestos_oc = total_oc * 0.18
-#     else:
-#         total_impuestos_oc = solicitud.TotalImp
-
-#     # Crear la cabecera de la orden de compra
-#     orden_compra_cabecera = OCC.objects.create(
-#         DocNumOC=doc_num_oc,
-#         SerieOC=serie_instance,
-#         SolicitanteOC=solicitud.ReqIdUser,
-#         DocTypeOC=tipo,
-#         DocDateOC=solicitud.DocDate,
-#         DocDueDateOC=solicitud.DocDueDate,
-#         SystemDateOC=date.today(),
-#         ProveedorOC=proveedor_instance,
-#         MonedaOC=solicitud.moneda,
-#         TaxCodeOC=solicitud.TaxCode,
-#         TotalOC=total_oc,
-#         TotalImpuestosOC=total_impuestos_oc + total_oc,
-#         CommentsOC=solicitud.Comments,
-#     )
-
-#     # Crear los detalles en OCD1
-#     for detalle in detalles_seleccionados:
-#         OCD1.objects.create(
-#             NumDocOCD=orden_compra_cabecera,
-#             ItemCodeOCD=detalle.ItemCode,
-#             LineVendorOCD=proveedor_instance,
-#             DescriptionOCD=detalle.Description,
-#             QuantityOCD=detalle.Quantity,
-#             UnidadMedidaOCD=detalle.UnidadMedida,
-#             AlmacenOCD=detalle.Almacen,
-#             CuentaMayorOCD=detalle.CuentaMayor,
-#             PrecioOCD=detalle.Precio,
-#             TotalOCD=detalle.Precio * detalle.Quantity,
-#             LineStatusOCD='C',
-#             DimensionOCD=detalle.idDimension,
-#             DocNumSAPOCD=None,
-#             BaseEntryOCD=detalle.NumDoc.DocNumSAP,
-#             BaseLineOCD=detalle.LineCount_Indexado,
-#             DocEntryOCD=detalle.NumDoc.DocEntry
-#         )
-
-#     # Incrementar el NumeroSiguiente en la serie
-#     serie_instance.NumeroSiguiente += 1
-#     serie_instance.save()
-
-#     return orden_compra_cabecera
 
 
 def guardar_orden_compra_oc_servicio(detalles_seleccionados, solicitud, tipo, proveedor, request):
