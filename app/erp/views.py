@@ -772,6 +772,60 @@ class ListSolicitudesCompra(ValidatePermissionRequiredMixin2, ListView):
 
     def get_queryset(self):
         return OPRQ.objects.order_by('DocNum')
+    
+    
+    
+class ListContabilizadas(ValidatePermissionRequiredMixin2, ListView):
+    model = OPRQ
+    template_name = 'SolicitudCompra/listar_contabilizadas.html'
+    required_groups = ['Administrador', 'Jefe_de_Presupuestos']
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        data = {}
+        try:
+            action = request.POST['action']
+            if action == "searchSolicitudes":
+                data = []
+                user = self.request.user
+                if user.groups.filter(name__in=['Administrador', 'Jefe_de_Presupuestos']).exists():
+                    # Eliminamos la dependencia del parámetro 'estado'
+                    solicitudes = OPRQ.objects.filter(DocStatus='C').order_by('DocEntry')  # Solo trae las contabilizadas
+                    for i in solicitudes:
+                        data.append(i.toJSON())
+            elif action == "showDetails":
+                data = []
+                user = self.request.user
+                if user.groups.filter(name__in=['Administrador', 'Jefe_de_Presupuestos']).exists():
+                    for i in PRQ1.objects.filter(NumDoc=request.POST['id'], LineStatus__in=['C', 'L']):  # Filtrar por LineStatus 'C' y 'L'
+                        data.append(i.toJSON())
+            elif action == "getDetails":
+                data = []
+                user = self.request.user
+                if user.groups.filter(name__in=['Administrador', 'Jefe_de_Presupuestos']).exists():
+                    for i in PRQ1.objects.filter(NumDoc=request.POST['code'], LineStatus__in=['C', 'L']):  # Filtrar por LineStatus 'C' y 'L'
+                        data.append(i.toJSON())
+            else:
+                data['error'] = 'Ha ocurrido un error'
+        except Exception as e:
+            data['error'] = str(e)
+        return JsonResponse(data, safe=False)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Listado de Solicitudes Contabilizadas'
+        context['entity'] = 'OPRQ'
+        context['edition_permissions'] = self.request.user.has_perm('erp.change_oprq')
+        return context
+
+    def get_queryset(self):
+        return OPRQ.objects.filter(DocStatus='C').order_by('DocNum')
+    
+    
+    
 
 @login_required
 def get_user_groups(request):

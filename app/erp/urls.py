@@ -26,4 +26,5 @@ urlpatterns = [
     path('solicitud/detalle_producto/<int:doc_num>/', views.get_solicitud_detalle_producto, name='get_solicitud_detalle_producto'),
     path('solicitud/detalle_servicio/<int:doc_num>/', views.get_solicitud_detalle_servicio, name='get_solicitud_detalle_servicio'),
     path('getLineDetails/', views.get_line_details, name='get_line_details'),
+    path('contabilizadas/', ListContabilizadas.as_view(), name='listar_contabilizadas'),
 ]

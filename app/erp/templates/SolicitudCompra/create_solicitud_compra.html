@@ -1413,6 +1413,63 @@
         }
     });
 
+{% comment %} 
+    const tasasDeCambio = {
+        'SOL': 1.0,    // Moneda base (Soles)
+        'USD': 0.26,   // 1 SOL = 0.26 USD (ejemplo)
+        'EUR': 0.23    // 1 SOL = 0.23 EUR (ejemplo)
+    };
+    
+    $(document).ready(function () {
+        $("#selecMoneda").change(function () {
+            const monedaSeleccionada = $(this).val(); // Obtiene la moneda seleccionada
+            const tasaCambio = tasasDeCambio[monedaSeleccionada]; // Obtiene la tasa de cambio
+    
+            // Llama a la función para convertir los valores visuales
+            convertirValoresVisuales(tasaCambio);
+        });
+    });
+    
+    function convertirValoresVisuales(tasaCambio) {
+        // Convertir el total
+        const totalElement = $("#idTotal");
+        const totalOriginal = parseFloat(totalElement.val());
+        const totalConvertido = totalOriginal * tasaCambio;
+        totalElement.val(totalConvertido.toFixed(2));
+    
+        // Convertir el total con impuesto
+        const totalImpuestoElement = $("#idTotalConImpuesto");
+        const totalImpuestoOriginal = parseFloat(totalImpuestoElement.val().split(' ')[0]);
+        const totalImpuestoConvertido = totalImpuestoOriginal * tasaCambio;
+        totalImpuestoElement.val(totalImpuestoConvertido.toFixed(2) + " (Seleccione un impuesto)");
+    
+        // Convertir los precios en la tabla de productos
+        $('#tblProducts tbody tr').each(function () {
+            const precioUnitarioElement = $(this).find('td:eq(7) input');
+            const precioUnitarioOriginal = parseFloat(precioUnitarioElement.val());
+            const precioUnitarioConvertido = precioUnitarioOriginal * tasaCambio;
+            precioUnitarioElement.val(precioUnitarioConvertido.toFixed(2));
+    
+            const precioTotalElement = $(this).find('td:eq(9)');
+            const precioTotalOriginal = parseFloat(precioTotalElement.text());
+            const precioTotalConvertido = precioTotalOriginal * tasaCambio;
+            precioTotalElement.text(precioTotalConvertido.toFixed(2));
+        });
+    
+        // Convertir los precios en la tabla de servicios
+        $('#tblServicios tbody tr').each(function () {
+            const precioUnitarioElement = $(this).find('td:eq(6) input');
+            const precioUnitarioOriginal = parseFloat(precioUnitarioElement.val());
+            const precioUnitarioConvertido = precioUnitarioOriginal * tasaCambio;
+            precioUnitarioElement.val(precioUnitarioConvertido.toFixed(2));
+    
+            const precioTotalElement = $(this).find('td:eq(8)');
+            const precioTotalOriginal = parseFloat(precioTotalElement.text());
+            const precioTotalConvertido = precioTotalOriginal * tasaCambio;
+            precioTotalElement.text(precioTotalConvertido.toFixed(2));
+        });
+    } {% endcomment %}
+
 
 
 
