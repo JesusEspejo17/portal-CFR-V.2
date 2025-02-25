@@ -715,7 +715,7 @@
                         }
                     },
                     {
-                        targets: [-2],  // Cambiado de -1 (proveedor era el penúltimo, ahora es el penúltimo)
+                        targets: [-2],  // Changed from -1 (proveedor was second to last, now second to last)
                         render: function (data, type, row, meta) {
                             var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
                             var rowIdx = meta.row;
@@ -726,12 +726,9 @@
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
                             }
                             options += '</select>';
-                            // Inicializar Select2 con allowClear
+                            // Inicializar Select2
                             setTimeout(function() {
-                                $('#idSocioNegocios_' + rowIdx).select2({
-                                    placeholder: "Seleccione proveedor (Opcional)",
-                                    allowClear: true
-                                });
+                                $('#idSocioNegocios_' + rowIdx).select2();
                             }, 0);
                             return options;
                         }
