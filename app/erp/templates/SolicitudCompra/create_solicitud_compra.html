@@ -715,12 +715,12 @@
                         }
                     },
                     {
-                        targets: [-2],  // Changed from -1 (proveedor was second to last, now second to last)
+                        targets: [-2],  // Proveedor
                         render: function (data, type, row, meta) {
                             var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
                             var rowIdx = meta.row;
                             var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
-                            options += '<option value="" disabled selected hidden>Seleccione proveedor (Opcional)</option>';
+                            options += '<option value=""' + (data === "" ? ' selected' : '') + '>Sin Proveedor</option>'; // Opción Sin Proveedor
                             for (var i = 0; i < socios_de_negocio.length; i++) {
                                 var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
@@ -963,6 +963,7 @@
         var type = $(this).attr('data-type');
         var rowIndex = tblServicios.cell($(this).closest('td, th')).index().row;
         var newValue = $(this).val();
+        console.log("Cambio detectado en la fila:", rowIndex, " Tipo:", type, " Nuevo valor:", newValue);  // Log para depuración
         switch (type) {
             case 'cuenta_contable':
                 servs.items.servicios[rowIndex].cuenta_contable = newValue;
@@ -976,6 +977,7 @@
             default:
                 break;
         }
+        console.log("Datos actualizados:", servs.items.servicios[rowIndex]);  // Log para verificar la actualización
     });
 
     function setTotalesIterativo(tipo) {
@@ -1084,23 +1086,20 @@
                         editable: true,
                     },
                     {
-                        targets: [-2],  // Campo proveedor
+                        targets: [-2],  // Proveedor
                         render: function (data, type, row, meta) {
                             var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
                             var rowIdx = meta.row;
-                            var options = '<select class="form-control select" data-type="proveedor" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
-                            options += '<option value="" disabled selected hidden>Seleccione Proveedor (Opcional)</option>';
+                            var options = '<select class="form-control select" data-type="socio_negocio" name="idSocioNegocios_' + rowIdx + '" id="idSocioNegocios_' + rowIdx + '" style="width: 100%;">';
+                            options += '<option value=""' + (data === "" ? ' selected' : '') + '>Sin Proveedor</option>'; // Opción Sin Proveedor
                             for (var i = 0; i < socios_de_negocio.length; i++) {
                                 var selected = (socios_de_negocio[i].CardName === data) ? 'selected' : '';
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
                             }
                             options += '</select>';
-                            // Inicializar Select2 con allowClear y placeholder
+                            // Inicializar Select2
                             setTimeout(function() {
-                                $('#idSocioNegocios_' + rowIdx).select2({
-                                    placeholder: "Seleccione Proveedor (Opcional)",
-                                    allowClear: true
-                                });
+                                $('#idSocioNegocios_' + rowIdx).select2();
                             }, 0);
                             return options;
                         }
