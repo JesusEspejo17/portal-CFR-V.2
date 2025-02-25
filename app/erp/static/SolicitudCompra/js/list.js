@@ -529,9 +529,9 @@ $(function initializeDataTable() {
                             headers: { "X-CSRFToken": csrftoken },
                             async: false,
                             success: function (response) {
-                                console.log('Response from getLineDetails:', response); // Verificar la respuesta del backend
+                                //console.log('Response from getLineDetails:', response); // Verificar la respuesta del backend
                                 for (var i = 0; i < response.length; i++) {
-                                    console.log('Processing line item:', response[i]); // Verificar cada línea procesada
+                                    //console.log('Processing line item:', response[i]); // Verificar cada línea procesada
                                     totalImp += response[i].totalimpdet;
                                 }
                             },
@@ -539,7 +539,7 @@ $(function initializeDataTable() {
                                 console.error('Error al obtener los detalles de las líneas:', error);
                             }
                         });
-                        console.log('Total Impuesto Calculado:', totalImp); // Verificar el total calculado
+                        //console.log('Total Impuesto Calculado:', totalImp); // Verificar el total calculado
                         return 'S/. ' + totalImp.toFixed(2);
                     }
                     return 'S/. 0.00';

@@ -715,7 +715,7 @@
                         }
                     },
                     {
-                        targets: [-2],  // Changed from -1 (proveedor was second to last, now second to last)
+                        targets: [-2],  // Cambiado de -1 (proveedor era el penúltimo, ahora es el penúltimo)
                         render: function (data, type, row, meta) {
                             var socios_de_negocio = JSON.parse('{{ socio_negocio|escapejs }}');
                             var rowIdx = meta.row;
@@ -726,9 +726,12 @@
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
                             }
                             options += '</select>';
-                            // Inicializar Select2
+                            // Inicializar Select2 con allowClear
                             setTimeout(function() {
-                                $('#idSocioNegocios_' + rowIdx).select2();
+                                $('#idSocioNegocios_' + rowIdx).select2({
+                                    placeholder: "Seleccione proveedor (Opcional)",
+                                    allowClear: true
+                                });
                             }, 0);
                             return options;
                         }
@@ -1095,13 +1098,16 @@
                                 options += '<option value="' + socios_de_negocio[i].CardName + '" ' + selected + '>' + socios_de_negocio[i].CardName + '</option>';
                             }
                             options += '</select>';
-                            // Inicializar Select2
+                            // Inicializar Select2 con allowClear y placeholder
                             setTimeout(function() {
-                                $('#idSocioNegocios_' + rowIdx).select2();
+                                $('#idSocioNegocios_' + rowIdx).select2({
+                                    placeholder: "Seleccione Proveedor (Opcional)",
+                                    allowClear: true
+                                });
                             }, 0);
                             return options;
                         }
-                    },
+                    },                    
                     {
                         targets: [-2],
                         class: "editable-cell",

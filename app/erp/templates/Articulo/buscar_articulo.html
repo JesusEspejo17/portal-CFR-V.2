@@ -279,8 +279,9 @@
                 initComplete: function (settings, json) {
                     $(function () {
                         $('#tblProdSeleccionados').find('select').each(function() {
+                            var allowClear = $(this).attr('data-type') === 'proveedorslt'; // Permitir borrar solo para proveedor
                             $(this).select2({
-                                allowClear: false,
+                                allowClear: allowClear,
                                 placeholder: "Selecciona una opción",
                                 dropdownParent: $(this).closest('.modal-content')
                             });
