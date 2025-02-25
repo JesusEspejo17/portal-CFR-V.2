@@ -1228,6 +1228,7 @@ def solicitudRechazar(request, id):
             
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+
 # def export_data_as_json(id):
 #     solicitudes = OPRQ.objects.filter(pk=id)
 
@@ -1252,36 +1253,45 @@ def solicitudRechazar(request, id):
 #         }
 #         detalle = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
 #         for det in detalle:
-#             #print(f"Detalle Code: {det.Code}, LineStatus: {det.LineStatus}")
-#             if det.LineStatus=='A' and solicitud.DocType == 'I':
-#                 detalle_list = {
-#                     "LineNum": det.LineCount_Indexado,
-#                     'ItemCode': det.ItemCode.ItemCode,
-#                     'LineVendor': det.LineVendor.CardCode,
-#                     "TaxCode": solicitud.TaxCode.Code,
-#                     'Quantity': det.Quantity,
-#                     "UnitPrice":det.Precio,
-#                     'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
-#                     'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
-#                 }
-#                 oprq['DocumentLines'].append(detalle_list)
-#             elif det.LineStatus=='A' and solicitud.DocType == 'S' :
-#                 detalle_list = {
-#                 ##  'ItemCode': det.ItemCode.ItemCode,
-#                     "ItemDescription":  det.ItemCode.ItemCode,
-#                     'LineVendor': det.LineVendor.CardCode,
-#                     "RequiredDate": solicitud.ReqDate,
-#                     "TaxCode": solicitud.TaxCode.Code,
-#                     'Quantity': det.Quantity,
-#                     "Price":det.Precio,
-#                     "UnitPrice":det.Precio,
-#                     "DocTotalFC":det.Precio*det.Quantity,
-#                     "AccountCode": det.CuentaMayor.AcctCode,
-#                     'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
-#                     'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
-#                 }
-#                 oprq['DocumentLines'].append(detalle_list)
+#             # Solo agregamos la línea si el estado de la línea es "A" (Activo)
+#             if det.LineStatus == 'A':
+#                 if solicitud.DocType == 'I':  # Tipo de documento "Items"
+#                     detalle_list = {
+#                         "LineNum": det.LineCount_Indexado,
+#                         'ItemCode': det.ItemCode.ItemCode,
+#                         'LineVendor': det.LineVendor.CardCode if det.LineVendor else None,  # Se agrega solo si LineVendor no es nulo
+#                         "TaxCode": solicitud.TaxCode.Code,
+#                         'Quantity': det.Quantity,
+#                         "UnitPrice": det.Precio,
+#                         'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
+#                         'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
+#                     }
+#                     # Si LineVendor es None, lo eliminamos del diccionario antes de agregarlo
+#                     if detalle_list['LineVendor'] is None:
+#                         del detalle_list['LineVendor']
+#                     oprq['DocumentLines'].append(detalle_list)
+
+#                 elif solicitud.DocType == 'S':  # Tipo de documento "Service"
+#                     detalle_list = {
+#                         "ItemDescription": det.ItemCode.ItemCode,
+#                         'LineVendor': det.LineVendor.CardCode if det.LineVendor else None,  # Se agrega solo si LineVendor no es nulo
+#                         "RequiredDate": solicitud.ReqDate,
+#                         "TaxCode": solicitud.TaxCode.Code,
+#                         'Quantity': det.Quantity,
+#                         "Price": det.Precio,
+#                         "UnitPrice": det.Precio,
+#                         "DocTotalFC": det.Precio * det.Quantity,
+#                         "AccountCode": det.CuentaMayor.AcctCode,
+#                         'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
+#                         'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
+#                     }
+#                     # Si LineVendor es None, lo eliminamos del diccionario antes de agregarlo
+#                     if detalle_list['LineVendor'] is None:
+#                         del detalle_list['LineVendor']
+#                     oprq['DocumentLines'].append(detalle_list)
+
 #         data.append(oprq)
+
 #     json_data = json.dumps(data[0], indent=2, default=lambda o: o.isoformat() if isinstance(o, date) else None)
 #     print(json_data)
 #     response = data_sender(json_data, id)
@@ -1313,8 +1323,8 @@ def export_data_as_json(id):
         }
         detalle = PRQ1.objects.filter(NumDoc=solicitud.DocEntry)
         for det in detalle:
-            # Solo agregamos la línea si el estado de la línea es "A" (Activo)
-            if det.LineStatus == 'A':
+            # Solo agregamos la línea si el estado de la línea es diferente de "R" (Rechazado)
+            if det.LineStatus != 'R':
                 if solicitud.DocType == 'I':  # Tipo de documento "Items"
                     detalle_list = {
                         "LineNum": det.LineCount_Indexado,

@@ -74,28 +74,30 @@ function setupCheckboxChangeListener() {
                 dataSrc: "",
                 success: function (response) {
                     for (var j = 0; j < response.length; j++) {
-                        if (rowDataC.DocType === 'S') {
-                            // Para servicios
-                            if (!checkedServ.some(item => item.Code === response[j].Code)) {
-                                checkedServ.push({
-                                    Code: response[j].Code,
-                                    ItemCode: response[j].ItemCode
-                                });
-                            }
-                            // También agregar a checkedProd para mantener consistencia con el backend
-                            if (!checkedProd.some(item => item.Code === response[j].Code)) {
-                                checkedProd.push({
-                                    Code: response[j].Code,
-                                    ItemCode: response[j].ItemCode
-                                });
-                            }
-                        } else {
-                            // Para productos
-                            if (!checkedProd.some(item => item.Code === response[j].Code)) {
-                                checkedProd.push({
-                                    Code: response[j].Code,
-                                    ItemCode: response[j].ItemCode
-                                });
+                        if (response[j].LineStatus !== 'R') { // Filtrar ítems con LineStatus diferente de "R"
+                            if (rowDataC.DocType === 'S') {
+                                // Para servicios
+                                if (!checkedServ.some(item => item.Code === response[j].Code)) {
+                                    checkedServ.push({
+                                        Code: response[j].Code,
+                                        ItemCode: response[j].ItemCode
+                                    });
+                                }
+                                // También agregar a checkedProd para mantener consistencia con el backend
+                                if (!checkedProd.some(item => item.Code === response[j].Code)) {
+                                    checkedProd.push({
+                                        Code: response[j].Code,
+                                        ItemCode: response[j].ItemCode
+                                    });
+                                }
+                            } else {
+                                // Para productos
+                                if (!checkedProd.some(item => item.Code === response[j].Code)) {
+                                    checkedProd.push({
+                                        Code: response[j].Code,
+                                        ItemCode: response[j].ItemCode
+                                    });
+                                }
                             }
                         }
                     }
@@ -115,21 +117,23 @@ function setupCheckboxChangeListener() {
                 dataSrc: "",
                 success: function (response) {
                     for (var j = 0; j < response.length; j++) {
-                        // Remover de checkedProd
-                        var indexProd = checkedProd.findIndex(function (item) {
-                            return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
-                        });
-                        if (indexProd !== -1) {
-                            checkedProd.splice(indexProd, 1);
-                        }
-
-                        // Si es servicio, también remover de checkedServ
-                        if (rowDataC.DocType === 'S') {
-                            var indexServ = checkedServ.findIndex(function (item) {
+                        if (response[j].LineStatus !== 'R') { // Filtrar ítems con LineStatus diferente de "R"
+                            // Remover de checkedProd
+                            var indexProd = checkedProd.findIndex(function (item) {
                                 return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
                             });
-                            if (indexServ !== -1) {
-                                checkedServ.splice(indexServ, 1);
+                            if (indexProd !== -1) {
+                                checkedProd.splice(indexProd, 1);
+                            }
+
+                            // Si es servicio, también remover de checkedServ
+                            if (rowDataC.DocType === 'S') {
+                                var indexServ = checkedServ.findIndex(function (item) {
+                                    return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
+                                });
+                                if (indexServ !== -1) {
+                                    checkedServ.splice(indexServ, 1);
+                                }
                             }
                         }
                     }
@@ -141,235 +145,6 @@ function setupCheckboxChangeListener() {
         }
     });
 }
-
-// $(function initializeDataTable() {
-//     tblSol = $('#tblSolicitudes').DataTable({
-//         responsive: true,
-//         autoWidth: false,
-//         destroy: true,
-//         deferRender: true,
-//         order: [[0, 'desc']],
-//         "language": {
-//             "sProcessing": "Procesando...",
-//             "sLengthMenu": "Mostrar _MENU_ registros",
-//             "sZeroRecords": "No se encontraron resultados",
-//             "sEmptyTable": "Ningún dato disponible en esta tabla",
-//             "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-//             "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
-//             "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-//             "sInfoPostFix": "",
-//             "sSearch": "Buscar Solicitud:",
-//             "sUrl": "",
-//             "sInfoThousands": ",",
-//             "sLoadingRecords": "Cargando...",
-//             "oPaginate": {
-//                 "sFirst": "Primero",
-//                 "sLast": "Último",
-//                 "sNext": "Siguiente",
-//                 "sPrevious": "Anterior"
-//             },
-//             "oAria": {
-//                 "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-//                 "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-//             }
-//         },
-//         ajax: {
-//             url: window.location.pathname,
-//             type: 'POST',
-//             data: function (d) {
-//                 d.estado = $('#filtrarEstado').val();
-//                 d.action = 'searchSolicitudes';
-//             },
-//             dataSrc: ""
-//         },
-//         columns: [
-//             { "data": null },
-//             { "data": null },
-//             { "data": "DocNumSAP" },
-//             { "data": "ReqIdUser" },
-//             { "data": "DocType" },
-//             { "data": "moneda" },
-//             { "data": "DocDate" },
-//             { "data": "DocDueDate" },
-//             { "data": "DocStatus" },
-//             { "data": "TotalImp" },
-//             { "data": null },
-//             { "data": null },
-//         ],
-//         columnDefs: [
-//             {
-//                 targets: [-2],
-//                 class: "text-center",
-//                 orderable: false,
-//                 render: function (data, type, row, meta) {
-//                     var hasGroupAccess = userGroups.some(group => ['Jefe_de_Presupuestos', 'Jefe_De_Area', 'Administrador', 'Validador'].includes(group));
-//                     var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
-//                     if (hasGroupAccess) {
-//                         if (isHeadofBudget) {
-//                             return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox"  value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" ></input></div>';
-//                         } else {
-//                             if (row.seleccionable == 1) {
-//                                 return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox"  value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" ></input></div>';
-//                             } else {
-//                                 return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" disabled></input></div>';
-//                             }
-//                         }
-//                     } else {
-//                         return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" disabled></input></div>';
-//                     }
-//                 },
-//             },
-//             {
-//                 targets: [1],
-//                 class: "text-center",
-//                 orderable: false,
-//                 render: function (data, type, row, meta) {
-//                     return row.DocNum + ' - ' + '<span class="badge badge-success">' + row.Serie + '</span>';
-//                 },
-//             },
-//             {
-//                 targets: [0],
-//                 class: "text-center",
-//                 orderable: false,
-//                 render: function (data, type, row, meta) {
-//                     return meta.row + 1;
-//                 },
-//             },
-//             // {
-//             //     targets: [2],
-//             //     class: "text-center",
-//             //     orderable: true,
-//             // },
-//             {
-//                 targets: [2],
-//                 class: "text-center",
-//                 orderable: true,
-//                 render: function (data, type, row) {
-//                     if (type === 'display' || type === 'filter') {
-//                         if (row.DocStatus === 'R') {
-//                             return '<span class="badge badge-warning" style="background-color: #f8285a;">No Aprobado</span>'; // Badge rojo
-//                         }
-//                         if (!data) {
-//                             return '<span class="badge badge-warning" style="background-color: #f6c000 ;">Aun no Aprobado</span>'; // Badge rojo
-//                         }
-//                         return data; // Si data es válido, devolverlo
-//                     }
-//                     return data; // Para otros tipos, devolver el dato sin cambios
-//                 }
-//             },
-//             {
-//                 targets: [9],
-//                 class: "text-center",
-//                 orderable: false,
-//                 render: function (data, type, row) {
-//                     var value = row.TotalImp;
-//                     var sol = 'S/. ';
-//                     return sol + value;
-//                 },
-//             },
-//             {
-//                 targets: [3, 5, 6, 7],
-//                 class: "text-center",
-//                 orderable: false,
-//             },
-//             {
-//                 targets: [6],
-//                 class: "text-center",
-//                 orderable: true,
-//             },
-//             {
-//                 targets: [-1],
-//                 class: "text-center",
-//                 orderable: false,
-//                 render: function (data, type, row) {
-//                     return '<button rel="remove" type="button" class="btn btn-primary btn-xs btn-flat" onclick="mostrarDetalles(' + parseInt(row.DocEntry) + ')"><i class="fas fa-info-circle"></i> Detalles</button>';
-//                 },
-//             },
-//             {
-//                 targets: [-8],
-//                 class: "text-center",
-//                 orderable: true,
-//                 render: function (data, type, row) {
-//                     var type = row.DocType;
-//                     var badgeClass = '';
-//                     var statusText = '';
-        
-//                     if (type === 'I') {
-//                         badgeClass = 'badge-dark';
-//                         statusText = 'Artículo';
-//                     } else if (type === 'S') {
-//                         badgeClass = 'badge-primary';
-//                         statusText = 'Servicio';
-//                     }
-//                     return '<span class="badge ' + badgeClass + '">' + statusText + '</span>';
-//                 },
-//             },
-//             {
-//                 targets: [-4],
-//                 class: "text-center",
-//                 orderable: true,
-//                 render: function (data, type, row) {
-//                     var status = row.DocStatus;
-//                     var badgeClass = '';
-//                     var statusText = '';
-        
-//                     if (status === 'P') {
-//                         badgeClass = 'badge-warning';
-//                         statusText = 'Pendiente';
-//                     } else if (status === 'A') {
-//                         badgeClass = 'badge-success';
-//                         statusText = 'Aprobado<br>por Jefatura';
-//                     } else if (status === 'R') {
-//                         badgeClass = 'badge-danger';
-//                         statusText = 'Rechazado<br>por Jefatura';
-//                     } else if (status == 'C') {
-//                         badgeClass = 'badge-success';
-//                         statusText = 'Contabilizado';
-//                     } else if (status == 'CP') {
-//                         badgeClass = 'badge-success';
-//                         statusText = 'Contabilizado Parcial';
-//                     }
-        
-//                     return '<span class="badge ' + badgeClass + '">' + statusText + '</span>';
-//                 },
-//             },
-//         ],
-//         initComplete: function (settings, json) {
-//             var hasGroupAccess = userGroups.includes('Jefe_de_Presupuesto', 'Jefe_De_Area', 'Administrador', 'Validador');
-//             if (hasGroupAccess) {
-//                 $('#tblSolicitudes').on('change', 'input[type="checkbox"]', function () {
-//                     var $checkbox = $(this);
-//                     var docEntry = $(this).val();
-//                     var table = $('#tblSolicitudes').DataTable();
-//                     var rowDataC = table.row($checkbox.closest('tr')).data();
-//                     updateCheckBoxDetails();
-
-//                     updateButtonStates();
-//                 });
-//             }
-//         },
-//         drawCallback: function (settings) {
-//             var hasGroupAccess = userGroups.includes('Jefe_de_Presupuesto', 'Jefe_De_Area', 'Administrador', 'Validador');
-//             if (hasGroupAccess) {
-//                 $('#tblSolicitudes').find('input[type="checkbox"]').each(function () {
-//                     var docEntry = $(this).val();
-//                     if (selectedCheckboxes[docEntry]) {
-//                         $(this).prop('checked', true);
-//                     } else {
-//                         $(this).prop('checked', false);
-//                     }
-//                 });
-//                 updateButtonStates();
-//             }
-//         }
-//     });
-
-//     $("#filtrarEstado").change(function () {
-//         //Recargar la página
-//         tblSol.ajax.reload();
-//     });
-// });
-
 
 
 $(function initializeDataTable() {
@@ -440,6 +215,28 @@ $(function initializeDataTable() {
             { "data": null },
         ],
         columnDefs: [
+            // {
+            //     targets: [-2],
+            //     class: "text-center",
+            //     orderable: false,
+            //     render: function (data, type, row, meta) {
+            //         var hasGroupAccess = userGroups.some(group => ['Jefe_de_Presupuestos', 'Jefe_De_Area', 'Administrador', 'Validador'].includes(group));
+            //         var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
+            //         if (hasGroupAccess) {
+            //             if (isHeadofBudget) {
+            //                 return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox"  value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" ></input></div>';
+            //             } else {
+            //                 if (row.seleccionable == 1) {
+            //                     return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox"  value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" ></input></div>';
+            //                 } else {
+            //                     return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" disabled></input></div>';
+            //                 }
+            //             }
+            //         } else {
+            //             return '<div class="form-check"> <input class="form-check-input" style="width: 20px;height: 40px;" type="checkbox" value="' + row.DocEntry + '" id="' + row.DocEntry + '" id="defaultCheck1" style="width: 20px; height: 50px;" disabled></input></div>';
+            //         }
+            //     },
+            // },
             {
                 targets: [-2],
                 class: "text-center",
