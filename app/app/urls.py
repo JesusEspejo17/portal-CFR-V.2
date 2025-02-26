@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include(('bases.urls', 'bases'), namespace='bases')),
     path('erp/', include(('erp.urls', 'erp'), namespace='erp')),
     path('users/', include(('user.urls', 'user'), namespace='user')),
+    path('api/', include(('erp.api.urls', 'api'), namespace='api')),
     path('admin/', admin.site.urls),
 ]
 
