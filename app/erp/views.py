@@ -838,8 +838,12 @@ def solicitudContabilizarMasivo(request):
         try:
             data = json.loads(request.body)
             arrSolicitudes = data.get('ids', None)
+            checked_prod = data.get('arrcheckedProd', [])
+            
             if not arrSolicitudes:
                 return JsonResponse({'error': 'No se recibieron IDs'}, status=400)
+            if not checked_prod:
+                return JsonResponse({'error': 'No se seleccionaron ítems para contabilizar'}, status=400)
             
             with transaction.atomic():
                 current_time = timezone.now()
@@ -848,8 +852,14 @@ def solicitudContabilizarMasivo(request):
                     solicitud_actual = OPRQ.objects.get(pk=id)
                     Solicitud_object = OPRQ.objects.filter(pk=id)
                     
-                    # Actualizar items seleccionados a 'L' y guardar datos de aprobación
-                    detalles = PRQ1.objects.filter(NumDoc=id, LineStatus='A')
+                    # Filtrar los detalles que coincidan con los ítems seleccionados
+                    checked_codes = {item.get('Code') for item in checked_prod}
+                    detalles = PRQ1.objects.filter(NumDoc=id, LineStatus='A', Code__in=checked_codes)
+                    
+                    if not detalles.exists():
+                        return JsonResponse({'error': f'No hay ítems seleccionados en estado "A" para la solicitud {id}'}, status=400)
+
+                    # Actualizar solo los ítems seleccionados a 'L' y guardar datos de aprobación
                     for detalle in detalles:
                         detalle.LineStatus = 'L'
                         detalle.idJefePresupuestos = request.user
@@ -872,17 +882,17 @@ def solicitudContabilizarMasivo(request):
                     validate = Validaciones()
                     usuario = solicitud_actual.ReqIdUser
                     usuario_solicitante = User.objects.get(username=usuario)
-                    validate.codReqUser = usuario_solicitante.first_name + ' ' + usuario.last_name
+                    validate.codReqUser = usuario_solicitante.first_name + ' ' + usuario_solicitante.last_name
                     validate.codValidador = request.user.username
                     validate.fecha = current_time
                     validate.estado = "Contabilizado"
                     validate.save()
                     
-            return HttpResponse("OK")
+                return HttpResponse("OK")
         except Exception as e:
             msg = f"Error al insertar datos maestros: {str(e)}"
             return JsonResponse({'error': msg}, status=500)
-    return JsonResponse({'error': 'Metodo no permitido'}, status=405)
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
     
 
 def solicitudAprobarMasivo(request):
@@ -973,8 +983,12 @@ def solicitudRechazarMasivo(request):
         try:
             data = json.loads(request.body)
             arrSolicitudes = data.get('ids', None)
+            checked_prod = data.get('arrcheckedProd', [])
+            
             if not arrSolicitudes:
                 return JsonResponse({'error': 'No se recibieron IDs'}, status=400)
+            if not checked_prod:
+                return JsonResponse({'error': 'No se seleccionaron ítems para rechazar'}, status=400)
 
             with transaction.atomic():
                 for id in arrSolicitudes:
@@ -987,16 +1001,15 @@ def solicitudRechazarMasivo(request):
                     if not detalles.exists():
                         return JsonResponse({'error': f'Detalles no encontrados para solicitud {id}'}, status=404)
 
-                    # Actualizar todos los detalles a rechazado
-                    detalles.update(LineStatus='R')
+                    # Actualizar solo los ítems seleccionados a rechazado
+                    checked_codes = {item.get('Code') for item in checked_prod}
+                    detalles_a_rechazar = detalles.filter(Code__in=checked_codes)
+                    detalles_a_rechazar.update(LineStatus='R')
 
                     # Verificar estado de todos los detalles
                     total_detalles = detalles.count()
                     detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
                     detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
-                    detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
-                    detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
-                    detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
 
                     # Determinar el nuevo estado
                     if total_detalles == detalles_rechazados:
@@ -1004,18 +1017,7 @@ def solicitudRechazarMasivo(request):
                         OPRQ.objects.filter(pk=id).update(DocStatus="R")
                     elif detalles_pendientes_P:
                         # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
-                        # No hacemos update para mantener el DocStatus actual
                         pass
-                    elif not detalles_pendientes_A:
-                        if detalles_cerrados + detalles_rechazados == total_detalles:
-                            # Si no hay pendientes y todos los demás están cerrados (C)
-                            OPRQ.objects.filter(pk=id).update(
-                                DocStatus="C",
-                                TipoDoc="OC"
-                            )
-                        elif not detalles_logistica:
-                            # Si no hay pendientes ni en logística, pero hay mezcla de C y R
-                            OPRQ.objects.filter(pk=id).update(DocStatus="C")
 
                     # Crear validación
                     validate = Validaciones()
@@ -1033,13 +1035,18 @@ def solicitudRechazarMasivo(request):
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+
 def solicitudRechazarMasivoPres(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             arrSolicitudes = data.get('ids', None)
+            checked_prod = data.get('arrcheckedProd', [])
+            
             if not arrSolicitudes:
                 return JsonResponse({'error': 'No se recibieron IDs'}, status=400)
+            if not checked_prod:
+                return JsonResponse({'error': 'No se seleccionaron ítems para rechazar'}, status=400)
 
             with transaction.atomic():
                 for id in arrSolicitudes:
@@ -1052,35 +1059,33 @@ def solicitudRechazarMasivoPres(request):
                     if not detalles.exists():
                         return JsonResponse({'error': f'Detalles no encontrados para solicitud {id}'}, status=404)
 
-                    # Actualizar todos los detalles a rechazado
-                    detalles.update(LineStatus='R')
+                    # Actualizar solo los ítems seleccionados a rechazado
+                    checked_codes = {item.get('Code') for item in checked_prod}
+                    detalles_a_rechazar = detalles.filter(Code__in=checked_codes)
+                    detalles_a_rechazar.update(LineStatus='R')
 
                     # Verificar estado de todos los detalles
-                    total_detalles = detalles.count()
+                    total_detalles = PRQ1.objects.filter(NumDoc=id).count()
                     detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
-                    detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
                     detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
-                    detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
                     detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
+                    detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
 
                     # Determinar el nuevo estado
                     if total_detalles == detalles_rechazados:
                         # Si todos están rechazados
-                        OPRQ.objects.filter(pk=id).update(DocStatus="R")
-                    elif detalles_pendientes_P:
-                        # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
-                        # No hacemos update para mantener el DocStatus actual
+                        OPRQ.objects.filter(pk=id).update(DocStatus="R", TipoDoc="SOL")
+                    elif detalles_pendientes_A:
+                        # Si quedan ítems en 'A', mantener el estado actual
                         pass
-                    elif not detalles_pendientes_A:
-                        if detalles_cerrados + detalles_rechazados == total_detalles:
-                            # Si no hay pendientes y todos los demás están cerrados (C)
-                            OPRQ.objects.filter(pk=id).update(
-                                DocStatus="C",
-                                TipoDoc="OC"
-                            )
-                        elif not detalles_logistica:
-                            # Si no hay pendientes ni en logística, pero hay mezcla de C y R
-                            OPRQ.objects.filter(pk=id).update(DocStatus="C")
+                    else:
+                        # No hay ítems en 'A'
+                        if detalles_logistica:
+                            # Hay ítems en 'L'
+                            OPRQ.objects.filter(pk=id).update(DocStatus="C", TipoDoc="SOL")
+                        elif detalles_cerrados > 0:
+                            # No hay 'L' pero hay 'C'
+                            OPRQ.objects.filter(pk=id).update(DocStatus="C", TipoDoc="OC")
 
                     # Crear validación
                     validate = Validaciones()
@@ -1172,6 +1177,7 @@ def solicitudAprobar(request, id):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
+
 def solicitudRechazar(request, id):
     if request.method == "POST":
         try:
@@ -1195,9 +1201,6 @@ def solicitudRechazar(request, id):
                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
                 detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
-                detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
-                detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
-                detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
                 
                 # Determinar el nuevo estado
                 if total_detalles == detalles_rechazados:
@@ -1205,18 +1208,7 @@ def solicitudRechazar(request, id):
                     OPRQ.objects.filter(pk=id).update(DocStatus="R")
                 elif detalles_pendientes_P:
                     # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
-                    # No hacemos update para mantener el DocStatus actual
                     pass
-                elif not detalles_pendientes_A:
-                    if detalles_cerrados + detalles_rechazados == total_detalles:
-                        # Si no hay pendientes y todos los demás están cerrados (C)
-                        OPRQ.objects.filter(pk=id).update(
-                            DocStatus="C",
-                            TipoDoc="OC"
-                        )
-                    elif not detalles_logistica:
-                        # Si no hay pendientes ni en logística, pero hay mezcla de C y R
-                        OPRQ.objects.filter(pk=id).update(DocStatus="C")
                     
                 validate = Validaciones()
                 validate.codReqUser = usuario
@@ -1250,37 +1242,34 @@ def solicitudRechazarPres(request, id):
                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
 
             with transaction.atomic():
-                # Actualizar items seleccionados
+                # Actualizar items seleccionados a rechazado
                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
-                detalles_actualizados = detalles.update(LineStatus='R')
+                detalles.update(LineStatus='R')
 
                 # Verificar estado de todos los detalles
                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
-                detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
                 detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
-                detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
                 detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
-                
+                detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
+
                 # Determinar el nuevo estado
                 if total_detalles == detalles_rechazados:
                     # Si todos están rechazados
-                    OPRQ.objects.filter(pk=id).update(DocStatus="R")
-                elif detalles_pendientes_P:
-                    # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
-                    # No hacemos update para mantener el DocStatus actual
+                    OPRQ.objects.filter(pk=id).update(DocStatus="R", TipoDoc="SOL")
+                elif detalles_pendientes_A:
+                    # Si quedan ítems en 'A', mantener el estado actual
                     pass
-                elif not detalles_pendientes_A:
-                    if detalles_cerrados + detalles_rechazados == total_detalles:
-                        # Si no hay pendientes y todos los demás están cerrados (C)
-                        OPRQ.objects.filter(pk=id).update(
-                            DocStatus="C",
-                            TipoDoc="OC"
-                        )
-                    elif not detalles_logistica:
-                        # Si no hay pendientes ni en logística, pero hay mezcla de C y R
-                        OPRQ.objects.filter(pk=id).update(DocStatus="C")
-                    
+                else:
+                    # No hay ítems en 'A'
+                    if detalles_logistica:
+                        # Hay ítems en 'L'
+                        OPRQ.objects.filter(pk=id).update(DocStatus="C", TipoDoc="SOL")
+                    elif detalles_cerrados > 0:
+                        # No hay 'L' pero hay 'C'
+                        OPRQ.objects.filter(pk=id).update(DocStatus="C", TipoDoc="OC")
+
+                # Registrar la validación
                 validate = Validaciones()
                 validate.codReqUser = usuario
                 validate.codValidador = request.user.username

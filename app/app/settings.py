@@ -153,3 +153,25 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER= "developercfr5@gmail.com"
 
 EMAIL_HOST_PASSWORD= "ruduivmcxawadcwm"
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        '__name__': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

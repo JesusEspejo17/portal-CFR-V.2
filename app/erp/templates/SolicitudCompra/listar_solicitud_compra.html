@@ -697,7 +697,7 @@
             return;
         }
     }
-    function rechazarMasivo() {
+    {% comment %} function rechazarMasivo() {
         var table = $('#tblSolicitudes').DataTable();
         var selectedIds = [];
         table.rows().every(function () {
@@ -783,6 +783,118 @@
             });
             return;
         }
+    } {% endcomment %}
+
+    function rechazarMasivo() {
+        var table = $('#tblSolicitudes').DataTable();
+        var selectedIds = [];
+        table.rows().every(function () {
+            var row = this.node();
+            var checkbox = $(row).find('input[type="checkbox"]');
+            if (checkbox.prop('checked')) {
+                selectedIds.push(checkbox.val());
+            }
+        });
+    
+        if (selectedIds.length === 0) {
+            $.alert({
+                title: 'Aviso',
+                content: 'No se han seleccionado solicitudes de compras.',
+                type: 'red',
+                theme: 'modern',
+                buttons: {
+                    confirm: function () {}
+                }
+            });
+            return;
+        } else {
+            // Depurar checkedProd para verificar su contenido
+            console.log("checkedProd antes de enviar:", checkedProd);
+    
+            if (!checkedProd || checkedProd.length === 0) {
+                $.alert({
+                    title: 'Aviso',
+                    content: 'No se han seleccionado ítems para rechazar.',
+                    type: 'red',
+                    theme: 'modern',
+                    buttons: {
+                        confirm: function () {}
+                    }
+                });
+                return;
+            }
+    
+            var token = '{{csrf_token}}';
+            $.confirm({
+                theme: 'modern',
+                title: 'Aviso',
+                columnClass: 'medium',
+                icon: 'fas fa-check',
+                type: 'red',
+                content: '¿Desea rechazar las solicitudes seleccionadas?',
+                buttons: {
+                    confirm: function () {
+                        abrir_modal_cargar();
+                        $.ajax({
+                            headers: { "X-CSRFToken": token },
+                            type: "POST",
+                            url: '/erp/rechazar_masivo/',
+                            data: JSON.stringify({ ids: selectedIds, arrcheckedProd: checkedProd }),
+                            contentType: "application/json; charset=utf-8",
+                            success: function (response) {
+                                if (response === "OK") {
+                                    $.confirm({
+                                        title: 'Éxito',
+                                        content: 'Las solicitudes han sido rechazadas exitosamente.',
+                                        type: 'red',
+                                        theme: 'modern',
+                                        buttons: {
+                                            confirm: function () {
+                                                $('#modalCarga').modal('hide');
+                                                location.reload(true);
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    $.alert({
+                                        title: 'Error',
+                                        icon: 'fa fa-times-circle',
+                                        theme: 'modern',
+                                        type: 'red',
+                                        content: "Error Intentado Cambiar Estado a Cliente",
+                                        buttons: {
+                                            ok: {
+                                                text: 'OK',
+                                                btnClass: 'btn-danger',
+                                                action: function () {
+                                                    $('#modalCarga').modal('hide');
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                console.log("Error en rechazarMasivo:", textStatus, errorThrown, jqXHR);
+                                var errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error : 'Error desconocido';
+                                $.alert({
+                                    title: 'Error',
+                                    content: 'Error: ' + errorMsg,
+                                    type: 'red',
+                                    theme: 'modern',
+                                    buttons: {
+                                        ok: function () {
+                                            $('#modalCarga').modal('hide');
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    },
+                    cancel: function () {}
+                }
+            });
+        }
     }
 
 
@@ -792,12 +904,11 @@
         table.rows().every(function () {
             var row = this.node();
             var checkbox = $(row).find('input[type="checkbox"]');
-
-            // Si el checkbox está marcado, agrega el ID a la lista
             if (checkbox.prop('checked')) {
                 selectedIds.push(checkbox.val());
             }
         });
+    
         if (selectedIds.length === 0) {
             $.alert({
                 title: 'Aviso',
@@ -805,13 +916,27 @@
                 type: 'red',
                 theme: 'modern',
                 buttons: {
-                    confirm: function () {
-
-                    },
+                    confirm: function () {}
                 }
             });
             return;
         } else {
+            // Depurar checkedProd para verificar su contenido
+            console.log("checkedProd antes de enviar:", checkedProd);
+    
+            if (!checkedProd || checkedProd.length === 0) {
+                $.alert({
+                    title: 'Aviso',
+                    content: 'No se han seleccionado ítems para rechazar.',
+                    type: 'red',
+                    theme: 'modern',
+                    buttons: {
+                        confirm: function () {}
+                    }
+                });
+                return;
+            }
+    
             var token = '{{csrf_token}}';
             $.confirm({
                 theme: 'modern',
@@ -827,7 +952,7 @@
                             headers: { "X-CSRFToken": token },
                             type: "POST",
                             url: '/erp/rechazar_masivo_pres/',
-                            data: JSON.stringify({ ids: selectedIds }),
+                            data: JSON.stringify({ ids: selectedIds, arrcheckedProd: checkedProd }),
                             contentType: "application/json; charset=utf-8",
                             success: function (response) {
                                 if (response === "OK") {
@@ -840,11 +965,10 @@
                                             confirm: function () {
                                                 $('#modalCarga').modal('hide');
                                                 location.reload(true);
-                                            },
+                                            }
                                         }
                                     });
-                                }
-                                else {
+                                } else {
                                     $.alert({
                                         title: 'Error',
                                         icon: 'fa fa-times-circle',
@@ -852,25 +976,37 @@
                                         type: 'red',
                                         content: "Error Intentado Cambiar Estado a Cliente",
                                         buttons: {
-                                            ok: function () {
-                                                text: 'OK';
-                                                btnClass: 'btn-danger'
-                                                $('#modalCarga').modal('hide');
+                                            ok: {
+                                                text: 'OK',
+                                                btnClass: 'btn-danger',
+                                                action: function () {
+                                                    $('#modalCarga').modal('hide');
+                                                }
                                             }
                                         }
                                     });
                                 }
                             },
-                            error: function (jqXHR, textStatus, errorThrow) {
-                                console.log(textStatus, errorThrow, jqXHR);
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                console.log("Error en rechazarMasivo:", textStatus, errorThrown, jqXHR);
+                                var errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error : 'Error desconocido';
+                                $.alert({
+                                    title: 'Error',
+                                    content: 'Error: ' + errorMsg,
+                                    type: 'red',
+                                    theme: 'modern',
+                                    buttons: {
+                                        ok: function () {
+                                            $('#modalCarga').modal('hide');
+                                        }
+                                    }
+                                });
                             }
                         });
                     },
-                    cancel: function () {
-                    },
+                    cancel: function () {}
                 }
             });
-            return;
         }
     }
 
@@ -884,6 +1020,7 @@
                 selectedIds.push(checkbox.val());
             }
         });
+    
         if (selectedIds.length === 0) {
             $.alert({
                 title: 'Aviso',
@@ -891,13 +1028,27 @@
                 type: 'red',
                 theme: 'modern',
                 buttons: {
-                    confirm: function () {
-
-                    },
+                    confirm: function () {}
                 }
             });
             return;
         } else {
+            // Depurar checkedProd para verificar su contenido
+            console.log("checkedProd antes de enviar:", checkedProd);
+    
+            if (!checkedProd || checkedProd.length === 0) {
+                $.alert({
+                    title: 'Aviso',
+                    content: 'No se han seleccionado ítems para contabilizar.',
+                    type: 'red',
+                    theme: 'modern',
+                    buttons: {
+                        confirm: function () {}
+                    }
+                });
+                return;
+            }
+    
             var token = '{{csrf_token}}';
             $.confirm({
                 theme: 'modern',
@@ -913,7 +1064,7 @@
                             headers: { "X-CSRFToken": token },
                             type: "POST",
                             url: '/erp/contabilizar_masivo/',
-                            data: JSON.stringify({ ids: selectedIds }),
+                            data: JSON.stringify({ ids: selectedIds, arrcheckedProd: checkedProd }),
                             contentType: "application/json; charset=utf-8",
                             success: function (response) {
                                 if (response === "OK") {
@@ -926,11 +1077,10 @@
                                             confirm: function () {
                                                 $('#modalCarga').modal('hide');
                                                 location.reload(true);
-                                            },
+                                            }
                                         }
                                     });
-                                }
-                                else {
+                                } else {
                                     $.alert({
                                         title: 'Error',
                                         icon: 'fa fa-times-circle',
@@ -938,25 +1088,37 @@
                                         type: 'red',
                                         content: "Error Intentado Cambiar Estado a Cliente",
                                         buttons: {
-                                            ok: function () {
-                                                text: 'OK';
-                                                btnClass: 'btn-danger'
-                                                $('#modalCarga').modal('hide');
+                                            ok: {
+                                                text: 'OK',
+                                                btnClass: 'btn-danger',
+                                                action: function () {
+                                                    $('#modalCarga').modal('hide');
+                                                }
                                             }
                                         }
                                     });
                                 }
                             },
-                            error: function (jqXHR, textStatus, errorThrow) {
-                                console.log(textStatus, errorThrow, jqXHR);
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                console.log("Error en contabilizarMasivo:", textStatus, errorThrown, jqXHR);
+                                var errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error : 'Error desconocido';
+                                $.alert({
+                                    title: 'Error',
+                                    content: 'Error: ' + errorMsg,
+                                    type: 'red',
+                                    theme: 'modern',
+                                    buttons: {
+                                        ok: function () {
+                                            $('#modalCarga').modal('hide');
+                                        }
+                                    }
+                                });
                             }
                         });
                     },
-                    cancelar: function () {
-                    },
+                    cancelar: function () {}
                 }
             });
-            return;
         }
     }
 
