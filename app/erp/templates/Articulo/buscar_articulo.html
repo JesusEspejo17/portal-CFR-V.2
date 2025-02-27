@@ -314,6 +314,45 @@
         },
     }
 
+
+    // Obtener el valor de TipoCambio
+    var tipoCambio = parseFloat($("#tipoCambio").val());
+    console.log("Valor de tipoCambio:", tipoCambio); // Depuración
+
+    if (isNaN(tipoCambio) || tipoCambio <= 0) {
+        console.error("El valor de TipoCambio no es válido:", tipoCambio);
+        tipoCambio = 1; // Asignar un valor por defecto para evitar NaN
+    }
+
+    // Obtener la moneda seleccionada
+    var monedaSeleccionada = $("#selecMoneda option:selected").text();
+    console.log("Moneda seleccionada:", monedaSeleccionada); // Depuración
+
+    // Ajustar los precios unitarios al cargar la tabla
+    $('#tblBuscarProd tbody tr').each(function() {
+        var precioUnitario = parseFloat($(this).find('td:eq(2)').text());
+        if (!isNaN(precioUnitario)) {
+            var precioAjustado = (precioUnitario / tipoCambio).toFixed(2);
+            var precioConMoneda = agregarSimboloMoneda(precioAjustado, monedaSeleccionada);
+            $(this).find('td:eq(2)').text(precioConMoneda);
+        } else {
+            console.error("El precio unitario no es válido:", precioUnitario);
+        }
+    });
+
+    function agregarSimboloMoneda(precio, moneda) {
+        switch (moneda) {
+            case 'USD':
+                return '$' + precio;
+            case 'EUR':
+                return '€' + precio;
+            case 'SOL':
+                return 'S/ ' + precio;
+            default:
+                return precio;
+        }
+    }
+
     $('#tblProdSeleccionados').on('change', '.editable-cell select', function () {
         var type = $(this).attr('data-type');
         var rowIndex = tblSlctProducts.cell($(this).closest('td')).index().row;
@@ -440,6 +479,42 @@
 		"<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
 		">"
     });
+
+    //Articulos Seleccionados del modal
+    function seleccionarProducto(codigo, descripcion, precio, idAlmacen, button) {
+        button.classList.replace("btn-warning", "btn-success");
+    
+        var tipoCambio = parseFloat($("#tipoCambio").val());
+        console.log("Valor de tipoCambio:", tipoCambio); // Depuración
+    
+        if (isNaN(tipoCambio) || tipoCambio <= 0) {
+            console.error("El valor de TipoCambio no es válido:", tipoCambio);
+            tipoCambio = 1; // Asignar un valor por defecto para evitar NaN
+        }
+    
+        var precioNumerico = parseFloat(precio);
+        if (isNaN(precioNumerico)) {
+            console.error("El precio no es válido:", precio);
+            precioNumerico = 0; // Asignar un valor por defecto para evitar NaN
+        }
+    
+        var precioAjustado = (precioNumerico / tipoCambio).toFixed(2); // Ajustar precio al seleccionar
+        console.log("Precio ajustado:", precioAjustado); // Depuración
+    
+        context = {
+            'codigo': codigo,
+            'descripcion': descripcion,
+            'precio': precioAjustado, // Aseguramos que se pase el precio ajustado sin el símbolo de moneda
+            'almacen': '',
+            'cantidad': 1,
+            'unidad': '',
+            'dimension': '',
+            'proveedor': '',
+            'idAlmacen': idAlmacen
+        };
+        selectedPdct.add(context);
+    }
+
 
     $(function () {
         $("#btnCancelar").click(function (e) {
