@@ -185,7 +185,6 @@ class OACT(models.Model):
 
 #Moneda
 class Moneda(models.Model):
-    idMoneda = models.IntegerField(primary_key=True)
     MonedaAbrev = models.CharField(max_length=150, null=False, blank=False)
     CambioSoles = models.FloatField(default=0.0, null=False, blank=False)
     TCDate = models.DateField()

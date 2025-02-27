@@ -112,15 +112,20 @@
                         </div>
                     </div>
                 
+
                     <div class="form-group">
                         <label>Moneda:</label>
+                        <div id="url-moneda" data-url="{% url 'erp:obtener_moneda' %}"></div>
                         <select class="form-control form-control-solidS select" name="moneda" id="selecMoneda" data-placeholder="Seleccione una moneda" required>
                             <option></option>
-                            {% for mon in moneda %}
-                            <option>{{mon.MonedaAbrev}}</option>
-                            {% endfor %}
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label>Tipo de Cambio:</label>
+                        <input type="text" readonly="true" name="TipoCambio" class="form-control form-control-solid text-right" id="tipoCambio" value="0.00" required>
+                    </div>
+
+
                     <div class="form-group">
                         <label>Impuestos:</label>
                         <div id="url-data" data-url="{% url 'erp:obtener_impuesto' %}"></div>
@@ -382,6 +387,44 @@
             else return false;
         }
     };
+
+    //Actualizar tipo de cambio
+    document.addEventListener('DOMContentLoaded', function () {
+        // Obtener la URL para cargar las monedas
+        var urlMoneda = document.getElementById('url-moneda').getAttribute('data-url');
+        // Función para cargar las monedas
+        function cargarMonedas() {
+            $.ajax({
+                url: urlMoneda,
+                type: 'GET',
+                success: function (response) {
+                    //console.log('Datos de monedas recibidos:', response);  // Depuración
+                    var selectMoneda = document.getElementById('selecMoneda');
+                    selectMoneda.innerHTML = '<option></option>'; // Limpiar opciones anteriores
+                    response.forEach(function(moneda) {
+                        var option = document.createElement('option');
+                        option.text = moneda.MonedaAbrev;
+                        option.setAttribute('data-cambio', moneda.CambioSoles);
+                        selectMoneda.add(option);
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error al cargar las monedas:', error);
+                }
+            });
+        }    
+        cargarMonedas();
+        function actualizarTipoCambio() {
+            var selectedOption = $("#selecMoneda option:selected");
+            var tipoCambio = selectedOption.data("cambio");
+            console.log('Moneda seleccionada:', selectedOption.text());  // Depuración
+            console.log('Tipo de cambio:', tipoCambio);  // Depuración
+            $("#tipoCambio").val(tipoCambio ? tipoCambio : '0.00');
+        }
+        $("#selecMoneda").change(function () {
+            actualizarTipoCambio();
+        });
+    });
 
     {% comment %} function setTotales(valor) {
         var subtotal = parseFloat($("#idTotal").val());

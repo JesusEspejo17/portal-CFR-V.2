@@ -69,114 +69,110 @@ def listado_articulos(request):
                   'proveedor_json':socioNegocio_json}
     return render(request, template_name, contexto)
 
+
 @login_required(login_url='/login/')
 @permission_required(['erp.add_oprq', 'erp.view_oprq', 'erp.view_oprq'], login_url='bases:sin_privilegios')
 # def solicitudcompra(request):
 #     template_name = 'SolicitudCompra/create_solicitud_compra.html'
 #     fecha = datetime.today().strftime('%d-%m-%Y')
 #     success_url = reverse_lazy('erp:listar_solicitudes')
-#     if request.method=='GET':
+#     if request.method == 'GET':
 #         coin = Moneda.objects.filter()
 #         impuestos = OSTA.objects.filter()
 #         departamento = Departamento.objects.filter()
 #         serie = Series.objects.filter()
 
-#         cuentaContable=OACT.objects.exclude(AcctName__icontains='Sin Cuenta Contable')
+#         cuentaContable = OACT.objects.exclude(AcctName__icontains='Sin Cuenta Contable')
 #         cuentaContable_json = json.dumps(list(cuentaContable.values('AcctCode', 'AcctName')))
 
-#         socioNegocio=OCRD.objects.filter()
+#         socioNegocio = OCRD.objects.filter()
 #         socioNegocio_json = json.dumps(list(socioNegocio.values('CardCode', 'CardName')))
 
 #         medida = OUOM.objects.exclude(Name__icontains='Sin Unidad')
 #         medida_json = json.dumps(list(medida.values('Code', 'Name')))
 
-#         almacen=OWHS.objects.exclude(WhsName__icontains='Sin Almacen')
+#         almacen = OWHS.objects.exclude(WhsName__icontains='Sin Almacen')
 #         almacenes_json = json.dumps(list(almacen.values('WhsCode', 'WhsName')))
 
 #         dimension = Dimensiones.objects.filter()
 #         dimension_json = json.dumps(list(dimension.values('nombre', 'descripcion')))
-        
 
 #         grupo_especifico = Group.objects.get(name='Administrador')
 #         pertenece_al_grupo = request.user.groups.filter(name=grupo_especifico).exists()
-#         contexto={'moneda': coin, 
-#                   'OSTA':impuestos, 
-#                   'title':' Nueva Solicitud de Compra',
-#                   'fecha': fecha,
-#                   'serie': serie,
-#                   'Departamento':departamento,
-#                   'cuenta_contable':cuentaContable_json,
-#                   'socio_negocio':socioNegocio_json,
-#                   'almacen': almacenes_json,
-#                   'medida': medida_json,
-#                   'dimension': dimension_json
-#                   }
+#         contexto = {
+#             'moneda': coin,
+#             'OSTA': impuestos,
+#             'title': ' Nueva Solicitud de Compra',
+#             'fecha': fecha,
+#             'serie': serie,
+#             'Departamento': departamento,
+#             'cuenta_contable': cuentaContable_json,
+#             'socio_negocio': socioNegocio_json,
+#             'almacen': almacenes_json,
+#             'medida': medida_json,
+#             'dimension': dimension_json
+#         }
 #         return render(request, template_name, contexto)
-#     if request.method=='POST':
+#     if request.method == 'POST':
 #         try:
 #             with transaction.atomic():
 #                 print("Iniciando creación de solicitud...")
 #                 NombreSerie = request.POST.get('serie')
 #                 serie = Series.objects.get(Nombre=NombreSerie)
 #                 print(f"Serie encontrada: {NombreSerie}")
-#                 if(serie.NumeroSiguiente>serie.UltimoNumero):
+#                 if (serie.NumeroSiguiente > serie.UltimoNumero):
 #                     msg = "ERROR: Se ha llegado al límite de solicitudes de compra guardadas por el sistema para esa serie."
 #                     render(request, template_name, {'error message': msg})
-                
-#                 #Cargamos vents para los productos
 
+#                 # Cargamos vents para los productos
 #                 vents_data = request.POST.get('vents_data', '{}')
 #                 servs_data = request.POST.get('servs_data', '{}')
 #                 print(f"Datos recibidos - Productos: {vents_data}")
 #                 print(f"Datos recibidos - Servicios: {servs_data}")
-                
-#                 # print("Datos de vents recibidos:", vents_data) 
-#                 # print("Datos de servs recibidos:", servs_data) 
 
 #                 # Procesa los datos JSON de vents_data y servs_data como necesites
 #                 vents = json.loads(vents_data)
 #                 servs = json.loads(servs_data)
-                
+
 #                 if not vents and not servs:
 #                     msg = "ERROR: No se ha ingresado ningún producto o servicio."
 #                     print("Error: No hay productos ni servicios")
 #                     return render(request, template_name, {'error_message': msg})
-                
-#                 #Inicialización de datos necesarios
+
+#                 # Inicialización de datos necesarios
 #                 print("Creando encabezado OPRQ...")
 #                 encabezado = OPRQ()
-#                 #User
-#                 nameUser = request.POST.get('idUser') 
-#                 usuario = User()
+#                 # User
+#                 nameUser = request.POST.get('idUser')
 #                 usuario = User.objects.get(id=nameUser)
 
-#                 #Impuestos
-#                 imp = request.POST.get('TaxCode') 
-#                 cadImpuesto = imp.split('-',1)  #imp está en el formato "Nombre - Codigo"
+#                 # Impuestos
+#                 imp = request.POST.get('TaxCode')
+#                 cadImpuesto = imp.split('-', 1)  # imp está en el formato "Nombre - Codigo"
 #                 code_Impuesto = cadImpuesto[-1].strip()
 #                 impuesto = OSTA.objects.get(Code=code_Impuesto)
 
-#                 #Moneda
-#                 abreviacionMoneda = request.POST.get('moneda') 
+#                 # Moneda
+#                 abreviacionMoneda = request.POST.get('moneda')
 #                 moneda = Moneda.objects.get(MonedaAbrev=abreviacionMoneda)
 
-#                 #Departamento
+#                 # Departamento
 #                 deptName = request.POST.get('Department')
 #                 departamento = Departamento.objects.get(Name=deptName)
 
-#                 #Save encabezado
+#                 # Save encabezado
 #                 encabezado.DocNum = request.POST.get('DocNum')
 #                 encabezado.ReqIdUser = usuario
 #                 encabezado.ReqCode = usuario.SAP_Code
 #                 encabezado.ReqType = usuario.UserType
 #                 encabezado.Department = departamento
 #                 encabezado.Serie = serie.CodigoSerie
-#                 encabezado.DocStatus = "P" #P: pendiente, A: aprobado, R: rechazado C:contabilizado
-#                 #Si el arreglo de servicios está vacío, se está agregando un producto
+#                 encabezado.DocStatus = "P"  # P: pendiente, A: aprobado, R: rechazado C:contabilizado
+#                 # Si el arreglo de servicios está vacío, se está agregando un producto
 #                 if (servs == [] and len(vents) > 0):
 #                     encabezado.DocType = "I"
-#                 #Si el arreglo de productos está vacío, se está agregando un servicio
-#                 elif(vents == [] and len(servs) > 0):
+#                 # Si el arreglo de productos está vacío, se está agregando un servicio
+#                 elif (vents == [] and len(servs) > 0):
 #                     encabezado.DocType = "S"
 #                 doc_date_str = request.POST.get('DocDate')
 #                 doc_date = datetime.strptime(doc_date_str, '%d-%m-%Y').strftime('%Y-%m-%d')
@@ -197,44 +193,11 @@ def listado_articulos(request):
 #                 encabezado.TotalImp = float(request.POST.get('TotalImp'))
 #                 encabezado.save()
 #                 print(f"Encabezado creado con ID: {encabezado.pk}")
-#                 #Save detalle
-#                 #Si el arreglo de servicios está vacío, se está agregando un producto
-#                 # if (servs == [] and len(vents) > 0):
-#                 #     print("Procesando productos...")
-#                 #     for i in vents:
-#                 #         try:
-#                 #             print(f"Creando detalle para producto: {i['code']}")
-#                 #             detalle = PRQ1()
-#                 #             item = OITM.objects.get(ItemCode=i['code'])
-#                 #             proveedor = OCRD.objects.get(CardName=i['proveedor'])
-#                 #             uni_med = OUOM.objects.get(Code=i['medida'])
-#                 #             almacen = OWHS.objects.get(WhsName=i['almacen'])
-#                 #             cuentaContable = OACT.objects.get(AcctName="Sin Cuenta Contable")
-#                 #             dimension = Dimensiones.objects.get(descripcion=i['dimension'])
-#                 #             detalle.NumDoc = encabezado
-#                 #             detalle.ItemCode = item
-#                 #             detalle.LineVendor = proveedor
-#                 #             detalle.Description = i['description']
-#                 #             detalle.Quantity = i['cant']
-#                 #             detalle.UnidadMedida = uni_med
-#                 #             detalle.Currency = moneda
-#                 #             detalle.Almacen = almacen
-#                 #             detalle.CuentaMayor = cuentaContable
-#                 #             detalle.total = i['precio_total']
-#                 #             if 'price' in i:
-#                 #                 try:
-#                 #                     detalle.Precio = float(i['price'])
-#                 #                     print("Precio asignado:", detalle.Precio)
-#                 #                 except ValueError:
-#                 #                     detalle.Precio = 0.0 
-#                 #             else:
-#                 #                 detalle.Precio = 0.0
-#                 #                 print("Advertencia: 'precio' no encontrado en item:", i)
-#                 #             detalle.idDimension = dimension
-#                 #             detalle.save()
-#                 #         except Exception as e:
-#                 #                 print(f"Error al guardar detalle de producto: {str(e)}")
-#                 #                 raise
+
+#                 # Calcular la tasa de impuesto
+#                 tasa_impuesto = impuesto.Rate
+
+#                 # Save detalle
 #                 if servs == [] and len(vents) > 0:
 #                     print("Procesando productos...")
 #                     for i in vents:
@@ -259,12 +222,13 @@ def listado_articulos(request):
 #                             detalle.Almacen = almacen
 #                             detalle.CuentaMayor = cuentaContable
 #                             detalle.total = i['precio_total']
+#                             detalle.totalimpdet = float(i['precio_total']) * (1 + tasa_impuesto)  # Calcular total con impuesto
 #                             if 'price' in i:
 #                                 try:
 #                                     detalle.Precio = float(i['price'])
 #                                     print("Precio asignado:", detalle.Precio)
 #                                 except ValueError:
-#                                     detalle.Precio = 0.0 
+#                                     detalle.Precio = 0.0
 #                             else:
 #                                 detalle.Precio = 0.0
 #                                 print("Advertencia: 'precio' no encontrado en item:", i)
@@ -273,44 +237,7 @@ def listado_articulos(request):
 #                         except Exception as e:
 #                             print(f"Error al guardar detalle de producto: {str(e)}")
 #                             raise
-#                 #Si el arreglo de productos está vacío, se está agregando un servicio
-#                 elif(vents == [] and len(servs) > 0):
-#                     # print("Procesando servicios...")
-#                     # for i in servs:
-#                     #     try:
-#                     #         print(f"Creando detalle para servicio: {i['code']}")
-#                     #         detalle = PRQ1()
-#                     #         item = OITM.objects.get(ItemCode=i['code'])
-#                     #         proveedor = OCRD.objects.get(CardName=i['proveedor'])
-#                     #         cuentaContable = OACT.objects.get(AcctName=i['cuenta_contable'])
-#                     #         uni_med = OUOM.objects.get(Code="Sin Unidad")
-#                     #         almacen = OWHS.objects.get(WhsName="Sin Almacen")
-#                     #         dimension = Dimensiones.objects.get(descripcion=i['dimension'])
-#                     #         detalle.NumDoc = encabezado
-#                     #         detalle.ItemCode = item
-#                     #         detalle.LineVendor = proveedor
-#                     #         detalle.Description = i['description']
-#                     #         detalle.Quantity = i['cant']
-#                     #         detalle.UnidadMedida = uni_med
-#                     #         detalle.Currency = moneda
-#                     #         detalle.Almacen = almacen
-#                     #         detalle.CuentaMayor = cuentaContable
-#                     #         detalle.total = i['precio_total']
-#                     #         if 'price' in i:
-#                     #             try:
-#                     #                 detalle.Precio = float(i['price'])
-#                     #                 print("Precio asignado:", detalle.Precio)
-#                     #             except ValueError:
-#                     #                 detalle.Precio = 0.0  # O manejar de otra manera
-#                     #         else:
-#                     #             detalle.Precio = 0.0
-#                     #             print("Advertencia: 'precio' no encontrado en item:", i)
-#                     #         detalle.idDimension = dimension
-#                     #         detalle.save()
-#                     #         print(f"Detalle de servicio guardado con ID: {detalle.pk}")
-#                     #     except Exception as e:
-#                     #             print(f"Error al guardar detalle de servicio: {str(e)}")
-#                     #             raise
+#                 elif vents == [] and len(servs) > 0:
 #                     print("Procesando servicios...")
 #                     for i in servs:
 #                         try:
@@ -334,12 +261,13 @@ def listado_articulos(request):
 #                             detalle.Almacen = almacen
 #                             detalle.CuentaMayor = cuentaContable
 #                             detalle.total = i['precio_total']
+#                             detalle.totalimpdet = float(i['precio_total']) * (1 + tasa_impuesto)  # Calcular total con impuesto
 #                             if 'price' in i:
 #                                 try:
 #                                     detalle.Precio = float(i['price'])
 #                                     print("Precio asignado:", detalle.Precio)
 #                                 except ValueError:
-#                                     detalle.Precio = 0.0  # O manejar de otra manera
+#                                     detalle.Precio = 0.0
 #                             else:
 #                                 detalle.Precio = 0.0
 #                                 print("Advertencia: 'precio' no encontrado en item:", i)
@@ -349,16 +277,17 @@ def listado_articulos(request):
 #                         except Exception as e:
 #                             print(f"Error al guardar detalle de servicio: {str(e)}")
 #                             raise
-#                 #Actualizar modelo Series
+
+#                 # Actualizar modelo Series
 #                 if serie:
-#                     serie.NumeroSiguiente +=1
+#                     serie.NumeroSiguiente += 1
 #                     serie.save()
 #                     print(f"Serie actualizada: {serie.NumeroSiguiente}")
 #                 success_message = "La solicitud de compra se ha guardado correctamente."
 #                 print("Solicitud creada exitosamente")
 #                 send_email_to_validator()
 #                 return render(request, template_name, {'success_message': "La solicitud de compra se ha guardado correctamente."})
-                                                    
+
 #         except Exception as e:
 #             print(f"Error general: {str(e)}")
 #             print(f"Tipo de error: {type(e)}")
@@ -368,8 +297,7 @@ def listado_articulos(request):
 #             # Considera registrar el error en un archivo de log
 #             render(request, template_name, {'error_message': msg})
 #         return redirect(success_url)
-@login_required(login_url='/login/')
-@permission_required(['erp.add_oprq', 'erp.view_oprq', 'erp.view_oprq'], login_url='bases:sin_privilegios')
+
 def solicitudcompra(request):
     template_name = 'SolicitudCompra/create_solicitud_compra.html'
     fecha = datetime.today().strftime('%d-%m-%Y')
@@ -452,7 +380,10 @@ def solicitudcompra(request):
 
                 # Moneda
                 abreviacionMoneda = request.POST.get('moneda')
-                moneda = Moneda.objects.get(MonedaAbrev=abreviacionMoneda)
+                today = timezone.now().date()
+                moneda = Moneda.objects.filter(MonedaAbrev=abreviacionMoneda, TCDate=today).first()
+                if not moneda:
+                    raise ValueError("No se encontró una moneda para la fecha actual.")
 
                 # Departamento
                 deptName = request.POST.get('Department')
@@ -629,6 +560,16 @@ def obtener_numero_serie(request):
             return JsonResponse({'error': 'Serie no encontrada'}, status=404)
     else:
         return JsonResponse({'error': 'Nombre de impuesto no proporcionado'}, status=400)
+    
+    
+def obtener_moneda(request):
+    today = timezone.now().date()
+    moneda = Moneda.objects.filter(TCDate=today)
+    # Convert to JSON or a similar format to pass to the template
+    monedas_list = list(moneda.values('MonedaAbrev', 'CambioSoles'))
+    print(monedas_list)  # Agregar un log para depuración
+    return JsonResponse(monedas_list, safe=False)
+
     
 # Metodo obtener LineStatus para calcular total
 @login_required(login_url='/login/')
