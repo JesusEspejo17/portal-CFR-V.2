@@ -426,46 +426,60 @@
         });
     });
 
-    {% comment %} function setTotales(valor) {
-        var subtotal = parseFloat($("#idTotal").val());
-        if (isNaN(subtotal)) {
-            subtotal = 0;
+
+    //ACA EMPIEZA METODO DE VACIAR TABLA AL SELECICONAR MONEDA DISTINTA
+    let monedaInicial = $("#selecMoneda").val();  // Guardar la moneda seleccionada inicialmente
+
+    // Detectar el cambio de moneda
+    $("#selecMoneda").change(function () {
+        var selectedMoneda = $(this).val();  // Obtener la moneda seleccionada
+        var option = document.getElementById("selectDetalle").value;
+
+        // Verificar si ya hay datos en la tabla y si se ha seleccionado una moneda diferente a la inicial
+        if ((monedaInicial !== selectedMoneda) && (verificar_datos_tabla("tblProducts") || verificar_datos_tabla("tblServicios"))) {
+            $.confirm({
+                theme: 'modern',
+                title: 'Advertencia',
+                columnClass: 'medium',
+                icon: 'fas fa-exclamation-triangle',
+                type: 'orange',
+                content: 'Si cambia la moneda, los datos en las tablas se eliminarán. ¿Desea continuar?',
+                buttons: {
+                    confirm: function () {
+                        // Limpiar las tablas
+                        if (verificar_datos_tabla("tblProducts")) {
+                            vents.delete();  // Vaciar productos
+                        }
+                        if (verificar_datos_tabla("tblServicios")) {
+                            servs.delete();  // Vaciar servicios
+                        }
+
+                        // Actualizar la moneda inicial
+                        monedaInicial = selectedMoneda;
+
+                        // Actualizar el tipo de cambio
+                        actualizarTipoCambio();
+                    },
+                    cancel: function () {
+                        // No hacer nada si el usuario cancela
+                        $("#selecMoneda").val(monedaInicial);  // Volver a la moneda inicial
+                    }
+                }
+            });
+        } else {
+            // Si no hay datos o no se cambió la moneda, solo actualizar el tipo de cambio
+            actualizarTipoCambio();
         }
-        subtotal += parseFloat(valor);
-        $("#idTotal").val(subtotal.toFixed(2));
-        
-        // Actualiza el subtotal en el pie de página
-        if ($("#tblProducts").is(":visible")) {
-            $("#subtotalProducts").text(subtotal.toFixed(2));
-        } else if ($("#tblServicios").is(":visible")) {
-            $("#subtotalServicios").text(subtotal.toFixed(2));
-        }
+    });
+
+    function actualizarTipoCambio() {
+        var selectedOption = $("#selecMoneda option:selected");
+        var tipoCambio = selectedOption.data("cambio");
+        $("#tipoCambio").val(tipoCambio ? tipoCambio : '0.00');
     }
-    
-    function restartTotales() {
-        subtotal = 0.00;
-        $("#idTotal").val(subtotal.toFixed(2));
-        
-        // Reinicia el subtotal en el pie de página
-        $("#subtotalProducts").text(subtotal.toFixed(2));
-        $("#subtotalServicios").text(subtotal.toFixed(2));
-    }
-    
-    function reducirTotales(valor) {
-        var subtotal = parseFloat($("#idTotal").val());
-        if (isNaN(subtotal)) {
-            subtotal = 0;
-        }
-        subtotal -= valor;
-        $("#idTotal").val(subtotal.toFixed(2));
-        
-        // Actualiza el subtotal en el pie de página
-        if ($("#tblProducts").is(":visible")) {
-            $("#subtotalProducts").text(subtotal.toFixed(2));
-        } else if ($("#tblServicios").is(":visible")) {
-            $("#subtotalServicios").text(subtotal.toFixed(2));
-        }
-    } {% endcomment %}
+    // FIN DE CAMBIO
+
+
 
     function setTotales(valor) {
         var subtotal = parseFloat($("#idTotal").val());
@@ -595,89 +609,6 @@
         actualizarSubtotales();
     });
 
-    {% comment %} $("#btnAgregar").click(function (e) {
-        var option = document.getElementById("selectDetalle").value;
-        if (option === "0") {
-            if (verificar_datos_tabla("tblProducts")) {
-                $.confirm({
-                    theme: 'modern',
-                    title: 'Aviso',
-                    columnClass: 'medium',
-                    icon: 'fas fa-trash',
-                    type: 'orange',
-                    content: 'Si cambia el tipo de detalle, sus selecciones previas desaparecerán. ¿Desea continuar?',
-                    "language": {
-                        "sProcessing": "Procesando...",
-                        "sLengthMenu": "Mostrar _MENU_ registros",
-                        "sZeroRecords": "No se encontraron resultados",
-                        "sEmptyTable": "Ningún dato disponible en esta tabla",
-                        "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-                        "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
-                        "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-                        "sInfoPostFix": "",
-                        "sSearch": "Buscar:",
-                        "sUrl": "",
-                        "sInfoThousands": ",",
-                        "sLoadingRecords": "Cargando...",
-                        "oPaginate": {
-                            "sFirst": "Primero",
-                            "sLast": "Último",
-                            "sNext": "Siguiente",
-                            "sPrevious": "Anterior"
-                        },
-                        "oAria": {
-                            "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-                            "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-                        }
-                    },
-                    buttons: {
-                        confirm: function () {
-                            vents.delete();
-                            $("#tblProducts").hide();
-                            $("#tblProducts_wrapper").hide();
-                            $("#tblServicios").show();
-                            abrir_modal("{% url 'erp:listar_serv' %}");
-
-                        },
-                        cancel: function () {
-                        },
-                    }
-                });
-            } else {
-                $("#tblProducts").hide();
-                $("#tblProducts_wrapper").hide();
-                $("#tblServicios").show();
-                abrir_modal("{% url 'erp:listar_serv' %}");
-            }
-        } else if (option === "1") {
-            if (verificar_datos_tabla("tblServicios")) {
-                $.confirm({
-                    theme: 'modern',
-                    title: 'Aviso',
-                    columnClass: 'medium',
-                    icon: 'fas fa-trash',
-                    type: 'orange',
-                    content: 'Si cambia el tipo de detalle, sus selecciones previas desaparecerán. ¿Desea continuar?',
-                    buttons: {
-                        confirm: function () {
-                            servs.delete();
-                            $("#tblServicios").hide();
-                            $("#tblServicios_wrapper").hide();
-                            $("#tblProducts").show();
-                            abrir_modal("{% url 'erp:listar_prod' %}");
-                        },
-                        cancel: function () {
-                        },
-                    }
-                });
-            } else {
-                $("#tblServicios").hide();
-                $("#tblServicios_wrapper").hide();
-                $("#tblProducts").show();
-                abrir_modal("{% url 'erp:listar_prod' %}");
-            }
-        }
-    });     {% endcomment %}
 
     $("#btnAgregar").click(function (e) {
         // Validar selección de moneda

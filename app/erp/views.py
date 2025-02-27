@@ -1033,6 +1033,71 @@ def solicitudRechazarMasivo(request):
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+def solicitudRechazarMasivoPres(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            arrSolicitudes = data.get('ids', None)
+            if not arrSolicitudes:
+                return JsonResponse({'error': 'No se recibieron IDs'}, status=400)
+
+            with transaction.atomic():
+                for id in arrSolicitudes:
+                    solicitud = OPRQ.objects.filter(pk=id).first()
+                    if not solicitud:
+                        return JsonResponse({'error': f'Solicitud {id} no encontrada'}, status=404)
+
+                    # Obtener todos los detalles de la solicitud
+                    detalles = PRQ1.objects.filter(NumDoc=id)
+                    if not detalles.exists():
+                        return JsonResponse({'error': f'Detalles no encontrados para solicitud {id}'}, status=404)
+
+                    # Actualizar todos los detalles a rechazado
+                    detalles.update(LineStatus='R')
+
+                    # Verificar estado de todos los detalles
+                    total_detalles = detalles.count()
+                    detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
+                    detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                    detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
+                    detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
+                    detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
+
+                    # Determinar el nuevo estado
+                    if total_detalles == detalles_rechazados:
+                        # Si todos están rechazados
+                        OPRQ.objects.filter(pk=id).update(DocStatus="R")
+                    elif detalles_pendientes_P:
+                        # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
+                        # No hacemos update para mantener el DocStatus actual
+                        pass
+                    elif not detalles_pendientes_A:
+                        if detalles_cerrados + detalles_rechazados == total_detalles:
+                            # Si no hay pendientes y todos los demás están cerrados (C)
+                            OPRQ.objects.filter(pk=id).update(
+                                DocStatus="C",
+                                TipoDoc="OC"
+                            )
+                        elif not detalles_logistica:
+                            # Si no hay pendientes ni en logística, pero hay mezcla de C y R
+                            OPRQ.objects.filter(pk=id).update(DocStatus="C")
+
+                    # Crear validación
+                    validate = Validaciones()
+                    validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}"
+                    validate.codValidador = request.user.username
+                    validate.fecha = timezone.now()
+                    validate.estado = "Rechazado"
+                    validate.save()
+
+                return HttpResponse("OK")
+
+        except Exception as e:
+            msg = f"Error al insertar datos maestros: {str(e)}"
+            return JsonResponse({'error': msg}, status=500)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 
 def solicitudAprobar(request, id):
     if request.method == "POST":
@@ -1108,6 +1173,69 @@ def solicitudAprobar(request, id):
 
 
 def solicitudRechazar(request, id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            usuario = data.get('usuario', None)
+            items_rechazados = data.get('arrcheckedProd', [])
+            
+            if not items_rechazados:
+                return JsonResponse({'error': 'Debe seleccionar al menos un item para rechazar'}, status=400)
+
+            solicitud = OPRQ.objects.filter(pk=id).first()
+            if not solicitud:
+                return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
+            with transaction.atomic():
+                # Actualizar items seleccionados
+                detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
+                detalles_actualizados = detalles.update(LineStatus='R')
+
+                # Verificar estado de todos los detalles
+                total_detalles = PRQ1.objects.filter(NumDoc=id).count()
+                detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
+                detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
+                detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
+                detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
+                
+                # Determinar el nuevo estado
+                if total_detalles == detalles_rechazados:
+                    # Si todos están rechazados
+                    OPRQ.objects.filter(pk=id).update(DocStatus="R")
+                elif detalles_pendientes_P:
+                    # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
+                    # No hacemos update para mantener el DocStatus actual
+                    pass
+                elif not detalles_pendientes_A:
+                    if detalles_cerrados + detalles_rechazados == total_detalles:
+                        # Si no hay pendientes y todos los demás están cerrados (C)
+                        OPRQ.objects.filter(pk=id).update(
+                            DocStatus="C",
+                            TipoDoc="OC"
+                        )
+                    elif not detalles_logistica:
+                        # Si no hay pendientes ni en logística, pero hay mezcla de C y R
+                        OPRQ.objects.filter(pk=id).update(DocStatus="C")
+                    
+                validate = Validaciones()
+                validate.codReqUser = usuario
+                validate.codValidador = request.user.username
+                validate.fecha = timezone.now()
+                validate.estado = "Rechazado"
+                validate.save()
+                
+                send_email_to_user(0)
+                return HttpResponse("OK")
+
+        except Exception as e:
+            msg = f"Error al insertar datos maestros: {str(e)}"
+            return JsonResponse({'error': msg}, status=500)
+            
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+def solicitudRechazarPres(request, id):
     if request.method == "POST":
         try:
             data = json.loads(request.body)

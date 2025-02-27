@@ -29,4 +29,8 @@ urlpatterns = [
     path('contabilizadas/', ListContabilizadas.as_view(), name='listar_contabilizadas'),
     path('api/', include('erp.api.urls', namespace='api')),  # Namespace 'api' definido
     path('obtener_moneda/', obtener_moneda, name="obtener_moneda"),
+    path('solicitud/rechazarPres/<int:id>',solicitudRechazarPres, name="rechazar_solicitud_pres"),
+    path('rechazar_masivo_pres/', solicitudRechazarMasivoPres, name="rechazar_masivo_pres"),
+
+
 ]

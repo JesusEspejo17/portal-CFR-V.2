@@ -139,7 +139,7 @@
                 <button type="button" id="btnContabilizarMasivo" class="btn btn-success"
                     onclick=contabilizarMasivo()>Contabilizar
                     Elementos Selec.</button>
-                <button type="button" id="btnRechazarMasivo" class="btn btn-danger" onclick=rechazarMasivo()>Rechazar
+                <button type="button" id="btnRechazarMasivo" class="btn btn-danger" onclick=rechazarMasivoPres()>Rechazar
                     Elementos Selec.</button>
                 {% endif %}
             </div>
@@ -309,7 +309,7 @@
                         <div class="d-flex justify-content-center gap-2">
                             {% if edition_permissions %}
                             <button type="button" id="btnContabilizar" class="btn btn-success" onclick="contabilizar()">Contabilizar</button>
-                            <button type="button" id="btnRechazar" class="btn btn-danger" onclick="rechazar()">Rechazar</button>
+                            <button type="button" id="btnRechazar" class="btn btn-danger" onclick="rechazarPres()">Rechazar</button>
                             {% endif %}
                             <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
                         </div>
@@ -515,6 +515,97 @@
         });
     }
 
+    function rechazarPres() {
+        var id = $("#InputDocEntry").html();
+        var user = $("#detallesReqIdUser").text().trim();
+        
+        // Recoger items seleccionados
+        var arrcheckedProd = [];
+        $('input[name="chk-detalle"]:checked').each(function() {
+            arrcheckedProd.push(parseInt($(this).val()));
+        });
+
+        console.log('Items seleccionados:', arrcheckedProd);
+    
+        // Validar selección
+        if (arrcheckedProd.length === 0) {
+            $.alert({
+                title: 'Advertencia',
+                content: 'Debe seleccionar al menos un ítem para rechazar',
+                type: 'orange',
+                theme: 'modern'
+            });
+            return;
+        }
+    
+        var data = JSON.stringify({
+            id: id,
+            usuario: user,
+            arrcheckedProd: arrcheckedProd
+        });
+
+        console.log('Datos a enviar:', data);
+    
+        var token = '{{csrf_token}}';
+        $.confirm({
+            theme: 'modern',
+            title: 'Aviso',
+            columnClass: 'medium',
+            icon: 'fas fa-trash',
+            type: 'red',
+            content: '¿Desea rechazar la Solicitud de Compra N°: ' + id + '?',
+            buttons: {
+                confirm: function () {
+                    abrir_modal_cargar();
+                    $.ajax({
+                        headers: { "X-CSRFToken": token },
+                        type: "POST",
+                        url: "/erp/solicitud/rechazarPres/" + id,
+                        data: data,
+                        contentType: 'application/json',
+                        success: function (response) {
+                            if (response === "OK") {
+                                $.confirm({
+                                    title: 'Éxito',
+                                    content: 'La solicitud ha sido rechazada exitosamente.',
+                                    type: 'red',
+                                    theme: 'modern',
+                                    buttons: {
+                                        confirm: function () {
+                                            $('#modalCarga').modal('hide');
+                                            location.reload(true);
+                                        },
+                                    }
+                                });
+                            } else {
+                                $('#modalCarga').modal('hide');
+                                $.alert({
+                                    title: 'Error',
+                                    icon: 'fa fa-times-circle',
+                                    theme: 'modern',
+                                    type: 'red',
+                                    content: "Error Intentado Cambiar Estado a Cliente",
+                                    buttons: {
+                                        ok: function () {
+                                            text: 'OK';
+                                            btnClass: 'btn-danger'
+                                            $('#modalCarga').modal('hide');
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrow) {
+                            $('#modalCarga').modal('hide');
+                            console.log(textStatus, errorThrow, jqXHR);
+                        }
+                    });
+                },
+                cancel: function () {},
+            }
+        });
+    }
+
     function aprobarMasivo() {
         var table = $('#tblSolicitudes').DataTable();
         var selectedIds = [];
@@ -647,6 +738,95 @@
                             headers: { "X-CSRFToken": token },
                             type: "POST",
                             url: '/erp/rechazar_masivo/',
+                            data: JSON.stringify({ ids: selectedIds }),
+                            contentType: "application/json; charset=utf-8",
+                            success: function (response) {
+                                if (response === "OK") {
+                                    $.confirm({
+                                        title: 'Éxito',
+                                        content: 'Las solicitudes han sido rechazadas exitosamente.',
+                                        type: 'red',
+                                        theme: 'modern',
+                                        buttons: {
+                                            confirm: function () {
+                                                $('#modalCarga').modal('hide');
+                                                location.reload(true);
+                                            },
+                                        }
+                                    });
+                                }
+                                else {
+                                    $.alert({
+                                        title: 'Error',
+                                        icon: 'fa fa-times-circle',
+                                        theme: 'modern',
+                                        type: 'red',
+                                        content: "Error Intentado Cambiar Estado a Cliente",
+                                        buttons: {
+                                            ok: function () {
+                                                text: 'OK';
+                                                btnClass: 'btn-danger'
+                                                $('#modalCarga').modal('hide');
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrow) {
+                                console.log(textStatus, errorThrow, jqXHR);
+                            }
+                        });
+                    },
+                    cancel: function () {
+                    },
+                }
+            });
+            return;
+        }
+    }
+
+
+    function rechazarMasivoPres() {
+        var table = $('#tblSolicitudes').DataTable();
+        var selectedIds = [];
+        table.rows().every(function () {
+            var row = this.node();
+            var checkbox = $(row).find('input[type="checkbox"]');
+
+            // Si el checkbox está marcado, agrega el ID a la lista
+            if (checkbox.prop('checked')) {
+                selectedIds.push(checkbox.val());
+            }
+        });
+        if (selectedIds.length === 0) {
+            $.alert({
+                title: 'Aviso',
+                content: 'No se han seleccionado solicitudes de compras.',
+                type: 'red',
+                theme: 'modern',
+                buttons: {
+                    confirm: function () {
+
+                    },
+                }
+            });
+            return;
+        } else {
+            var token = '{{csrf_token}}';
+            $.confirm({
+                theme: 'modern',
+                title: 'Aviso',
+                columnClass: 'medium',
+                icon: 'fas fa-check',
+                type: 'red',
+                content: '¿Desea rechazar las solicitudes seleccionadas?',
+                buttons: {
+                    confirm: function () {
+                        abrir_modal_cargar();
+                        $.ajax({
+                            headers: { "X-CSRFToken": token },
+                            type: "POST",
+                            url: '/erp/rechazar_masivo_pres/',
                             data: JSON.stringify({ ids: selectedIds }),
                             contentType: "application/json; charset=utf-8",
                             success: function (response) {
