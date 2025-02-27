@@ -87,6 +87,7 @@
             serv: []
         },
         add: function (item) {
+            console.log("Item añadido:", item); // Depuración
             this.items.serv.push(item);
             this.list();
         },
@@ -100,21 +101,20 @@
                 columns: [
                     { "data": "codigo" },
                     { "data": "descripcion" },
-                    { "data": "precio" },
+                    { "data": "precio" }, // Aseguramos que se muestre el precio
                     { "data": "cuenta_contable", "defaultContent": "" },
                     { "data": "dimension", "defaultContent": "" },
                     { "data": "proveedor", "defaultContent": "" },
                     { "data": null }
                 ],
                 columnDefs: [
-                    // The precio definition stays the same (target: [2])
                     {
                         targets: [2],
                         render: function (data, type, row) {
-                            return '<input type="number" class="form-control editable-input" data-type="precioSlt" name="precio" id="precio" value="' + data + '">';
+                            console.log("Renderizando precio:", data); // Depuración
+                            return '<input type="number" class="form-control editable-input" data-type="precioSlt" name="precio" id="precio" value="' + data + '">'; // Aseguramos que el campo de precio se inicialice con el valor correcto
                         }
                     },
-                    // Delete button stays the same (target: [-1])
                     {
                         targets: [-1],
                         class: "text-center",
@@ -123,7 +123,6 @@
                             return '<a rel="remove" class="btn btn-danger btn-xs btn-flat"><i class="fas fa-trash-alt"></i></a>';
                         }
                     },
-                    // Proveedor moves to -2
                     {
                         targets: [-2],  // Campo proveedor
                         render: function (data, type, row) {
@@ -269,6 +268,44 @@
         },
     }
 
+    // Obtener el valor de TipoCambio
+    var tipoCambio = parseFloat($("#tipoCambio").val());
+    console.log("Valor de tipoCambio:", tipoCambio); // Depuración
+
+    if (isNaN(tipoCambio) || tipoCambio <= 0) {
+        console.error("El valor de TipoCambio no es válido:", tipoCambio);
+        tipoCambio = 1; // Asignar un valor por defecto para evitar NaN
+    }
+
+    // Obtener la moneda seleccionada
+    var monedaSeleccionada = $("#selecMoneda option:selected").text();
+    console.log("Moneda seleccionada:", monedaSeleccionada); // Depuración
+
+    // Ajustar los precios unitarios al cargar la tabla
+    $('#tblServ tbody tr').each(function() {
+        var precioUnitario = parseFloat($(this).find('td:eq(2)').text());
+        if (!isNaN(precioUnitario)) {
+            var precioAjustado = (precioUnitario / tipoCambio).toFixed(2);
+            var precioConMoneda = agregarSimboloMoneda(precioAjustado, monedaSeleccionada);
+            $(this).find('td:eq(2)').text(precioConMoneda);
+        } else {
+            console.error("El precio unitario no es válido:", precioUnitario);
+        }
+    });
+
+    function agregarSimboloMoneda(precio, moneda) {
+        switch (moneda) {
+            case 'USD':
+                return '$' + precio;
+            case 'EUR':
+                return '€' + precio;
+            case 'SOL':
+                return 'S/ ' + precio;
+            default:
+                return precio;
+        }
+    }
+
     $('#tblServSeleccionados').on('change', '.editable-cell select', function () {
         var type = $(this).attr('data-type');
         var rowIndex = tblSlctServices.cell($(this).closest('td')).index().row;
@@ -286,7 +323,6 @@
             default:
                 break;
         }
-
     });
 
     $('#tblServSeleccionados').on('change', '.editable-cell input[type="number"]', function () {
@@ -296,6 +332,7 @@
         var newValue = $(this).val();
         selectedSrv.items.serv[rowIndex].precio = newValue;
     });
+    
 
     $('#tblServ').DataTable({
         width: '100%',
@@ -325,16 +362,37 @@
 		">"
     });
 
+
+
+    //Serivicos Seleccionados del modal
     function seleccionarServicio(codigo, descripcion, precio, button) {
         button.classList.replace("btn-warning", "btn-success");
+    
+        var tipoCambio = parseFloat($("#tipoCambio").val());
+        console.log("Valor de tipoCambio:", tipoCambio); // Depuración
+    
+        if (isNaN(tipoCambio) || tipoCambio <= 0) {
+            console.error("El valor de TipoCambio no es válido:", tipoCambio);
+            tipoCambio = 1; // Asignar un valor por defecto para evitar NaN
+        }
+    
+        var precioNumerico = parseFloat(precio);
+        if (isNaN(precioNumerico)) {
+            console.error("El precio no es válido:", precio);
+            precioNumerico = 0; // Asignar un valor por defecto para evitar NaN
+        }
+    
+        var precioAjustado = (precioNumerico / tipoCambio).toFixed(2); // Ajustar precio al seleccionar
+        console.log("Precio ajustado:", precioAjustado); // Depuración
+    
         context = {
             'codigo': codigo,
             'descripcion': descripcion,
-            'precio': precio,
+            'precio': precioAjustado, // Aseguramos que se pase el precio ajustado
             'cuenta_contable': '', // Inicializamos vacío
             'proveedor': '',      // Inicializamos vacío
             'dimension': ''       // Inicializamos vacío
-        }
+        };
         selectedSrv.add(context);
     }
     

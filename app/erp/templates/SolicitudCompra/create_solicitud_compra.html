@@ -122,8 +122,8 @@
                     </div>
                     <div class="form-group">
                         <label>Tipo de Cambio:</label>
-                        <input type="text" readonly="true" name="TipoCambio" class="form-control form-control-solid text-right" id="tipoCambio" value="0.00" required>
-                    </div>
+                        <input type="text" readonly="true" name="TipoCambio" class="form-control form-control-solid text-right" id="" value="0.00" required>
+                    </div>tipoCambio
 
 
                     <div class="form-group">
@@ -595,7 +595,7 @@
         actualizarSubtotales();
     });
 
-    $("#btnAgregar").click(function (e) {
+    {% comment %} $("#btnAgregar").click(function (e) {
         var option = document.getElementById("selectDetalle").value;
         if (option === "0") {
             if (verificar_datos_tabla("tblProducts")) {
@@ -677,7 +677,85 @@
                 abrir_modal("{% url 'erp:listar_prod' %}");
             }
         }
-    });    
+    });     {% endcomment %}
+
+    $("#btnAgregar").click(function (e) {
+        // Validar selección de moneda
+        var selectedMoneda = $("#selecMoneda").val();
+        if (!selectedMoneda) {
+            $.alert({
+                title: 'Advertencia',
+                icon: 'fa fa-exclamation-triangle',
+                theme: 'modern',
+                type: 'orange',
+                content: 'Por favor, seleccione una moneda antes de agregar un detalle.',
+                buttons: {
+                    ok: {
+                        text: 'OK',
+                        btnClass: 'btn-warning'
+                    }
+                }
+            });
+            return; // Evita que se ejecute el resto del código
+        }
+    
+        var option = document.getElementById("selectDetalle").value;
+        if (option === "0") {
+            if (verificar_datos_tabla("tblProducts")) {
+                $.confirm({
+                    theme: 'modern',
+                    title: 'Aviso',
+                    columnClass: 'medium',
+                    icon: 'fas fa-trash',
+                    type: 'orange',
+                    content: 'Si cambia el tipo de detalle, sus selecciones previas desaparecerán. ¿Desea continuar?',
+                    buttons: {
+                        confirm: function () {
+                            vents.delete();
+                            $("#tblProducts").hide();
+                            $("#tblProducts_wrapper").hide();
+                            $("#tblServicios").show();
+                            abrir_modal("{% url 'erp:listar_serv' %}");
+                        },
+                        cancel: function () {
+                        },
+                    }
+                });
+            } else {
+                $("#tblProducts").hide();
+                $("#tblProducts_wrapper").hide();
+                $("#tblServicios").show();
+                abrir_modal("{% url 'erp:listar_serv' %}");
+            }
+        } else if (option === "1") {
+            if (verificar_datos_tabla("tblServicios")) {
+                $.confirm({
+                    theme: 'modern',
+                    title: 'Aviso',
+                    columnClass: 'medium',
+                    icon: 'fas fa-trash',
+                    type: 'orange',
+                    content: 'Si cambia el tipo de detalle, sus selecciones previas desaparecerán. ¿Desea continuar?',
+                    buttons: {
+                        confirm: function () {
+                            servs.delete();
+                            $("#tblServicios").hide();
+                            $("#tblServicios_wrapper").hide();
+                            $("#tblProducts").show();
+                            abrir_modal("{% url 'erp:listar_prod' %}");
+                        },
+                        cancel: function () {
+                        },
+                    }
+                });
+            } else {
+                $("#tblServicios").hide();
+                $("#tblServicios_wrapper").hide();
+                $("#tblProducts").show();
+                abrir_modal("{% url 'erp:listar_prod' %}");
+            }
+        }
+    });
 
     
     var tblProducts;
