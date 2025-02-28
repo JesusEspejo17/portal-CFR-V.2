@@ -524,9 +524,9 @@
         $('input[name="chk-detalle"]:checked').each(function() {
             arrcheckedProd.push(parseInt($(this).val()));
         });
-
-        console.log('Items seleccionados:', arrcheckedProd);
     
+        console.log('Items seleccionados:', arrcheckedProd);
+        
         // Validar selección
         if (arrcheckedProd.length === 0) {
             $.alert({
@@ -537,15 +537,15 @@
             });
             return;
         }
-    
+        
         var data = JSON.stringify({
             id: id,
             usuario: user,
             arrcheckedProd: arrcheckedProd
         });
-
-        console.log('Datos a enviar:', data);
     
+        console.log('Datos a enviar:', data);
+        
         var token = '{{csrf_token}}';
         $.confirm({
             theme: 'modern',
@@ -564,32 +564,32 @@
                         data: data,
                         contentType: 'application/json',
                         success: function (response) {
-                            if (response === "OK") {
+                            $('#modalCarga').modal('hide');
+                            // Verificar si la respuesta tiene un message (éxito o advertencia)
+                            if (response && response.message) {
                                 $.confirm({
                                     title: 'Éxito',
-                                    content: 'La solicitud ha sido rechazada exitosamente.',
-                                    type: 'red',
+                                    content: response.message, // Usar el mensaje devuelto por el backend
+                                    type: response.sap_status === 'Error' ? 'orange' : 'red', // Cambiar color si hay error en SAP
                                     theme: 'modern',
                                     buttons: {
                                         confirm: function () {
-                                            $('#modalCarga').modal('hide');
                                             location.reload(true);
-                                        },
+                                        }
                                     }
                                 });
+                                console.log('Detalles del rechazo:', response);
                             } else {
-                                $('#modalCarga').modal('hide');
                                 $.alert({
                                     title: 'Error',
                                     icon: 'fa fa-times-circle',
                                     theme: 'modern',
                                     type: 'red',
-                                    content: "Error Intentado Cambiar Estado a Cliente",
+                                    content: "Respuesta inesperada del servidor",
                                     buttons: {
                                         ok: function () {
                                             text: 'OK';
-                                            btnClass: 'btn-danger'
-                                            $('#modalCarga').modal('hide');
+                                            btnClass: 'btn-danger';
                                         }
                                     }
                                 });
@@ -597,6 +597,19 @@
                         },
                         error: function (jqXHR, textStatus, errorThrow) {
                             $('#modalCarga').modal('hide');
+                            $.alert({
+                                title: 'Error',
+                                icon: 'fa fa-times-circle',
+                                theme: 'modern',
+                                type: 'red',
+                                content: jqXHR.responseJSON ? jqXHR.responseJSON.error : "Error en la solicitud",
+                                buttons: {
+                                    ok: function () {
+                                        text: 'OK';
+                                        btnClass: 'btn-danger';
+                                    }
+                                }
+                            });
                             console.log(textStatus, errorThrow, jqXHR);
                         }
                     });
@@ -697,93 +710,6 @@
             return;
         }
     }
-    {% comment %} function rechazarMasivo() {
-        var table = $('#tblSolicitudes').DataTable();
-        var selectedIds = [];
-        table.rows().every(function () {
-            var row = this.node();
-            var checkbox = $(row).find('input[type="checkbox"]');
-
-            // Si el checkbox está marcado, agrega el ID a la lista
-            if (checkbox.prop('checked')) {
-                selectedIds.push(checkbox.val());
-            }
-        });
-        if (selectedIds.length === 0) {
-            $.alert({
-                title: 'Aviso',
-                content: 'No se han seleccionado solicitudes de compras.',
-                type: 'red',
-                theme: 'modern',
-                buttons: {
-                    confirm: function () {
-
-                    },
-                }
-            });
-            return;
-        } else {
-            var token = '{{csrf_token}}';
-            $.confirm({
-                theme: 'modern',
-                title: 'Aviso',
-                columnClass: 'medium',
-                icon: 'fas fa-check',
-                type: 'red',
-                content: '¿Desea rechazar las solicitudes seleccionadas?',
-                buttons: {
-                    confirm: function () {
-                        abrir_modal_cargar();
-                        $.ajax({
-                            headers: { "X-CSRFToken": token },
-                            type: "POST",
-                            url: '/erp/rechazar_masivo/',
-                            data: JSON.stringify({ ids: selectedIds }),
-                            contentType: "application/json; charset=utf-8",
-                            success: function (response) {
-                                if (response === "OK") {
-                                    $.confirm({
-                                        title: 'Éxito',
-                                        content: 'Las solicitudes han sido rechazadas exitosamente.',
-                                        type: 'red',
-                                        theme: 'modern',
-                                        buttons: {
-                                            confirm: function () {
-                                                $('#modalCarga').modal('hide');
-                                                location.reload(true);
-                                            },
-                                        }
-                                    });
-                                }
-                                else {
-                                    $.alert({
-                                        title: 'Error',
-                                        icon: 'fa fa-times-circle',
-                                        theme: 'modern',
-                                        type: 'red',
-                                        content: "Error Intentado Cambiar Estado a Cliente",
-                                        buttons: {
-                                            ok: function () {
-                                                text: 'OK';
-                                                btnClass: 'btn-danger'
-                                                $('#modalCarga').modal('hide');
-                                            }
-                                        }
-                                    });
-                                }
-                            },
-                            error: function (jqXHR, textStatus, errorThrow) {
-                                console.log(textStatus, errorThrow, jqXHR);
-                            }
-                        });
-                    },
-                    cancel: function () {
-                    },
-                }
-            });
-            return;
-        }
-    } {% endcomment %}
 
     function rechazarMasivo() {
         var table = $('#tblSolicitudes').DataTable();
@@ -955,39 +881,44 @@
                             data: JSON.stringify({ ids: selectedIds, arrcheckedProd: checkedProd }),
                             contentType: "application/json; charset=utf-8",
                             success: function (response) {
-                                if (response === "OK") {
+                                $('#modalCarga').modal('hide');
+                                if (response && response.solicitudes) {
+                                    // Construir mensaje con los resultados de cada solicitud
+                                    {% comment %} var messages = response.solicitudes.map(s => 
+                                        `${s.solicitud_id}: ${s.message}`
+                                    ).join('\n'); {% endcomment %}
+                                    var hasError = response.solicitudes.some(s => s.sap_status === 'Error');
+    
                                     $.confirm({
                                         title: 'Éxito',
                                         content: 'Las solicitudes han sido rechazadas exitosamente.',
-                                        type: 'red',
+                                        type: hasError ? 'orange' : 'red', // Naranja si hay error en SAP, rojo si todo es éxito
                                         theme: 'modern',
                                         buttons: {
                                             confirm: function () {
-                                                $('#modalCarga').modal('hide');
                                                 location.reload(true);
                                             }
                                         }
                                     });
+                                    console.log('Detalles del rechazo masivo:', response);
                                 } else {
                                     $.alert({
                                         title: 'Error',
                                         icon: 'fa fa-times-circle',
                                         theme: 'modern',
                                         type: 'red',
-                                        content: "Error Intentado Cambiar Estado a Cliente",
+                                        content: "Respuesta inesperada del servidor",
                                         buttons: {
                                             ok: {
                                                 text: 'OK',
-                                                btnClass: 'btn-danger',
-                                                action: function () {
-                                                    $('#modalCarga').modal('hide');
-                                                }
+                                                btnClass: 'btn-danger'
                                             }
                                         }
                                     });
                                 }
                             },
                             error: function (jqXHR, textStatus, errorThrown) {
+                                $('#modalCarga').modal('hide');
                                 console.log("Error en rechazarMasivo:", textStatus, errorThrown, jqXHR);
                                 var errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error : 'Error desconocido';
                                 $.alert({
@@ -996,8 +927,9 @@
                                     type: 'red',
                                     theme: 'modern',
                                     buttons: {
-                                        ok: function () {
-                                            $('#modalCarga').modal('hide');
+                                        ok: {
+                                            text: 'OK',
+                                            btnClass: 'btn-danger'
                                         }
                                     }
                                 });
@@ -1122,69 +1054,6 @@
         }
     }
 
-    {% comment %} function contabilizar() {
-        var id = $("#InputDocEntry").html();
-        var user = $("#detallesReqIdUser").text().trim();
-        var data = { id: id, usuario: user };
-        data = JSON.stringify(data);
-        var token = '{{csrf_token}}';
-        $.confirm({
-            theme: 'modern',
-            title: 'Confirmación',
-            columnClass: 'medium',
-            icon: 'fas fa-check',
-            type: 'green',
-            content: '¿Desea contabilizar la Solicitud de Compra N°: ' + id + '?',
-            buttons: {
-                confirm: function () {
-                    abrir_modal_cargar();
-                    $.ajax({
-                        headers: { "X-CSRFToken": token },
-                        type: "POST",
-                        url: "/erp/solicitud/contabilizar/" + id,
-                        data: data,
-                        success: function (response) {
-                            if (response === "OK") {
-                                $.confirm({
-                                    title: 'Éxito',
-                                    content: 'La solicitud ha sido contabilizada exitosamente.',
-                                    type: 'green',
-                                    theme: 'modern',
-                                    buttons: {
-                                        confirm: function () {
-                                            $('#modalCarga').modal('hide');
-                                            location.reload(true);
-                                        },
-                                    }
-                                });
-                            }
-                            else {
-                                $.alert({
-                                    title: 'Error',
-                                    icon: 'fa fa-times-circle',
-                                    theme: 'modern',
-                                    type: 'red',
-                                    content: "Error Intentado Cambiar Estado a Cliente",
-                                    buttons: {
-                                        ok: function () {
-                                            text: 'OK';
-                                            btnClass: 'btn-danger'
-                                            $('#modalCarga').modal('hide');
-                                        }
-                                    }
-                                });
-                            }
-                        },
-                        error: function (jqXHR, textStatus, errorThrow) {
-                            console.log(textStatus, errorThrow, jqXHR);
-                        }
-                    });
-                },
-                cancel: function () {
-                },
-            }
-        });
-    } {% endcomment %}
 
     function contabilizar() {
         var id = $("#InputDocEntry").html();
