@@ -324,6 +324,17 @@ def obtener_impuesto(request):
     else:
         return JsonResponse({'error': 'Nombre de impuesto no proporcionado'}, status=400)
     
+def obtener_impuesto_logistica(request):
+    tax_code = request.GET.get('TaxCode', None)
+    if tax_code:
+        try:
+            impuesto = OSTA.objects.get(Code=tax_code)
+            return JsonResponse({'rate': impuesto.Rate})
+        except OSTA.DoesNotExist:
+            return JsonResponse({'error': 'Impuesto no encontrado'}, status=404)
+    else:
+        return JsonResponse({'error': 'Código de impuesto no proporcionado'}, status=400)
+    
 def obtener_numero_serie(request):
     serie = request.GET.get('numSerie', None)
     if serie:

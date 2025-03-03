@@ -2,9 +2,8 @@ $(document).ready(function () {
     iniciarTabla();
 });
 
+let TAX_RATE = 0.00; // Solo para inicializar valor
 
-// Variables globales para manejar impuestos (ajusta la tasa según tu necesidad)
-const TAX_RATE = 0.18; // 18% de impuesto, por ejemplo, IGV en Perú
 
 function iniciarTabla() {
     tableContabilizados = $('#tblContabilizados').DataTable({
@@ -149,6 +148,8 @@ function iniciarTabla() {
                 var $checkbox = $(this);
                 var table = $('#tblContabilizados').DataTable();
                 var rowDataC = table.row($checkbox.closest('tr')).data();
+                obtenerTaxRate(rowDataC.TaxCode); // Obtener la tasa de impuesto basada en el TaxCode de la solicitud
+
                 if ($checkbox.is(':checked')) {
                     if (rowDataC.DocType === 'I') {
                         $.ajax({
@@ -1256,11 +1257,30 @@ function limpiarCheckboxesContabilizados() {
 }
 
 
-
-
-
-
-
+// Función para obtener la tasa de impuesto desde el backend para LOGISTICA
+function obtenerTaxRate(taxCode) {
+    console.log('Obteniendo tasa de impuesto para:', taxCode);
+    $.ajax({
+        url: '/erp/obtener_impuesto_logistica/',
+        type: 'GET',
+        data: {
+            'TaxCode': taxCode
+        },
+        success: function (response) {
+            if (response.rate) {
+                TAX_RATE = response.rate;
+                console.log('Tasa de impuesto obtenida:', TAX_RATE);
+                updateSubtotals('productos');
+                updateSubtotals('servicios');
+            } else {
+                console.error('Error al obtener la tasa de impuesto:', response.error);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error en la solicitud AJAX:', error);
+        }
+    });
+}
 
 
 // Función para calcular y actualizar subtotales
@@ -1279,6 +1299,11 @@ function updateSubtotals(type) {
     // Calcular subtotal
     let subtotal = items.reduce((sum, item) => sum + (item.Quantity * item.Precio), 0);
     let subtotalConImpuestos = subtotal * (1 + TAX_RATE);
+
+    // Log para verificar los cálculos
+    console.log(`Calculando subtotales para ${type}`);
+    console.log(`Subtotal: ${subtotal.toFixed(2)}`);
+    console.log(`Subtotal con impuestos (${TAX_RATE * 100}%): ${subtotalConImpuestos.toFixed(2)}`);
 
     // Actualizar elementos en el tfoot
     subtotalElement.text(`S/. ${subtotal.toFixed(2)}`);
