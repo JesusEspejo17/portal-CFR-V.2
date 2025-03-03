@@ -287,14 +287,18 @@ $(function initializeDataTable() {
                 render: function (data, type, row) {
                     if (type === 'display' || type === 'filter') {
                         if (row.DocStatus === 'R') {
-                            return '<span class="badge badge-warning" style="background-color: #f8285a;">No Aprobado</span>'; // Badge rojo
+                            if (row.DocNumSAP) {
+                                return `<span class="">${row.DocNumSAP}</span>`; // Mostrar DocNumSAP si existe
+                            } else {
+                                return '<span class="badge badge-warning" style="background-color: #f8285a;">No Aprobado</span>'; // Badge rojo
+                            }
                         }
                         if (!data) {
-                            return '<span class="badge badge-warning" style="background-color: #f6c000 ;">Aun no Aprobado</span>'; // Badge rojo
+                            return '<span class="badge badge-warning" style="background-color: #f6c000;">Aun no Aprobado</span>'; // Badge amarillo
                         }
                         return data; // Si data es válido, devolverlo
                     }
-                    return data; // Para otros tipos, devolver el dato sin cambios
+                    return data;
                 }
             },
             // {
