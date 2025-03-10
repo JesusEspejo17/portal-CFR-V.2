@@ -10,60 +10,6 @@ import smtplib
 
 
 # EMAILS AREA GENERAL
-
-# def send_email_to_general():
-#     try:
-#         mailServer = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
-#         mailServer.starttls()
-#         mailServer.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
-        
-#         # Obtener todos los usuarios del grupo 'Jefe_De_Area'
-#         grupo = Group.objects.get(name='Jefe_De_Area')
-#         usuarios = grupo.user_set.all()  # Obtener todos los usuarios del grupo
-        
-#         for user in usuarios:
-#             email_to = user.email
-#             mensaje = MIMEMultipart()
-#             mensaje['From'] = EMAIL_HOST_USER
-#             mensaje['To'] = email_to
-#             mensaje['Subject'] = "Tienes un correo del Portal de Requerimientos"
-#             content = render_to_string('emails/General/nuevo_email_gen.html')
-#             mensaje.attach(MIMEText(content, 'html'))
-#             mailServer.sendmail(EMAIL_HOST_USER, email_to, mensaje.as_string())
-#             print(f"Correo enviado a {email_to}")
-        
-#     except Group.DoesNotExist:
-#         print("El grupo 'Jefe_De_Area' no existe")
-#     except Exception as e:
-#         print(f"Error al enviar correos al grupo Jefe_De_Area: {str(e)}")
-
-
-# def send_email_to_user_general(option, user):
-#     try:
-#         mailServer = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
-#         mailServer.starttls()
-#         mailServer.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
-        
-#         # Usar el correo del usuario que creó la solicitud
-#         email_to = user.email  # Asume que User tiene un campo 'email'
-#         mensaje = MIMEMultipart()
-#         mensaje['From'] = EMAIL_HOST_USER
-#         mensaje['To'] = email_to
-        
-#         if option == 1:
-#             mensaje['Subject'] = "Solicitud aprobada"
-#             content = render_to_string('emails/General/email_aprobada_gen.html')
-#         elif option == 0:
-#             mensaje['Subject'] = "Solicitud rechazada"  # Cambié el mensaje para reflejar la creación
-#             content = render_to_string('emails/General/email_rechazada_gen.html')  # Ajusta la plantilla si es necesario
-#         mensaje.attach(MIMEText(content, 'html'))
-#         mailServer.sendmail(EMAIL_HOST_USER, email_to, mensaje.as_string())
-#         print(f"Correo enviado a {email_to}")
-#     except Exception as e:
-#         print(f"Error al enviar correo a {user.email}: {str(e)}")
-        
-
-# EMAILS AREA GENERAL
 def send_email_to_general(solicitud):  # Añadimos el argumento solicitud
     try:
         mailServer = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
@@ -114,9 +60,9 @@ def send_email_to_general(solicitud):  # Añadimos el argumento solicitud
         print("El grupo 'Jefe_De_Area' no existe")
     except Exception as e:
         print(f"Error al enviar correos al grupo Jefe_De_Area: {str(e)}")
+        
 
-# Resto de las funciones (send_email_to_user_general, etc.) pueden ajustarse de manera similar si lo necesitas
-def send_email_to_user_general(option, user, solicitud=None):
+def send_email_to_user_general(option, user, solicitud):  # Añadimos el parámetro solicitud
     try:
         mailServer = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
         mailServer.starttls()
@@ -127,29 +73,105 @@ def send_email_to_user_general(option, user, solicitud=None):
         mensaje['From'] = EMAIL_HOST_USER
         mensaje['To'] = email_to
         
+        # Preparar el contexto base que será común para ambos casos
+        contexto = {
+            'nombre_empleado': f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud.ReqIdUser else "Desconocido",
+            'tipo_documento': solicitud.DocType,
+            'moneda': solicitud.moneda.MonedaAbrev if solicitud.moneda else "No especificada",
+            'tax_code': solicitud.TaxCode.Code if solicitud.TaxCode else "No especificado",
+            'doc_entry': solicitud.DocEntry,
+        }
+
         if option == 1:
             mensaje['Subject'] = "Solicitud aprobada"
-            contexto = {
-                'nombre_empleado': f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud and solicitud.ReqIdUser else user.username,
-                'tipo_documento': solicitud.DocType if solicitud else "No especificado",
-                'moneda': solicitud.moneda.MonedaAbrev if solicitud and solicitud.moneda else "No especificada",
-                'tax_code': solicitud.TaxCode.Code if solicitud and solicitud.TaxCode else "No especificado"
-            }
+            
+            # Obtener los detalles aprobados y rechazados
+            detalles_aprobados = PRQ1.objects.filter(
+                NumDoc=solicitud,
+                LineStatus='A'
+            ).select_related('ItemCode')
+            
+            detalles_rechazados = PRQ1.objects.filter(
+                NumDoc=solicitud,
+                LineStatus='R'
+            ).select_related('ItemCode')
+            
+            # Preparar las listas de detalles
+            detalles_aprobados_lista = []
+            for detalle in detalles_aprobados:
+                detalles_aprobados_lista.append({
+                    'code': detalle.ItemCode.ItemCode if detalle.ItemCode else "No especificado",
+                    'description': detalle.Description,
+                    'quantity': detalle.Quantity,
+                    'precio': detalle.Precio,
+                    'total': detalle.total,
+                    'totalimpdet': detalle.totalimpdet,
+                })
+            
+            detalles_rechazados_lista = []
+            for detalle in detalles_rechazados:
+                detalles_rechazados_lista.append({
+                    'code': detalle.ItemCode.ItemCode if detalle.ItemCode else "No especificado",
+                    'description': detalle.Description,
+                    'quantity': detalle.Quantity,
+                    'precio': detalle.Precio,
+                    'total': detalle.total,
+                    'totalimpdet': detalle.totalimpdet,
+                })
+            
+            # Agregar los detalles al contexto
+            contexto.update({
+                'detalles_aprobados': detalles_aprobados_lista,
+                'detalles_rechazados': detalles_rechazados_lista
+            })
+            
             content = render_to_string('emails/General/email_aprobada_gen.html', contexto)
         elif option == 0:
             mensaje['Subject'] = "Solicitud rechazada"
-            contexto = {
-                'nombre_empleado': f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud and solicitud.ReqIdUser else user.username,
-                'tipo_documento': solicitud.DocType if solicitud else "No especificado",
-                'moneda': solicitud.moneda.MonedaAbrev if solicitud and solicitud.moneda else "No especificada",
-                'tax_code': solicitud.TaxCode.Code if solicitud and solicitud.TaxCode else "No especificado"
-            }
+            
+            # Obtener conteos de estados
+            total_items = PRQ1.objects.filter(NumDoc=solicitud).count()
+            items_rechazados = PRQ1.objects.filter(NumDoc=solicitud, LineStatus='R').count()
+            
+            # Determinar si es rechazo total o parcial
+            contexto['es_rechazo_total'] = (total_items == items_rechazados)
+            
+            # Obtener detalles rechazados
+            detalles_rechazados = PRQ1.objects.filter(
+                NumDoc=solicitud,
+                LineStatus='R'
+            ).select_related('ItemCode')
+            
+            detalles_rechazados_lista = []
+            for detalle in detalles_rechazados:
+                detalles_rechazados_lista.append({
+                    'code': detalle.ItemCode.ItemCode if detalle.ItemCode else "No especificado",
+                    'description': detalle.Description,
+                    'quantity': detalle.Quantity,
+                    'precio': detalle.Precio,
+                    'total': detalle.total,
+                    'totalimpdet': detalle.totalimpdet,
+                })
+            
+            contexto['detalles_rechazados'] = detalles_rechazados_lista
+            
             content = render_to_string('emails/General/email_rechazada_gen.html', contexto)
+            
+            
         mensaje.attach(MIMEText(content, 'html'))
         mailServer.sendmail(EMAIL_HOST_USER, email_to, mensaje.as_string())
         print(f"Correo enviado a {email_to}")
     except Exception as e:
         print(f"Error al enviar correo a {user.email}: {str(e)}")
+
+
+
+
+
+
+
+
+
 
 
 # EMAILS AREA PRESUPUESTOS

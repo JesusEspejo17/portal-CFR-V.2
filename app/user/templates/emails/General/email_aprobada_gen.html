@@ -220,14 +220,111 @@
                                                     </table>
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-															<td class="pad" style="padding-left:38px;padding-right:38px;padding-top:10px;">
-																<div style="color:#555555;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;line-height:150%;text-align:center;mso-line-height-alt:24px;">
-																	<p style="margin: 0;">
-																		Tu solicitud de compra acaba de ser <span style="background-color:rgb(29, 216, 72); color: white; padding: 2px 6px; border-radius: 8px;">APROBADA</span> por el Jefe de Área General a cargo, a su vez, acaba de ser remitida para su Contabilización.
-																	</p>
-																</div>
-															</td>
-														</tr>
+                                                            <td class="pad" style="padding-left:38px;padding-right:38px;padding-top:10px;">
+                                                                <div style="color:#555555;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;line-height:150%;text-align:center;mso-line-height-alt:24px;">
+                                                                    <p style="margin: 0;">
+                                                                        Tu solicitud de compra acaba de ser <span style="background-color:rgb(29, 216, 72); color: white; padding: 2px 6px; border-radius: 8px;">APROBADA</span> por el Jefe de Área General<br>
+                                                                        <strong>Empleado:</strong> {{ nombre_empleado }}<br>
+                                                                        <strong>Tipo de Documento:</strong> 
+                                                                        <span class="badge badge-primary">
+                                                                            {% if tipo_documento == 'i' %}
+                                                                                Artículo
+                                                                            {% elif tipo_documento == 'S' %}
+                                                                                Servicio
+                                                                            {% else %}
+                                                                                {{ tipo_documento }}
+                                                                            {% endif %}
+                                                                        </span><br>
+                                                                        <strong>Moneda:</strong> {{ moneda }}<br>
+                                                                        <strong>Impuesto:</strong> {{ tax_code }}<br>
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    
+                                                    <!-- Nueva tabla para los detalles APROBADOS -->
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-left:38px;padding-right:38px;padding-top:20px;">
+                                                                <div style="color:#555555;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;line-height:150%;text-align:center;mso-line-height-alt:24px;">
+                                                                    <p style="margin: 0; font-weight: bold;">
+                                                                        SOLICITUD: {{ doc_entry }}
+                                                                    </p>
+                                                                    <p style="margin: 10px 0; font-weight: bold; color: #1DD848;">
+                                                                        ITEMS APROBADOS
+                                                                    </p>
+                                                                    <!-- Tabla de detalles aprobados -->
+                                                                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+                                                                        <thead>
+                                                                            <tr style="background-color: #f0f0f0;">
+                                                                                <th>Ítem</th>
+                                                                                <th>Code</th>
+                                                                                <th>Description</th>
+                                                                                <th>Quantity</th>
+                                                                                <th>Precio</th>
+                                                                                <th>Total</th>
+                                                                                <th>Total con Impuestos</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {% for detalle in detalles_aprobados %}
+                                                                            <tr>
+                                                                                <td>{{ forloop.counter }}</td>
+                                                                                <td>{{ detalle.code }}</td>
+                                                                                <td>{{ detalle.description }}</td>
+                                                                                <td>{{ detalle.quantity }}</td>
+                                                                                <td>{{ detalle.precio }}</td>
+                                                                                <td>{{ detalle.total }}</td>
+                                                                                <td>{{ detalle.totalimpdet }}</td>
+                                                                            </tr>
+                                                                            {% empty %}
+                                                                            <tr>
+                                                                                <td colspan="7" style="text-align: center;">No hay items aprobados.</td>
+                                                                            </tr>
+                                                                            {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                    
+                                                                    {% if detalles_rechazados %}
+                                                                    <!-- Tabla de items RECHAZADOS -->
+                                                                    <p style="margin: 20px 0; font-weight: bold; color: #FF4444;">
+                                                                        ITEMS RECHAZADOS
+                                                                    </p>
+                                                                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+                                                                        <thead>
+                                                                            <tr style="background-color: #f0f0f0;">
+                                                                                <th>Ítem</th>
+                                                                                <th>Code</th>
+                                                                                <th>Description</th>
+                                                                                <th>Quantity</th>
+                                                                                <th>Precio</th>
+                                                                                <th>Total</th>
+                                                                                <th>Total con Impuestos</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {% for detalle in detalles_rechazados %}
+                                                                            <tr>
+                                                                                <td>{{ forloop.counter }}</td>
+                                                                                <td>{{ detalle.code }}</td>
+                                                                                <td>{{ detalle.description }}</td>
+                                                                                <td>{{ detalle.quantity }}</td>
+                                                                                <td>{{ detalle.precio }}</td>
+                                                                                <td>{{ detalle.total }}</td>
+                                                                                <td>{{ detalle.totalimpdet }}</td>
+                                                                            </tr>
+                                                                            {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                                    {% endif %}
+                                                    
+                                                                    <p style="margin-top: 20px;">
+                                                                        Puedes encontrarla en tu panel de Solicitudes en el Portal de Requerimientos.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
                                                     </table>
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
