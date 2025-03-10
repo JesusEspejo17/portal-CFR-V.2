@@ -139,17 +139,24 @@
                         }
                     },
                     {
-                        targets: [-3],
+                        targets: [-3], // Campo dimensión
                         render: function (data, type, row) {
                             var dimensiones = JSON.parse('{{ dimension_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="dimensionslt" name="idDimensionSlt" id="idDimensionSlt-' + 1 + '" style="width: 100%;">';
+                            
+                            // Si no hay un valor previo en 'data', seleccionamos "CEPRECE" por defecto
+                            if (!data) {
+                                data = "CEPRECE"; // Establecemos "CEPRECE" como valor por defecto
+                            }
+                    
+                            // Construimos las opciones del select
                             for (var i = 0; i < dimensiones.length; i++) {
                                 var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
                                 options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
                             }
                             options += '</select>';
                             return options;
-                        },
+                        }
                     },
                     {
                         targets: [-4],

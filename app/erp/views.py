@@ -288,7 +288,7 @@ def solicitudcompra(request):
                     print(f"Serie actualizada: {serie.NumeroSiguiente}")
                 success_message = "La solicitud de compra se ha guardado correctamente."
                 print("Solicitud creada exitosamente")
-                send_email_to_general()
+                send_email_to_general(encabezado)
                 return render(request, template_name, {'success_message': "La solicitud de compra se ha guardado correctamente."})
 
         except Exception as e:
@@ -879,11 +879,70 @@ def solicitudAprobarMasivo(request):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
+# def solicitudRechazarMasivo(request):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             usuario = data.get('usuario', None)
+#             arrSolicitudes = data.get('ids', None)
+#             checked_prod = data.get('arrcheckedProd', [])
+            
+#             if not arrSolicitudes:
+#                 return JsonResponse({'error': 'No se recibieron IDs'}, status=400)
+#             if not checked_prod:
+#                 return JsonResponse({'error': 'No se seleccionaron ítems para rechazar'}, status=400)
+
+#             with transaction.atomic():
+#                 for id in arrSolicitudes:
+#                     solicitud = OPRQ.objects.filter(pk=id).first()
+#                     if not solicitud:
+#                         return JsonResponse({'error': f'Solicitud {id} no encontrada'}, status=404)
+
+#                     # Obtener todos los detalles de la solicitud
+#                     detalles = PRQ1.objects.filter(NumDoc=id)
+#                     if not detalles.exists():
+#                         return JsonResponse({'error': f'Detalles no encontrados para solicitud {id}'}, status=404)
+
+#                     # Actualizar solo los ítems seleccionados a rechazado
+#                     checked_codes = {item.get('Code') for item in checked_prod}
+#                     detalles_a_rechazar = detalles.filter(Code__in=checked_codes)
+#                     detalles_a_rechazar.update(LineStatus='R')
+
+#                     # Verificar estado de todos los detalles
+#                     total_detalles = detalles.count()
+#                     detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
+#                     detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+
+#                     # Determinar el nuevo estado
+#                     if total_detalles == detalles_rechazados:
+#                         # Si todos están rechazados
+#                         OPRQ.objects.filter(pk=id).update(DocStatus="R")
+#                     elif detalles_pendientes_P:
+#                         # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
+#                         pass
+
+#                     # Crear validación
+#                     validate = Validaciones()
+#                     validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}"
+#                     validate.codValidador = request.user.username
+#                     validate.fecha = timezone.now()
+#                     validate.estado = "Rechazado"
+#                     validate.save()
+#                     send_email_to_user_general(0, usuario)
+
+#                 return HttpResponse("OK")
+
+#         except Exception as e:
+#             msg = f"Error al insertar datos maestros: {str(e)}"
+#             return JsonResponse({'error': msg}, status=500)
+
+#     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 def solicitudRechazarMasivo(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            usuario = data.get('usuario', None)
+            usuario = data.get('usuario', None)  # No lo usaremos para el correo
             arrSolicitudes = data.get('ids', None)
             checked_prod = data.get('arrcheckedProd', [])
             
@@ -898,37 +957,34 @@ def solicitudRechazarMasivo(request):
                     if not solicitud:
                         return JsonResponse({'error': f'Solicitud {id} no encontrada'}, status=404)
 
-                    # Obtener todos los detalles de la solicitud
                     detalles = PRQ1.objects.filter(NumDoc=id)
                     if not detalles.exists():
                         return JsonResponse({'error': f'Detalles no encontrados para solicitud {id}'}, status=404)
 
-                    # Actualizar solo los ítems seleccionados a rechazado
                     checked_codes = {item.get('Code') for item in checked_prod}
                     detalles_a_rechazar = detalles.filter(Code__in=checked_codes)
                     detalles_a_rechazar.update(LineStatus='R')
 
-                    # Verificar estado de todos los detalles
                     total_detalles = detalles.count()
                     detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
                     detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
 
-                    # Determinar el nuevo estado
                     if total_detalles == detalles_rechazados:
-                        # Si todos están rechazados
                         OPRQ.objects.filter(pk=id).update(DocStatus="R")
                     elif detalles_pendientes_P:
-                        # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
                         pass
 
-                    # Crear validación
                     validate = Validaciones()
-                    validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}"
+                    validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud.ReqIdUser else "Usuario no definido"
                     validate.codValidador = request.user.username
                     validate.fecha = timezone.now()
                     validate.estado = "Rechazado"
                     validate.save()
-                    send_email_to_user_general(0, usuario)
+                    
+                    if solicitud.ReqIdUser:
+                        send_email_to_user_general(0, solicitud.ReqIdUser)
+                    else:
+                        print(f"No se envió correo para solicitud {id} porque ReqIdUser es None")
 
                 return HttpResponse("OK")
 
@@ -1305,11 +1361,59 @@ def solicitudAprobar(request, id):
 
 
 
+# def solicitudRechazar(request, id):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             usuario = data.get('usuario', None)
+#             items_rechazados = data.get('arrcheckedProd', [])
+            
+#             if not items_rechazados:
+#                 return JsonResponse({'error': 'Debe seleccionar al menos un item para rechazar'}, status=400)
+
+#             solicitud = OPRQ.objects.filter(pk=id).first()
+#             if not solicitud:
+#                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
+#             with transaction.atomic():
+#                 # Actualizar items seleccionados
+#                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
+#                 detalles_actualizados = detalles.update(LineStatus='R')
+
+#                 # Verificar estado de todos los detalles
+#                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
+#                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
+#                 detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
+                
+#                 # Determinar el nuevo estado
+#                 if total_detalles == detalles_rechazados:
+#                     # Si todos están rechazados
+#                     OPRQ.objects.filter(pk=id).update(DocStatus="R")
+#                 elif detalles_pendientes_P:
+#                     # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
+#                     pass
+                    
+#                 validate = Validaciones()
+#                 validate.codReqUser = usuario
+#                 validate.codValidador = request.user.username
+#                 validate.fecha = timezone.now()
+#                 validate.estado = "Rechazado"
+#                 validate.save()
+                
+#                 send_email_to_user_general(0, usuario)
+#                 return HttpResponse("OK")
+
+#         except Exception as e:
+#             msg = f"Error al insertar datos maestros: {str(e)}"
+#             return JsonResponse({'error': msg}, status=500)
+            
+#     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 def solicitudRechazar(request, id):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            usuario = data.get('usuario', None)
+            usuario = data.get('usuario', None)  # No lo usaremos para el correo ni validación
             items_rechazados = data.get('arrcheckedProd', [])
             
             if not items_rechazados:
@@ -1320,31 +1424,30 @@ def solicitudRechazar(request, id):
                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
 
             with transaction.atomic():
-                # Actualizar items seleccionados
                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
                 detalles_actualizados = detalles.update(LineStatus='R')
 
-                # Verificar estado de todos los detalles
                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
                 detalles_pendientes_P = PRQ1.objects.filter(NumDoc=id, LineStatus='P').exists()
                 
-                # Determinar el nuevo estado
                 if total_detalles == detalles_rechazados:
-                    # Si todos están rechazados
                     OPRQ.objects.filter(pk=id).update(DocStatus="R")
                 elif detalles_pendientes_P:
-                    # Si hay items pendientes en estado 'P', mantener DocStatus como 'P'
                     pass
                     
                 validate = Validaciones()
-                validate.codReqUser = usuario
+                validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud.ReqIdUser else "Usuario no definido"
                 validate.codValidador = request.user.username
                 validate.fecha = timezone.now()
                 validate.estado = "Rechazado"
                 validate.save()
                 
-                send_email_to_user_general(0, usuario)
+                if solicitud.ReqIdUser:
+                    send_email_to_user_general(0, solicitud.ReqIdUser)
+                else:
+                    print(f"No se envió correo para solicitud {id} porque ReqIdUser es None")
+                
                 return HttpResponse("OK")
 
         except Exception as e:
@@ -1358,7 +1461,7 @@ def solicitudRechazar(request, id):
 #     if request.method == "POST":
 #         try:
 #             data = json.loads(request.body)
-#             usuario = data.get('usuario', None)
+#             usuario = data.get('usuario', None)  # No lo usaremos para el correo
 #             items_rechazados = data.get('arrcheckedProd', [])
             
 #             logger.info(f"Iniciando rechazo para solicitud {id}. Usuario: {usuario}, Items rechazados: {items_rechazados}")
@@ -1373,12 +1476,10 @@ def solicitudRechazar(request, id):
 #                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
 
 #             with transaction.atomic():
-#                 # Actualizar ítems seleccionados a rechazado
 #                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
 #                 detalles.update(LineStatus='R')
 #                 logger.info(f"Actualizados {detalles.count()} ítems a LineStatus='R' en solicitud {id}")
 
-#                 # Preparar JSON con los ítems rechazados
 #                 rejected_items = []
 #                 for detalle in detalles:
 #                     rejected_items.append({
@@ -1390,7 +1491,6 @@ def solicitudRechazar(request, id):
 #                         'line_status': detalle.LineStatus
 #                     })
 
-#                 # Verificar estado de todos los detalles
 #                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
 #                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
 #                 detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
@@ -1399,7 +1499,6 @@ def solicitudRechazar(request, id):
 
 #                 logger.debug(f"Estado de detalles en solicitud {id}: Total={total_detalles}, Rechazados={detalles_rechazados}, Pendientes_A={detalles_pendientes_A}, Logística={detalles_logistica}, Cerrados={detalles_cerrados}")
 
-#                 # Determinar el nuevo estado y preparar respuesta
 #                 response_data = {
 #                     'solicitud_id': id,
 #                     'doc_status': solicitud.DocStatus,
@@ -1411,17 +1510,19 @@ def solicitudRechazar(request, id):
 #                 }
 
 #                 if total_detalles == detalles_rechazados:
-#                     # Si todos están rechazados
 #                     OPRQ.objects.filter(pk=id).update(DocStatus="R", TipoDoc="SOL")
 #                     logger.info(f"Solicitud {id} actualizada a DocStatus='R', TipoDoc='SOL'")
 #                     response_data['doc_status'] = "R"
 #                     response_data['tipo_doc'] = "SOL"
                     
-#                     # Enviar correo solo cuando todos los ítems están en 'R'
-#                     send_email_to_user_presupuesto(0, usuario)
-#                     logger.info(f"Correo enviado para solicitud {id} porque todos los ítems están en 'R'")
+#                     # Verificar si ReqIdUser es válido antes de enviar el correo
+#                     if solicitud.ReqIdUser:
+#                         send_email_to_user_presupuesto(0, solicitud.ReqIdUser)
+#                         logger.info(f"Correo enviado para solicitud {id} usando ReqIdUser={solicitud.ReqIdUser}")
+#                     else:
+#                         logger.warning(f"No se envió correo para solicitud {id} porque ReqIdUser es None")
+#                         response_data['message'] += " (Correo no enviado: usuario solicitante no definido)"
 
-#                     # Si DocNumSAP existe, intentar cancelar en SAP directamente
 #                     if solicitud.DocNumSAP:
 #                         logger.info(f"Intentando cancelar solicitud {id} en SAP con DocNumSAP={solicitud.DocNumSAP}")
 #                         cancel_response = cancel_purchase_order_in_sap(solicitud.DocNumSAP)
@@ -1447,16 +1548,15 @@ def solicitudRechazar(request, id):
 #                         response_data['doc_status'] = "C"
 #                         response_data['tipo_doc'] = "OC"
 
-#                 # Registrar la validación
 #                 validate = Validaciones()
-#                 validate.codReqUser = usuario
+#                 # Manejar caso donde ReqIdUser pueda ser None
+#                 validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud.ReqIdUser else "Usuario no definido"
 #                 validate.codValidador = request.user.username
 #                 validate.fecha = timezone.now()
 #                 validate.estado = "Rechazado"
 #                 validate.save()
 #                 logger.info(f"Validación registrada para solicitud {id}: Validador={request.user.username}, Estado=Rechazado")
 
-#                 # Devolver JSON con los detalles del rechazo
 #                 return JsonResponse(response_data, status=200)
 
 #         except Exception as e:
@@ -1467,11 +1567,12 @@ def solicitudRechazar(request, id):
 #     logger.warning(f"Método no permitido para solicitud {id}: {request.method}")
 #     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+
 def solicitudRechazarPres(request, id):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            usuario = data.get('usuario', None)  # No lo usaremos para el correo
+            usuario = data.get('usuario', None)
             items_rechazados = data.get('arrcheckedProd', [])
             
             logger.info(f"Iniciando rechazo para solicitud {id}. Usuario: {usuario}, Items rechazados: {items_rechazados}")
@@ -1491,6 +1592,7 @@ def solicitudRechazarPres(request, id):
                 logger.info(f"Actualizados {detalles.count()} ítems a LineStatus='R' en solicitud {id}")
 
                 rejected_items = []
+                lines_to_close = []  # Lista para las líneas a cerrar en SAP
                 for detalle in detalles:
                     rejected_items.append({
                         'code': detalle.Code,
@@ -1499,6 +1601,9 @@ def solicitudRechazarPres(request, id):
                         'price': float(detalle.Precio) if detalle.Precio else 0.0,
                         'total': float(detalle.total) if detalle.total else 0.0,
                         'line_status': detalle.LineStatus
+                    })
+                    lines_to_close.append({
+                        'line_num': detalle.LineCount_Indexado  # Usamos LineCount_Indexado como LineNum
                     })
 
                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
@@ -1519,13 +1624,25 @@ def solicitudRechazarPres(request, id):
                     'message': "La solicitud ha sido rechazada exitosamente"
                 }
 
+                # Cerrar líneas en SAP si existe DocNumSAP
+                if solicitud.DocNumSAP:
+                    logger.info(f"Intentando cerrar líneas en SAP para solicitud {id} con DocNumSAP={solicitud.DocNumSAP}")
+                    close_response = close_purchase_request_line_in_sap(solicitud.DocNumSAP, lines_to_close)
+                    if close_response.get('status') == 'success':
+                        logger.info(f"Líneas cerradas exitosamente en SAP para solicitud {id}")
+                        response_data['sap_status'] = 'Lines Closed'
+                    else:
+                        logger.error(f"Fallo al cerrar líneas en SAP para solicitud {id}: {close_response.get('error')}, Código: {close_response.get('status_code')}")
+                        response_data['message'] += f" (Fallo al cerrar líneas en SAP: {close_response.get('error')})"
+                        response_data['sap_status'] = 'Error'
+
+                # Actualizar estado de la solicitud
                 if total_detalles == detalles_rechazados:
                     OPRQ.objects.filter(pk=id).update(DocStatus="R", TipoDoc="SOL")
                     logger.info(f"Solicitud {id} actualizada a DocStatus='R', TipoDoc='SOL'")
                     response_data['doc_status'] = "R"
                     response_data['tipo_doc'] = "SOL"
                     
-                    # Verificar si ReqIdUser es válido antes de enviar el correo
                     if solicitud.ReqIdUser:
                         send_email_to_user_presupuesto(0, solicitud.ReqIdUser)
                         logger.info(f"Correo enviado para solicitud {id} usando ReqIdUser={solicitud.ReqIdUser}")
@@ -1533,14 +1650,14 @@ def solicitudRechazarPres(request, id):
                         logger.warning(f"No se envió correo para solicitud {id} porque ReqIdUser es None")
                         response_data['message'] += " (Correo no enviado: usuario solicitante no definido)"
 
-                    if solicitud.DocNumSAP:
+                    if solicitud.DocNumSAP and 'sap_status' not in response_data:  # Solo si no se cerraron líneas antes
                         logger.info(f"Intentando cancelar solicitud {id} en SAP con DocNumSAP={solicitud.DocNumSAP}")
                         cancel_response = cancel_purchase_order_in_sap(solicitud.DocNumSAP)
                         if cancel_response.get('status') == 'success':
                             response_data['sap_status'] = 'Canceled'
                             logger.info(f"Solicitud {id} cancelada exitosamente en SAP")
                         else:
-                            logger.error(f"Fallo al cancelar solicitud {id} en SAP: {cancel_response.get('error')}, Código: {cancel_response.get('status_code')}")
+                            logger.error(f"Fallo al cancelar solicitud {id} en SAP: {cancel_response.get('error')}")
                             response_data['message'] = f"Solicitud rechazada localmente, pero fallo al cancelar en SAP: {cancel_response.get('error')}"
                             response_data['sap_status'] = 'Error'
                 elif detalles_pendientes_A:
@@ -1559,7 +1676,6 @@ def solicitudRechazarPres(request, id):
                         response_data['tipo_doc'] = "OC"
 
                 validate = Validaciones()
-                # Manejar caso donde ReqIdUser pueda ser None
                 validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud.ReqIdUser else "Usuario no definido"
                 validate.codValidador = request.user.username
                 validate.fecha = timezone.now()
@@ -1577,6 +1693,95 @@ def solicitudRechazarPres(request, id):
     logger.warning(f"Método no permitido para solicitud {id}: {request.method}")
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+
+#Metodo para cancelar las lineas seleccionadas en SAP desde Presupuestos
+def close_purchase_request_line_in_sap(doc_entry, lines_to_close):
+    """
+    Cierra líneas específicas de una solicitud de compra en SAP usando PATCH.
+    :param doc_entry: El DocEntry de la solicitud en SAP (solicitud.DocNumSAP).
+    :param lines_to_close: Lista de diccionarios con 'line_num' para cerrar.
+    :return: Dict con estado de la operación.
+    """
+    url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
+    payload_session = json.dumps({
+        "CompanyDB": "BDPRUEBASOCL",
+        "Password": "m1r1",
+        "UserName": "manager"
+    })
+    headers_session = {'Content-Type': 'application/json'}
+
+    session = requests.Session()
+    session.verify = False
+
+    for attempt in range(5):
+        try:
+            logger.debug(f"Intento {attempt + 1} de inicio de sesión en SAP para DocEntry={doc_entry}")
+            response_session = session.post(url_session, headers=headers_session, data=payload_session)
+            if response_session.status_code == 200:
+                session_cookie = response_session.cookies.get('B1SESSION')
+                route_id_cookie = response_session.cookies.get('ROUTEID', '.node1')
+
+                if not session_cookie:
+                    logger.warning(f"Intento {attempt + 1}: No se obtuvo B1SESSION para DocEntry={doc_entry}")
+                    if attempt == 4:
+                        return {'status': 'error', 'error': 'No se pudo obtener la cookie de sesión', 'status_code': 500}
+                    time.sleep(2)
+                    continue
+
+                cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
+                logger.debug(f"Sesión iniciada para DocEntry={doc_entry} - Cookie: {cookie_string}")
+
+                # Endpoint PATCH para PurchaseRequests
+                url = f"https://CFR-I7-1:50000/b1s/v1/PurchaseRequests({doc_entry})"
+                headers = {'Content-Type': 'application/json', 'Cookie': cookie_string}
+
+                # Construir el payload con las líneas a cerrar
+                payload = {
+                    "DocumentLines": [
+                        {
+                            "LineNum": line['line_num'],
+                            "LineStatus": "bost_Close"
+                        } for line in lines_to_close
+                    ]
+                }
+                payload_json = json.dumps(payload)
+                logger.debug(f"Enviando PATCH a {url} para cerrar líneas en DocEntry={doc_entry}: {payload_json}")
+
+                response = session.patch(url, headers=headers, data=payload_json)
+                logger.debug(f"Respuesta de SAP para DocEntry={doc_entry}: Status={response.status_code}, Contenido={response.text}")
+
+                if response.status_code == 200 or response.status_code == 204:
+                    logger.info(f"Líneas cerradas exitosamente en SAP para DocEntry={doc_entry}")
+                    return {'status': 'success'}
+                else:
+                    try:
+                        response_dict = response.json()
+                        error_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
+                    except json.JSONDecodeError:
+                        error_message = response.text
+                    logger.warning(f"Error en intento {attempt + 1} para DocEntry={doc_entry}: {response.status_code} - {error_message}")
+                    if attempt == 4:
+                        return {'status': 'error', 'error': error_message, 'status_code': response.status_code}
+                    time.sleep(2)
+                    continue
+
+            else:
+                logger.warning(f"Intento {attempt + 1} fallido para DocEntry={doc_entry}: Error en la solicitud de sesión: {response_session.status_code}")
+                if attempt == 4:
+                    return {'status': 'error', 'error': f"Error al iniciar sesión: {response_session.status_code}", 'status_code': 500}
+                time.sleep(2)
+
+        except requests.RequestException as e:
+            logger.error(f"Error de conexión en intento {attempt + 1} para DocEntry={doc_entry}: {str(e)}")
+            if attempt == 4:
+                return {'status': 'error', 'error': f"Error de conexión: {str(e)}", 'status_code': 500}
+            time.sleep(2)
+
+    logger.error(f"No se pudo cerrar líneas para DocEntry={doc_entry} después de 5 intentos")
+    return {'status': 'error', 'error': 'No se pudo completar la operación después de 5 intentos', 'status_code': 500}
+
+
+#Metodo para cancelar la solicitud en SAP desde Presupuestos solo si, todos las lineas estan como R en el portal
 def cancel_purchase_order_in_sap(doc_entry):
     """
     Cancela una solicitud de compra en SAP usando el endpoint dinámico /PurchaseRequests(DOCENTRY)/Cancel.

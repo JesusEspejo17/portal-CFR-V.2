@@ -139,12 +139,19 @@
                     },
                     // Dimension moves to -3
                     {
-                        targets: [-3],
+                        targets: [-3], // Campo dimensión
                         render: function (data, type, row) {
                             var dimensiones = JSON.parse('{{ dimension_json|escapejs }}');
                             var options = '<select class="form-control select" data-type="dimensionSlt" name="iddimension" id="iddimension" style="width: 100%;">';
+                            
+                            // Si no hay un valor previo en 'data', seleccionamos "CEPRECE" por defecto
+                            if (!data) {
+                                data = "CEPRECE"; // Establecemos "CEPRECE" como valor por defecto
+                            }
+                    
+                            // Construimos las opciones del select
                             for (var i = 0; i < dimensiones.length; i++) {
-                                var selected = (dimensiones[i].descripcion === data) ? 'selected' : '';
+                                var selected = (dimensiones[i].descripcion === data || (!data && dimensiones[i].descripcion === "CEPRECE")) ? 'selected' : '';
                                 options += '<option value="' + dimensiones[i].descripcion + '" ' + selected + '>' + dimensiones[i].descripcion + '</option>';
                             }
                             options += '</select>';
