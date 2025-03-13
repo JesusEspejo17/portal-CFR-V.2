@@ -209,25 +209,91 @@
                                                             </td>
                                                         </tr>
                                                     </table>
+                                                    
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:15px;padding-left:38px;padding-right:38px;padding-top:20px;">
                                                                 <div style="color:#555555;font-family:'Bitter', Georgia, Times, 'Times New Roman', serif;font-size:42px;line-height:120%;text-align:center;mso-line-height-alt:50.4px;">
-                                                                    <p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #2a272b;"><strong>Solicitud de Compra Aprobada por Logística</strong></span></p>
+                                                                    <p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #2a272b;"><strong>
+                                                                        Solicitud {{ doc_entry }} Convertida a Orden de Compra
+                                                                    </strong></span></p>
                                                                 </div>
                                                             </td>
                                                         </tr>
                                                     </table>
+                                                    
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-															<td class="pad" style="padding-left:38px;padding-right:38px;padding-top:10px;">
-																<div style="color:#555555;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;line-height:150%;text-align:center;mso-line-height-alt:24px;">
-																	<p style="margin: 0;">
-																		Tu solicitud de compra acaba de ser <span style="background-color:rgb(29, 216, 72); color: white; padding: 2px 6px; border-radius: 8px;">CONVERTIDA</span> a Orden de Compra por el Jefe de Área de Logística a cargo.
-																	</p>
-																</div>
-															</td>
-														</tr>
+                                                            <td class="pad" style="padding-left:38px;padding-right:38px;padding-top:10px;">
+                                                                <div style="color:#555555;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;line-height:150%;text-align:center;mso-line-height-alt:24px;">
+                                                                    <p style="margin: 0;">
+                                                                        Tu solicitud de compra acaba de ser <span style="background-color:rgb(29, 216, 72); color: white; padding: 2px 6px; border-radius: 8px;">CONVERTIDA</span> a Orden de Compra por el Jefe de Área de Logística a cargo.<br>
+                                                                        <strong>Empleado:</strong> {{ nombre_empleado }}<br>
+                                                                        <strong>Tipo de Documento:</strong> 
+                                                                        <span class="badge badge-primary">
+                                                                            {% if tipo_documento == 'I' %}
+                                                                                Artículo
+                                                                            {% elif tipo_documento == 'S' %}
+                                                                                Servicio
+                                                                            {% else %}
+                                                                                {{ tipo_documento }}
+                                                                            {% endif %}
+                                                                        </span><br>
+                                                                        <strong>Moneda:</strong> {{ moneda }}<br>
+                                                                        <strong>Impuesto:</strong> {{ tax_code }}<br>
+                                                                        <strong>N° Orden de Compra SAP:</strong> {{ doc_num_sap }}<br>
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    
+                                                    <!-- Tabla para los detalles de la Orden de Compra -->
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-left:38px;padding-right:38px;padding-top:20px;">
+                                                                <div style="color:#555555;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;line-height:150%;text-align:center;mso-line-height-alt:24px;">
+                                                                    <p style="margin: 0; font-weight: bold;">
+                                                                        DETALLES DE LA ORDEN DE COMPRA
+                                                                    </p>
+                                                                    <!-- Tabla de detalles -->
+                                                                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+                                                                        <thead>
+                                                                            <tr style="background-color: #f0f0f0;">
+                                                                                <th>Ítem</th>
+                                                                                <th>Code</th>
+                                                                                <th>Description</th>
+                                                                                <th>Quantity</th>
+                                                                                <th>Precio</th>
+                                                                                <th>Total</th>
+                                                                                {% comment %} <th>Total con Impuestos</th> {% endcomment %}
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {% for detalle in detalles_oc %}
+                                                                            <tr>
+                                                                                <td>{{ forloop.counter }}</td>
+                                                                                <td>{{ detalle.code }}</td>
+                                                                                <td>{{ detalle.description }}</td>
+                                                                                <td>{{ detalle.quantity }}</td>
+                                                                                <td>{{ detalle.precio }}</td>
+                                                                                <td>{{ detalle.total }}</td>
+                                                                                {% comment %} <td>{{ detalle.totalimpdet }}</td> {% endcomment %}
+                                                                            </tr>
+                                                                            {% empty %}
+                                                                            <tr>
+                                                                                <td colspan="7" style="text-align: center;">No hay items en la orden de compra.</td>
+                                                                            </tr>
+                                                                            {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                                    
+                                                                    <p style="margin-top: 20px;">
+                                                                        Puedes encontrar los detalles en tu panel de Solicitudes en el Portal de Requerimientos.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
                                                     </table>
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>

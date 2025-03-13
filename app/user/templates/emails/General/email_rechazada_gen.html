@@ -217,7 +217,7 @@
                                                                         {% if es_rechazo_total %}
                                                                             Solicitud de Compra {{ doc_entry }} Rechazada por Área General
                                                                         {% else %}
-                                                                            {% if tipo_documento == "I" %}Artículos{% elif tipo_documento == "S" %}Servicios{% else %}Tipo desconocido{% endif %} Específicos de tu Solicitud {{ doc_entry }} Rechazados por Área General.
+                                                                            {% if tipo_documento == "I" %}Artículos{% elif tipo_documento == "S" %}Servicios{% else %}Tipo desconocido{% endif %} Específicos de tu Solicitud {{ doc_entry }} Rechazados por Área General
                                                                         {% endif %}
                                                                     </strong></span></p>
                                                                 </div>
@@ -263,7 +263,7 @@
                                                                         SOLICITUD: {{ doc_entry }}
                                                                     </p>
                                                                     <p style="margin: 10px 0; font-weight: bold; color: #FF4444;">
-                                                                        ITEMS RECHAZADOS
+                                                                        {% if tipo_documento == "I" %}ARTÍCULOS{% elif tipo_documento == "S" %}SERVICIOS{% else %}ITEMS{% endif %} RECHAZADOS
                                                                     </p>
                                                                     <!-- Tabla de detalles -->
                                                                     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">

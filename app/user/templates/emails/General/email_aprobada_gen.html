@@ -213,7 +213,7 @@
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:15px;padding-left:38px;padding-right:38px;padding-top:20px;">
                                                                 <div style="color:#555555;font-family:'Bitter', Georgia, Times, 'Times New Roman', serif;font-size:42px;line-height:120%;text-align:center;mso-line-height-alt:50.4px;">
-                                                                    <p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #2a272b;"><strong>Solicitud de Compra Aprobada por Área General</strong></span></p>
+                                                                    <p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #2a272b;"><strong>Solicitud de Compra {{ doc_entry }} Aprobada por Área General</strong></span></p>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -223,7 +223,11 @@
                                                             <td class="pad" style="padding-left:38px;padding-right:38px;padding-top:10px;">
                                                                 <div style="color:#555555;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:16px;line-height:150%;text-align:center;mso-line-height-alt:24px;">
                                                                     <p style="margin: 0;">
-                                                                        Tu solicitud de compra acaba de ser <span style="background-color:rgb(29, 216, 72); color: white; padding: 2px 6px; border-radius: 8px;">APROBADA</span> por el Jefe de Área General<br>
+                                                                        {% if detalles_rechazados %}
+                                                                            Algunos {% if tipo_documento == "I" %}Artículos{% elif tipo_documento == "S" %}Servicios{% else %}Tipo desconocido{% endif %} específicos de tu Solicitud {{ doc_entry }} han sido <span style="background-color:rgb(29, 216, 72); color: white; padding: 2px 6px; border-radius: 8px;">APROBADOS</span>.<br>
+                                                                        {% else %}
+                                                                            Tu solicitud de compra acaba de ser <span style="background-color:rgb(29, 216, 72); color: white; padding: 2px 6px; border-radius: 8px;">APROBADA</span> por el Jefe de Área General.<br>
+                                                                        {% endif %}
                                                                         <strong>Empleado:</strong> {{ nombre_empleado }}<br>
                                                                         <strong>Tipo de Documento:</strong> 
                                                                         <span class="badge badge-primary">
@@ -252,7 +256,7 @@
                                                                         SOLICITUD: {{ doc_entry }}
                                                                     </p>
                                                                     <p style="margin: 10px 0; font-weight: bold; color: #1DD848;">
-                                                                        ITEMS APROBADOS
+                                                                        {% if tipo_documento == "I" %}ARTÍCULOS{% elif tipo_documento == "S" %}SERVICIOS{% else %}ITEMS{% endif %} APROBADOS
                                                                     </p>
                                                                     <!-- Tabla de detalles aprobados -->
                                                                     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">
@@ -289,7 +293,7 @@
                                                                     {% if detalles_rechazados %}
                                                                     <!-- Tabla de items RECHAZADOS -->
                                                                     <p style="margin: 20px 0; font-weight: bold; color: #FF4444;">
-                                                                        ITEMS RECHAZADOS
+                                                                        {% if tipo_documento == "I" %}ARTÍCULOS{% elif tipo_documento == "S" %}SERVICIOS{% else %}ITEMS{% endif %} RECHAZADOS
                                                                     </p>
                                                                     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">
                                                                         <thead>

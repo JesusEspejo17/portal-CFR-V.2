@@ -1453,13 +1453,13 @@
         var rowIndex = tblProducts.cell($(this).closest('td')).index().row;  // Obtener el índice de la fila
         var row = vents.items.products[rowIndex];  // Acceder al producto en la fila
     
-        if (precio == 0 || precio < 0.01) {
-            // Muestra un mensaje de advertencia si el precio es 0 o menor a 0.01
+        if (isNaN(precio) || precio == 0 || precio < 0.01) {
+            // Muestra un mensaje de advertencia si el precio es NaN, 0 o menor a 0.01
             $.alert({
                 title: 'Error',
                 theme: 'modern',
                 type: 'red',
-                content: `El precio no puede ser 0.00 para el Producto: ${row.description}`,
+                content: `El precio no puede ser 0.00 o estar vacío para el Producto: ${row.description}`,
             });
     
             // Resetea el valor del input a 0.01
@@ -1467,19 +1467,18 @@
         }
     });
 
-
     $('#tblServicios').on('input', 'input[type="number"][data-type="price"]', function () {
         var precio = parseFloat($(this).val()).toFixed(2);  // Convertir a float y asegurar 2 decimales
         var rowIndex = tblServicios.cell($(this).closest('td')).index().row;  // Obtener el índice de la fila
         var row = servs.items.servicios[rowIndex];  // Acceder al servicio en la fila
     
-        if (precio == 0 || precio < 0.01) {
-            // Muestra un mensaje de advertencia si el precio es 0 o menor a 0.01
+        if (isNaN(precio) || precio == 0 || precio < 0.01) {
+            // Muestra un mensaje de advertencia si el precio es NaN, 0 o menor a 0.01
             $.alert({
                 title: 'Error',
                 theme: 'modern',
                 type: 'red',
-                content: `El precio no puede ser 0.00 para el Servicio: ${row.description}`,
+                content: `El precio no puede ser 0.00 o estar vacío para el Servicio: ${row.description}`,
             });
     
             // Resetea el valor del input a 0.01

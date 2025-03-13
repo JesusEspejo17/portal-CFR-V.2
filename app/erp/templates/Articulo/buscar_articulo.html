@@ -444,16 +444,16 @@
             var precio = parseFloat($(this).val()).toFixed(2);  // Convertir a float y asegurar 2 decimales
             var rowIndex = tblSlctProducts.cell($(this).closest('td')).index().row;  // Obtener el índice de la fila
             var row = selectedPdct.items.prod[rowIndex];  // Acceder al producto en la fila
-        
-            if (precio == 0 || precio < 0.01) {
-                // Muestra un mensaje de advertencia si el precio es 0 o menor a 0.01
+    
+            if (isNaN(precio) || precio == 0 || precio < 0.01) {
+                // Muestra un mensaje de advertencia si el precio es 0, menor a 0.01 o no es un número válido
                 $.alert({
                     title: 'Error',
                     theme: 'modern',
                     type: 'red',
-                    content: `El precio no puede ser 0.00 para el Producto: ${row.descripcion}`,
+                    content: `El precio no puede ser 0.00 o estar vacío para el Producto: ${row.descripcion}`,
                 });
-        
+    
                 // Resetea el valor del input a 0.01 o al valor previo
                 $(this).val(0.01);
             }
@@ -535,7 +535,22 @@
     };
 
     function pintarProducto() {
-        if (selectedPdct.items.prod.length > 0) {
+        var camposValidos = true;
+        $('#tblProdSeleccionados tbody tr').each(function () {
+            var precio = $(this).find('input[name="precioSlt"]').val();
+            if (!precio || parseFloat(precio) <= 0) {
+                camposValidos = false;
+                $.alert({
+                    title: 'Error',
+                    theme: 'modern',
+                    type: 'red',
+                    content: 'Todos los campos de precio deben estar rellenados y ser mayores a 0.00',
+                });
+                return false; // Salir del bucle si se encuentra un campo no válido
+            }
+        });
+
+        if (camposValidos && selectedPdct.items.prod.length > 0) {
             $('#tblProdSeleccionados tbody tr').each(function () {
                 var codigo = $(this).find('td:eq(0)').text().trim();
                 var descripcion = $(this).find('td:eq(1)').text().trim();
@@ -564,7 +579,7 @@
             });
             vents.list();
             cerrar_modal();
-        } else {
+        } else if (selectedPdct.items.prod.length === 0) {
             $.alert({
                 title: 'Producto no seleccionado',
                 icon: 'fa fa-exclamation',

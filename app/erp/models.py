@@ -274,6 +274,8 @@ class PRQ1(models.Model):
     idLogistica = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='idLogistica')
     DateLogistica = models.DateTimeField(null=True, blank=True)
     
+    LineRechazo = models.CharField(max_length=2,null=True, blank=True)
+    
     def __str__(self):
         return self.Code
 

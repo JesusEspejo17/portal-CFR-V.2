@@ -20,6 +20,7 @@ from user.tests import *
 from django.contrib.auth.models import Group, Permission
 from django.utils import timezone
 import time
+from datetime import timedelta
 from django.db.models import Prefetch, Q
 import traceback
 import logging  # Añadir al inicio del archivo
@@ -713,8 +714,10 @@ def solicitudContabilizar(request, id):
                 logger.info(f"Validación guardada para solicitud {id}")
 
                 # Enviar correos
-                send_email_to_user_presupuesto(1, solicitud.ReqIdUser)
-                send_email_to_logistica()
+                # send_email_to_user_presupuesto(1, solicitud.ReqIdUser)
+                send_email_to_user_presupuesto(1, solicitud.ReqIdUser, solicitud)
+                # send_email_to_logistica()
+                send_email_to_logistica(solicitud) 
                 logger.info(f"Correos enviados para solicitud {id}")
                 
                 return HttpResponse("OK")
@@ -784,8 +787,10 @@ def solicitudContabilizarMasivo(request):
                     validate.fecha = current_time
                     validate.estado = "Contabilizado"
                     validate.save()
-                    send_email_to_user_presupuesto(1, usuario)
-                    send_email_to_logistica()
+                    # send_email_to_user_presupuesto(1, usuario)
+                    send_email_to_user_presupuesto(1, usuario, solicitud_actual)
+                    # send_email_to_logistica()
+                    send_email_to_logistica(solicitud_actual)
                     
                 return HttpResponse("OK")
         except Exception as e:
@@ -866,9 +871,11 @@ def solicitudAprobarMasivo(request):
                         validate.fecha = current_time
                         validate.estado = "Aprobado"
                         validate.save()
-                        send_email_to_user_general(1, usuario)
-                        send_email_to_presupuesto()
-
+                        # send_email_to_user_general(1, usuario)
+                        send_email_to_user_general(1, usuario, solicitud_actual)
+                        # send_email_to_presupuesto()
+                        send_email_to_presupuesto(solicitud_actual)
+                        
                 # 6. Retornar éxito si todas las solicitudes se aprobaron correctamente
                 return JsonResponse({'success': "Éxito"}, status=200)
 
@@ -970,7 +977,7 @@ def solicitudRechazarMasivoPres(request):
 
                     checked_codes = {item.get('Code') for item in checked_prod}
                     detalles_a_rechazar = detalles.filter(Code__in=checked_codes)
-                    detalles_a_rechazar.update(LineStatus='R')
+                    detalles_a_rechazar.update(LineStatus='R', LineRechazo='RP')
                     logger.info(f"Actualizados {detalles_a_rechazar.count()} ítems a LineStatus='R' en solicitud {id}")
 
                     rejected_items = []
@@ -1009,7 +1016,8 @@ def solicitudRechazarMasivoPres(request):
                         solicitud_data['tipo_doc'] = "SOL"
                         
                         # Usar ReqIdUser del modelo en lugar de usuario del JSON
-                        send_email_to_user_presupuesto(0, solicitud.ReqIdUser)
+                        # send_email_to_user_presupuesto(0, solicitud.ReqIdUser)
+                        send_email_to_user_presupuesto(0, solicitud.ReqIdUser, solicitud)
                         logger.info(f"Correo enviado para solicitud {id} usando ReqIdUser={solicitud.ReqIdUser}")
                         
                         if not detalles_logistica and not detalles_cerrados and solicitud.DocNumSAP:
@@ -1215,7 +1223,9 @@ def solicitudAprobar(request, id):
                     # Enviar correos con el username correcto
                     # send_email_to_user_general(1, solicitud_actual.ReqIdUser)
                     send_email_to_user_general(1, solicitud_actual.ReqIdUser, solicitud_actual)
-                    send_email_to_presupuesto()
+                    # send_email_to_presupuesto()
+                    send_email_to_presupuesto(solicitud_actual)
+
                     logger.info(f"Correos enviados para solicitud {id}")
                     return JsonResponse({'success': "Éxito"}, status=200)
 
@@ -1279,6 +1289,268 @@ def solicitudRechazar(request, id):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
+# def solicitudRechazarPres(request, id):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             usuario = data.get('usuario', None)
+#             items_rechazados = data.get('arrcheckedProd', [])
+            
+#             logger.info(f"Iniciando rechazo para solicitud {id}. Usuario: {usuario}, Items rechazados: {items_rechazados}")
+            
+#             if not items_rechazados:
+#                 logger.warning(f"No se seleccionaron ítems para rechazar en solicitud {id}")
+#                 return JsonResponse({'error': 'Debe seleccionar al menos un item para rechazar'}, status=400)
+
+#             solicitud = OPRQ.objects.filter(pk=id).first()
+#             if not solicitud:
+#                 logger.error(f"Solicitud {id} no encontrada en la base de datos")
+#                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
+#             with transaction.atomic():
+#                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
+#                 detalles.update(LineStatus='R', LineRechazo='RP')
+#                 logger.info(f"Actualizados {detalles.count()} ítems a LineStatus='R' en solicitud {id}")
+
+#                 rejected_items = []
+#                 lines_to_close = []  # Lista para las líneas a cerrar en SAP
+#                 for detalle in detalles:
+#                     rejected_items.append({
+#                         'code': detalle.Code,
+#                         'description': detalle.Description,
+#                         'quantity': float(detalle.Quantity) if detalle.Quantity else 0.0,
+#                         'price': float(detalle.Precio) if detalle.Precio else 0.0,
+#                         'total': float(detalle.total) if detalle.total else 0.0,
+#                         'line_status': detalle.LineStatus
+#                     })
+#                     lines_to_close.append({
+#                         'line_num': detalle.LineCount_Indexado  # Usamos LineCount_Indexado como LineNum
+#                     })
+
+#                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
+#                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
+#                 detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
+#                 detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
+#                 detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
+
+#                 logger.debug(f"Estado de detalles en solicitud {id}: Total={total_detalles}, Rechazados={detalles_rechazados}, Pendientes_A={detalles_pendientes_A}, Logística={detalles_logistica}, Cerrados={detalles_cerrados}")
+
+#                 response_data = {
+#                     'solicitud_id': id,
+#                     'doc_status': solicitud.DocStatus,
+#                     'tipo_doc': solicitud.TipoDoc,
+#                     'rejected_items': rejected_items,
+#                     'total_items': total_detalles,
+#                     'rejected_count': detalles_rechazados,
+#                     'message': "La solicitud ha sido rechazada exitosamente"
+#                 }
+
+#                 # Cerrar líneas en SAP si existe DocNumSAP
+#                 if solicitud.DocNumSAP:
+#                     logger.info(f"Intentando cerrar líneas en SAP para solicitud {id} con DocNumSAP={solicitud.DocNumSAP}")
+#                     close_response = close_purchase_request_line_in_sap(solicitud.DocNumSAP, lines_to_close)
+#                     if close_response.get('status') == 'success':
+#                         logger.info(f"Líneas cerradas exitosamente en SAP para solicitud {id}")
+#                         response_data['sap_status'] = 'Lines Closed'
+#                     else:
+#                         logger.error(f"Fallo al cerrar líneas en SAP para solicitud {id}: {close_response.get('error')}, Código: {close_response.get('status_code')}")
+#                         response_data['message'] += f" (Fallo al cerrar líneas en SAP: {close_response.get('error')})"
+#                         response_data['sap_status'] = 'Error'
+
+#                 # Actualizar estado de la solicitud
+#                 if total_detalles == detalles_rechazados:
+#                     OPRQ.objects.filter(pk=id).update(DocStatus="R", TipoDoc="SOL")
+#                     logger.info(f"Solicitud {id} actualizada a DocStatus='R', TipoDoc='SOL'")
+#                     response_data['doc_status'] = "R"
+#                     response_data['tipo_doc'] = "SOL"
+                    
+#                     # if solicitud.ReqIdUser:
+#                     #     send_email_to_user_presupuesto(0, solicitud.ReqIdUser)
+#                     #     logger.info(f"Correo enviado para solicitud {id} usando ReqIdUser={solicitud.ReqIdUser}")
+#                     if solicitud.ReqIdUser:
+#                         send_email_to_user_presupuesto(0, solicitud.ReqIdUser, solicitud)
+#                         logger.info(f"Correo enviado para solicitud {id} usando ReqIdUser={solicitud.ReqIdUser}")
+#                     else:
+#                         logger.warning(f"No se envió correo para solicitud {id} porque ReqIdUser es None")
+#                         response_data['message'] += " (Correo no enviado: usuario solicitante no definido)"
+
+#                     if solicitud.DocNumSAP and 'sap_status' not in response_data:  # Solo si no se cerraron líneas antes
+#                         logger.info(f"Intentando cancelar solicitud {id} en SAP con DocNumSAP={solicitud.DocNumSAP}")
+#                         cancel_response = cancel_purchase_order_in_sap(solicitud.DocNumSAP)
+#                         if cancel_response.get('status') == 'success':
+#                             response_data['sap_status'] = 'Canceled'
+#                             logger.info(f"Solicitud {id} cancelada exitosamente en SAP")
+#                         else:
+#                             logger.error(f"Fallo al cancelar solicitud {id} en SAP: {cancel_response.get('error')}")
+#                             response_data['message'] = f"Solicitud rechazada localmente, pero fallo al cancelar en SAP: {cancel_response.get('error')}"
+#                             response_data['sap_status'] = 'Error'
+#                 elif detalles_pendientes_A:
+#                     logger.info(f"Solicitud {id} tiene ítems pendientes en 'A', DocStatus no cambia")
+#                     response_data['doc_status'] = solicitud.DocStatus
+#                 else:
+#                     if detalles_logistica:
+#                         OPRQ.objects.filter(pk=id).update(DocStatus="C", TipoDoc="SOL")
+#                         logger.info(f"Solicitud {id} actualizada a DocStatus='C', TipoDoc='SOL' por ítems en logística")
+#                         response_data['doc_status'] = "C"
+#                         response_data['tipo_doc'] = "SOL"
+#                     elif detalles_cerrados > 0:
+#                         OPRQ.objects.filter(pk=id).update(DocStatus="C", TipoDoc="OC")
+#                         logger.info(f"Solicitud {id} actualizada a DocStatus='C', TipoDoc='OC' por ítems cerrados")
+#                         response_data['doc_status'] = "C"
+#                         response_data['tipo_doc'] = "OC"
+
+#                 validate = Validaciones()
+#                 validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud.ReqIdUser else "Usuario no definido"
+#                 validate.codValidador = request.user.username
+#                 validate.fecha = timezone.now()
+#                 validate.estado = "Rechazado"
+#                 validate.save()
+#                 logger.info(f"Validación registrada para solicitud {id}: Validador={request.user.username}, Estado=Rechazado")
+
+#                 return JsonResponse(response_data, status=200)
+
+#         except Exception as e:
+#             logger.error(f"Error general en solicitudRechazarPres para solicitud {id}: {str(e)}", exc_info=True)
+#             msg = f"Error al insertar datos maestros: {str(e)}"
+#             return JsonResponse({'error': msg}, status=500)
+            
+#     logger.warning(f"Método no permitido para solicitud {id}: {request.method}")
+#     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+# def solicitudRechazarPres(request, id):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+#             usuario = data.get('usuario', None)
+#             items_rechazados = data.get('arrcheckedProd', [])
+            
+#             logger.info(f"Iniciando rechazo para solicitud {id}. Usuario: {usuario}, Items rechazados: {items_rechazados}")
+            
+#             if not items_rechazados:
+#                 logger.warning(f"No se seleccionaron ítems para rechazar en solicitud {id}")
+#                 return JsonResponse({'error': 'Debe seleccionar al menos un item para rechazar'}, status=400)
+
+#             solicitud = OPRQ.objects.filter(pk=id).first()
+#             if not solicitud:
+#                 logger.error(f"Solicitud {id} no encontrada en la base de datos")
+#                 return JsonResponse({'error': 'Solicitud no encontrada'}, status=404)
+
+#             with transaction.atomic():
+#                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
+#                 if not detalles.exists():
+#                     logger.warning(f"No se encontraron ítems válidos para rechazar en solicitud {id}")
+#                     return JsonResponse({'error': 'Ítems seleccionados no encontrados'}, status=400)
+
+#                 # Preparar datos antes de cualquier cambio
+#                 rejected_items = []
+#                 lines_to_close = []
+#                 for detalle in detalles:
+#                     rejected_items.append({
+#                         'code': detalle.Code,
+#                         'description': detalle.Description,
+#                         'quantity': float(detalle.Quantity) if detalle.Quantity else 0.0,
+#                         'price': float(detalle.Precio) if detalle.Precio else 0.0,
+#                         'total': float(detalle.total) if detalle.total else 0.0,
+#                         'line_status': 'R'  # Estado que tendrá tras el update
+#                     })
+#                     lines_to_close.append({
+#                         'line_num': detalle.LineCount_Indexado
+#                     })
+
+#                 # Cerrar líneas en SAP primero (si aplica)
+#                 if solicitud.DocNumSAP:
+#                     logger.info(f"Intentando cerrar líneas en SAP para solicitud {id} con DocNumSAP={solicitud.DocNumSAP}")
+#                     close_response = close_purchase_request_line_in_sap(solicitud.DocNumSAP, lines_to_close)
+#                     if close_response.get('status') != 'success':
+#                         logger.error(f"Fallo al cerrar líneas en SAP para solicitud {id}: {close_response.get('error')}, Código: {close_response.get('status_code')}")
+#                         raise Exception(f"Fallo al cerrar líneas en SAP: {close_response.get('error')}")
+#                     logger.info(f"Líneas cerradas exitosamente en SAP para solicitud {id}")
+
+#                 # Si SAP fue exitoso (o no aplica), actualizar la base de datos
+#                 detalles.update(LineStatus='R', LineRechazo='RP')
+#                 logger.info(f"Actualizados {detalles.count()} ítems a LineStatus='R', LineRechazo='RP' en solicitud {id}")
+
+#                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
+#                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
+#                 detalles_pendientes_A = PRQ1.objects.filter(NumDoc=id, LineStatus='A').exists()
+#                 detalles_logistica = PRQ1.objects.filter(NumDoc=id, LineStatus='L').exists()
+#                 detalles_cerrados = PRQ1.objects.filter(NumDoc=id, LineStatus='C').count()
+
+#                 logger.debug(f"Estado de detalles en solicitud {id}: Total={total_detalles}, Rechazados={detalles_rechazados}, Pendientes_A={detalles_pendientes_A}, Logística={detalles_logistica}, Cerrados={detalles_cerrados}")
+
+#                 response_data = {
+#                     'solicitud_id': id,
+#                     'doc_status': solicitud.DocStatus,
+#                     'tipo_doc': solicitud.TipoDoc,
+#                     'rejected_items': rejected_items,
+#                     'total_items': total_detalles,
+#                     'rejected_count': detalles_rechazados,
+#                     'message': "La solicitud ha sido rechazada exitosamente",
+#                     'sap_status': 'Lines Closed' if solicitud.DocNumSAP else 'Not Applicable'
+#                 }
+
+#                 # Actualizar estado de la solicitud
+#                 if total_detalles == detalles_rechazados:
+#                     OPRQ.objects.filter(pk=id).update(DocStatus="R", TipoDoc="SOL")
+#                     logger.info(f"Solicitud {id} actualizada a DocStatus='R', TipoDoc='SOL'")
+#                     response_data['doc_status'] = "R"
+#                     response_data['tipo_doc'] = "SOL"
+                    
+#                     if solicitud.DocNumSAP and close_response.get('status') == 'success':
+#                         logger.info(f"Intentando cancelar solicitud {id} en SAP con DocNumSAP={solicitud.DocNumSAP}")
+#                         cancel_response = cancel_purchase_order_in_sap(solicitud.DocNumSAP)
+#                         if cancel_response.get('status') == 'success':
+#                             response_data['sap_status'] = 'Canceled'
+#                             logger.info(f"Solicitud {id} cancelada exitosamente en SAP")
+#                         else:
+#                             logger.error(f"Fallo al cancelar solicitud {id} en SAP: {cancel_response.get('error')}")
+#                             response_data['message'] += f" (Fallo al cancelar en SAP: {cancel_response.get('error')}"
+#                             response_data['sap_status'] = 'Error'
+#                 elif detalles_pendientes_A:
+#                     logger.info(f"Solicitud {id} tiene ítems pendientes en 'A', DocStatus no cambia")
+#                     response_data['doc_status'] = solicitud.DocStatus
+#                 else:
+#                     if detalles_logistica:
+#                         OPRQ.objects.filter(pk=id).update(DocStatus="C", TipoDoc="SOL")
+#                         logger.info(f"Solicitud {id} actualizada a DocStatus='C', TipoDoc='SOL' por ítems en logística")
+#                         response_data['doc_status'] = "C"
+#                         response_data['tipo_doc'] = "SOL"
+#                     elif detalles_cerrados > 0:
+#                         OPRQ.objects.filter(pk=id).update(DocStatus="C", TipoDoc="OC")
+#                         logger.info(f"Solicitud {id} actualizada a DocStatus='C', TipoDoc='OC' por ítems cerrados")
+#                         response_data['doc_status'] = "C"
+#                         response_data['tipo_doc'] = "OC"
+
+#                 # Registrar validación
+#                 validate = Validaciones()
+#                 validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud.ReqIdUser else "Usuario no definido"
+#                 validate.codValidador = request.user.username
+#                 validate.fecha = timezone.now()
+#                 validate.estado = "Rechazado"
+#                 validate.save()
+#                 logger.info(f"Validación registrada para solicitud {id}: Validador={request.user.username}, Estado=Rechazado")
+
+#                 # Enviar correo si todo fue exitoso
+#                 if solicitud.ReqIdUser:
+#                     try:
+#                         send_email_to_user_presupuesto(0, solicitud.ReqIdUser, solicitud)
+#                         logger.info(f"Correo enviado para solicitud {id} usando ReqIdUser={solicitud.ReqIdUser}")
+#                     except Exception as e:
+#                         logger.error(f"Error al enviar correo para solicitud {id}: {str(e)}")
+#                         response_data['message'] += f" (Correo no enviado: {str(e)})"
+#                 else:
+#                     logger.warning(f"No se envió correo para solicitud {id} porque ReqIdUser es None")
+#                     response_data['message'] += " (Correo no enviado: usuario solicitante no definido)"
+
+#                 return JsonResponse(response_data, status=200)
+
+#         except Exception as e:
+#             logger.error(f"Error general en solicitudRechazarPres para solicitud {id}: {str(e)}", exc_info=True)
+#             return JsonResponse({'error': f"Error al procesar la solicitud: {str(e)}"}, status=500)
+            
+#     logger.warning(f"Método no permitido para solicitud {id}: {request.method}")
+#     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 def solicitudRechazarPres(request, id):
     if request.method == "POST":
         try:
@@ -1299,11 +1571,13 @@ def solicitudRechazarPres(request, id):
 
             with transaction.atomic():
                 detalles = PRQ1.objects.filter(NumDoc=id, Code__in=items_rechazados)
-                detalles.update(LineStatus='R')
-                logger.info(f"Actualizados {detalles.count()} ítems a LineStatus='R' en solicitud {id}")
+                if not detalles.exists():
+                    logger.warning(f"No se encontraron ítems válidos para rechazar en solicitud {id}")
+                    return JsonResponse({'error': 'Ítems seleccionados no encontrados'}, status=400)
 
+                # Preparar datos antes de cualquier cambio
                 rejected_items = []
-                lines_to_close = []  # Lista para las líneas a cerrar en SAP
+                lines_to_close = []
                 for detalle in detalles:
                     rejected_items.append({
                         'code': detalle.Code,
@@ -1311,11 +1585,26 @@ def solicitudRechazarPres(request, id):
                         'quantity': float(detalle.Quantity) if detalle.Quantity else 0.0,
                         'price': float(detalle.Precio) if detalle.Precio else 0.0,
                         'total': float(detalle.total) if detalle.total else 0.0,
-                        'line_status': detalle.LineStatus
+                        'line_status': 'R'
                     })
                     lines_to_close.append({
-                        'line_num': detalle.LineCount_Indexado  # Usamos LineCount_Indexado como LineNum
+                        'line_num': detalle.LineCount_Indexado
                     })
+
+                # Cerrar líneas en SAP primero (si aplica)
+                sap_lines_closed = False
+                if solicitud.DocNumSAP:
+                    logger.info(f"Intentando cerrar líneas en SAP para solicitud {id} con DocNumSAP={solicitud.DocNumSAP}")
+                    close_response = close_purchase_request_line_in_sap(solicitud.DocNumSAP, lines_to_close)
+                    if close_response.get('status') != 'success':
+                        logger.error(f"Fallo al cerrar líneas en SAP para solicitud {id}: {close_response.get('error')}, Código: {close_response.get('status_code')}")
+                        raise Exception(f"Fallo al cerrar líneas en SAP: {close_response.get('error')}")
+                    logger.info(f"Líneas cerradas exitosamente en SAP para solicitud {id}")
+                    sap_lines_closed = True
+
+                # Si SAP fue exitoso (o no aplica), actualizar la base de datos
+                detalles.update(LineStatus='R', LineRechazo='RP')
+                logger.info(f"Actualizados {detalles.count()} ítems a LineStatus='R', LineRechazo='RP' en solicitud {id}")
 
                 total_detalles = PRQ1.objects.filter(NumDoc=id).count()
                 detalles_rechazados = PRQ1.objects.filter(NumDoc=id, LineStatus='R').count()
@@ -1332,20 +1621,9 @@ def solicitudRechazarPres(request, id):
                     'rejected_items': rejected_items,
                     'total_items': total_detalles,
                     'rejected_count': detalles_rechazados,
-                    'message': "La solicitud ha sido rechazada exitosamente"
+                    'message': "La solicitud ha sido rechazada exitosamente",
+                    'sap_status': 'Lines Closed' if sap_lines_closed else 'Not Applicable'
                 }
-
-                # Cerrar líneas en SAP si existe DocNumSAP
-                if solicitud.DocNumSAP:
-                    logger.info(f"Intentando cerrar líneas en SAP para solicitud {id} con DocNumSAP={solicitud.DocNumSAP}")
-                    close_response = close_purchase_request_line_in_sap(solicitud.DocNumSAP, lines_to_close)
-                    if close_response.get('status') == 'success':
-                        logger.info(f"Líneas cerradas exitosamente en SAP para solicitud {id}")
-                        response_data['sap_status'] = 'Lines Closed'
-                    else:
-                        logger.error(f"Fallo al cerrar líneas en SAP para solicitud {id}: {close_response.get('error')}, Código: {close_response.get('status_code')}")
-                        response_data['message'] += f" (Fallo al cerrar líneas en SAP: {close_response.get('error')})"
-                        response_data['sap_status'] = 'Error'
 
                 # Actualizar estado de la solicitud
                 if total_detalles == detalles_rechazados:
@@ -1354,14 +1632,8 @@ def solicitudRechazarPres(request, id):
                     response_data['doc_status'] = "R"
                     response_data['tipo_doc'] = "SOL"
                     
-                    if solicitud.ReqIdUser:
-                        send_email_to_user_presupuesto(0, solicitud.ReqIdUser)
-                        logger.info(f"Correo enviado para solicitud {id} usando ReqIdUser={solicitud.ReqIdUser}")
-                    else:
-                        logger.warning(f"No se envió correo para solicitud {id} porque ReqIdUser es None")
-                        response_data['message'] += " (Correo no enviado: usuario solicitante no definido)"
-
-                    if solicitud.DocNumSAP and 'sap_status' not in response_data:  # Solo si no se cerraron líneas antes
+                    # Solo intentar cancelar en SAP si no se cerraron todas las líneas previamente
+                    if solicitud.DocNumSAP and not sap_lines_closed:
                         logger.info(f"Intentando cancelar solicitud {id} en SAP con DocNumSAP={solicitud.DocNumSAP}")
                         cancel_response = cancel_purchase_order_in_sap(solicitud.DocNumSAP)
                         if cancel_response.get('status') == 'success':
@@ -1369,8 +1641,10 @@ def solicitudRechazarPres(request, id):
                             logger.info(f"Solicitud {id} cancelada exitosamente en SAP")
                         else:
                             logger.error(f"Fallo al cancelar solicitud {id} en SAP: {cancel_response.get('error')}")
-                            response_data['message'] = f"Solicitud rechazada localmente, pero fallo al cancelar en SAP: {cancel_response.get('error')}"
+                            response_data['message'] += f" (Fallo al cancelar en SAP: {cancel_response.get('error')})"
                             response_data['sap_status'] = 'Error'
+                    elif sap_lines_closed:
+                        logger.info(f"Omitiendo cancelación en SAP para solicitud {id} porque todas las líneas ya fueron cerradas")
                 elif detalles_pendientes_A:
                     logger.info(f"Solicitud {id} tiene ítems pendientes en 'A', DocStatus no cambia")
                     response_data['doc_status'] = solicitud.DocStatus
@@ -1386,6 +1660,7 @@ def solicitudRechazarPres(request, id):
                         response_data['doc_status'] = "C"
                         response_data['tipo_doc'] = "OC"
 
+                # Registrar validación
                 validate = Validaciones()
                 validate.codReqUser = f"{solicitud.ReqIdUser.first_name} {solicitud.ReqIdUser.last_name}" if solicitud.ReqIdUser else "Usuario no definido"
                 validate.codValidador = request.user.username
@@ -1394,25 +1669,115 @@ def solicitudRechazarPres(request, id):
                 validate.save()
                 logger.info(f"Validación registrada para solicitud {id}: Validador={request.user.username}, Estado=Rechazado")
 
+                # Enviar correo si todo fue exitoso
+                if solicitud.ReqIdUser:
+                    try:
+                        send_email_to_user_presupuesto(0, solicitud.ReqIdUser, solicitud)
+                        logger.info(f"Correo enviado para solicitud {id} usando ReqIdUser={solicitud.ReqIdUser}")
+                    except Exception as e:
+                        logger.error(f"Error al enviar correo para solicitud {id}: {str(e)}")
+                        response_data['message'] += f" (Correo no enviado: {str(e)})"
+                else:
+                    logger.warning(f"No se envió correo para solicitud {id} porque ReqIdUser es None")
+                    response_data['message'] += " (Correo no enviado: usuario solicitante no definido)"
+
                 return JsonResponse(response_data, status=200)
 
         except Exception as e:
             logger.error(f"Error general en solicitudRechazarPres para solicitud {id}: {str(e)}", exc_info=True)
-            msg = f"Error al insertar datos maestros: {str(e)}"
-            return JsonResponse({'error': msg}, status=500)
+            return JsonResponse({'error': f"Error al procesar la solicitud: {str(e)}"}, status=500)
             
     logger.warning(f"Método no permitido para solicitud {id}: {request.method}")
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-
 #Metodo para cancelar las lineas seleccionadas en SAP desde Presupuestos
+# def close_purchase_request_line_in_sap(doc_entry, lines_to_close):
+#     """
+#     Cierra líneas específicas de una solicitud de compra en SAP usando PATCH.
+#     :param doc_entry: El DocEntry de la solicitud en SAP (solicitud.DocNumSAP).
+#     :param lines_to_close: Lista de diccionarios con 'line_num' para cerrar.
+#     :return: Dict con estado de la operación.
+#     """
+#     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
+#     payload_session = json.dumps({
+#         "CompanyDB": "BDPRUEBASOCL",
+#         "Password": "m1r1",
+#         "UserName": "manager"
+#     })
+#     headers_session = {'Content-Type': 'application/json'}
+
+#     session = requests.Session()
+#     session.verify = False
+
+#     for attempt in range(5):
+#         try:
+#             logger.debug(f"Intento {attempt + 1} de inicio de sesión en SAP para DocEntry={doc_entry}")
+#             response_session = session.post(url_session, headers=headers_session, data=payload_session)
+#             if response_session.status_code == 200:
+#                 session_cookie = response_session.cookies.get('B1SESSION')
+#                 route_id_cookie = response_session.cookies.get('ROUTEID', '.node1')
+
+#                 if not session_cookie:
+#                     logger.warning(f"Intento {attempt + 1}: No se obtuvo B1SESSION para DocEntry={doc_entry}")
+#                     if attempt == 4:
+#                         return {'status': 'error', 'error': 'No se pudo obtener la cookie de sesión', 'status_code': 500}
+#                     time.sleep(2)
+#                     continue
+
+#                 cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
+#                 logger.debug(f"Sesión iniciada para DocEntry={doc_entry} - Cookie: {cookie_string}")
+
+#                 # Endpoint PATCH para PurchaseRequests
+#                 url = f"https://CFR-I7-1:50000/b1s/v1/PurchaseRequests({doc_entry})"
+#                 headers = {'Content-Type': 'application/json', 'Cookie': cookie_string}
+
+#                 # Construir el payload con las líneas a cerrar
+#                 payload = {
+#                     "DocumentLines": [
+#                         {
+#                             "LineNum": line['line_num'],
+#                             "LineStatus": "bost_Close"
+#                         } for line in lines_to_close
+#                     ]
+#                 }
+#                 payload_json = json.dumps(payload)
+#                 logger.debug(f"Enviando PATCH a {url} para cerrar líneas en DocEntry={doc_entry}: {payload_json}")
+
+#                 response = session.patch(url, headers=headers, data=payload_json)
+#                 logger.debug(f"Respuesta de SAP para DocEntry={doc_entry}: Status={response.status_code}, Contenido={response.text}")
+
+#                 if response.status_code == 200 or response.status_code == 204:
+#                     logger.info(f"Líneas cerradas exitosamente en SAP para DocEntry={doc_entry}")
+#                     return {'status': 'success'}
+#                 else:
+#                     try:
+#                         response_dict = response.json()
+#                         error_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
+#                     except json.JSONDecodeError:
+#                         error_message = response.text
+#                     logger.warning(f"Error en intento {attempt + 1} para DocEntry={doc_entry}: {response.status_code} - {error_message}")
+#                     if attempt == 4:
+#                         return {'status': 'error', 'error': error_message, 'status_code': response.status_code}
+#                     time.sleep(2)
+#                     continue
+
+#             else:
+#                 logger.warning(f"Intento {attempt + 1} fallido para DocEntry={doc_entry}: Error en la solicitud de sesión: {response_session.status_code}")
+#                 if attempt == 4:
+#                     return {'status': 'error', 'error': f"Error al iniciar sesión: {response_session.status_code}", 'status_code': 500}
+#                 time.sleep(2)
+
+#         except requests.RequestException as e:
+#             logger.error(f"Error de conexión en intento {attempt + 1} para DocEntry={doc_entry}: {str(e)}")
+#             if attempt == 4:
+#                 return {'status': 'error', 'error': f"Error de conexión: {str(e)}", 'status_code': 500}
+#             time.sleep(2)
+
+#     logger.error(f"No se pudo cerrar líneas para DocEntry={doc_entry} después de 5 intentos")
+#     return {'status': 'error', 'error': 'No se pudo completar la operación después de 5 intentos', 'status_code': 500}
+
+
 def close_purchase_request_line_in_sap(doc_entry, lines_to_close):
-    """
-    Cierra líneas específicas de una solicitud de compra en SAP usando PATCH.
-    :param doc_entry: El DocEntry de la solicitud en SAP (solicitud.DocNumSAP).
-    :param lines_to_close: Lista de diccionarios con 'line_num' para cerrar.
-    :return: Dict con estado de la operación.
-    """
     url_session = "https://CFR-I7-1:50000/b1s/v1/Login"
     payload_session = json.dumps({
         "CompanyDB": "BDPRUEBASOCL",
@@ -1428,41 +1793,38 @@ def close_purchase_request_line_in_sap(doc_entry, lines_to_close):
         try:
             logger.debug(f"Intento {attempt + 1} de inicio de sesión en SAP para DocEntry={doc_entry}")
             response_session = session.post(url_session, headers=headers_session, data=payload_session)
+            logger.debug(f"Respuesta de login: Status={response_session.status_code}, Contenido={response_session.text}")
+            
             if response_session.status_code == 200:
                 session_cookie = response_session.cookies.get('B1SESSION')
                 route_id_cookie = response_session.cookies.get('ROUTEID', '.node1')
 
                 if not session_cookie:
-                    logger.warning(f"Intento {attempt + 1}: No se obtuvo B1SESSION para DocEntry={doc_entry}")
+                    logger.warning(f"Intento {attempt + 1}: No se obtuvo B1SESSION")
                     if attempt == 4:
                         return {'status': 'error', 'error': 'No se pudo obtener la cookie de sesión', 'status_code': 500}
                     time.sleep(2)
                     continue
 
                 cookie_string = f'B1SESSION={session_cookie}; ROUTEID={route_id_cookie}'
-                logger.debug(f"Sesión iniciada para DocEntry={doc_entry} - Cookie: {cookie_string}")
+                logger.debug(f"Sesión iniciada - Cookie: {cookie_string}")
 
-                # Endpoint PATCH para PurchaseRequests
                 url = f"https://CFR-I7-1:50000/b1s/v1/PurchaseRequests({doc_entry})"
                 headers = {'Content-Type': 'application/json', 'Cookie': cookie_string}
-
-                # Construir el payload con las líneas a cerrar
                 payload = {
                     "DocumentLines": [
-                        {
-                            "LineNum": line['line_num'],
-                            "LineStatus": "bost_Close"
-                        } for line in lines_to_close
+                        {"LineNum": line['line_num'], "LineStatus": "bost_Close"}
+                        for line in lines_to_close
                     ]
                 }
                 payload_json = json.dumps(payload)
-                logger.debug(f"Enviando PATCH a {url} para cerrar líneas en DocEntry={doc_entry}: {payload_json}")
+                logger.debug(f"Enviando PATCH a {url} con payload: {payload_json}")
 
                 response = session.patch(url, headers=headers, data=payload_json)
-                logger.debug(f"Respuesta de SAP para DocEntry={doc_entry}: Status={response.status_code}, Contenido={response.text}")
+                logger.debug(f"Respuesta de SAP: Status={response.status_code}, Contenido={response.text}")
 
-                if response.status_code == 200 or response.status_code == 204:
-                    logger.info(f"Líneas cerradas exitosamente en SAP para DocEntry={doc_entry}")
+                if response.status_code in (200, 204):
+                    logger.info(f"Líneas cerradas exitosamente en SAP para DocEntry={doc_entry}: {lines_to_close}")
                     return {'status': 'success'}
                 else:
                     try:
@@ -1470,20 +1832,20 @@ def close_purchase_request_line_in_sap(doc_entry, lines_to_close):
                         error_message = response_dict.get('error', {}).get('message', {}).get('value', 'Error desconocido')
                     except json.JSONDecodeError:
                         error_message = response.text
-                    logger.warning(f"Error en intento {attempt + 1} para DocEntry={doc_entry}: {response.status_code} - {error_message}")
+                    logger.warning(f"Error en intento {attempt + 1}: {response.status_code} - {error_message}")
                     if attempt == 4:
                         return {'status': 'error', 'error': error_message, 'status_code': response.status_code}
                     time.sleep(2)
                     continue
 
             else:
-                logger.warning(f"Intento {attempt + 1} fallido para DocEntry={doc_entry}: Error en la solicitud de sesión: {response_session.status_code}")
+                logger.warning(f"Intento {attempt + 1} fallido: Error en login: {response_session.status_code} - {response_session.text}")
                 if attempt == 4:
                     return {'status': 'error', 'error': f"Error al iniciar sesión: {response_session.status_code}", 'status_code': 500}
                 time.sleep(2)
 
         except requests.RequestException as e:
-            logger.error(f"Error de conexión en intento {attempt + 1} para DocEntry={doc_entry}: {str(e)}")
+            logger.error(f"Error de conexión en intento {attempt + 1}: {str(e)}")
             if attempt == 4:
                 return {'status': 'error', 'error': f"Error de conexión: {str(e)}", 'status_code': 500}
             time.sleep(2)
@@ -2051,7 +2413,8 @@ def guardar_orden_compra_oc_producto(detalles_seleccionados, solicitud, tipo, pr
     serie_instance.save()
     
     # Enviar correo a logística después de guardar la orden de compra
-    send_email_to_user_logistica(1, solicitud.ReqIdUser)
+    # send_email_to_user_logistica(1, solicitud.ReqIdUser)
+    send_email_to_user_logistica(1, solicitud.ReqIdUser, solicitud)
     print("Correo enviado a logística después de guardar la orden de compra")
 
     return orden_compra_cabecera
@@ -2410,7 +2773,8 @@ def guardar_orden_compra_oc_servicio(detalles_seleccionados, solicitud, tipo, pr
     serie_instance.save()
     
     # Enviar correo a logística después de guardar la orden de compra
-    send_email_to_user_logistica(1, solicitud.ReqIdUser)
+    # send_email_to_user_logistica(1, solicitud.ReqIdUser)
+    send_email_to_user_logistica(1, solicitud.ReqIdUser, solicitud)
     print("Correo enviado a logística después de guardar la orden de compra")
 
     return orden_compra_cabecera
