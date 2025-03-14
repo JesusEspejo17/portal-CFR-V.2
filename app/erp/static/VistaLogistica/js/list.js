@@ -1388,7 +1388,7 @@ function updateSubtotals(type) {
     console.log(`Subtotal con impuestos (${TAX_RATE * 100}%): ${subtotalConImpuestos.toFixed(2)}`);
     console.log(`Moneda detectada: ${monedaTexto}, Símbolo: ${monedaSimbolo}`);
 
-    // Actualizar elementos en el tfoot con símbolo dinámico
+    // Actualizar elementos en el tfoot con símbolo dinam
     subtotalElement.text(`${monedaSimbolo}${subtotal.toFixed(2)}`);
     subtotalImpElement.text(`${monedaSimbolo}${subtotalConImpuestos.toFixed(2)}`);
 }
