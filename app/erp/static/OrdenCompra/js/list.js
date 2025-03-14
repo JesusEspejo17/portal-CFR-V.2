@@ -62,8 +62,21 @@ $(document).ready(function () {
             {
                 targets: [7], // Índices de las columnas TotalOC y TotalImpuestosOC
                 render: function (data, type, row) {
+                    // Usar row.moneda directamente desde los datos de la fila
+                    var monedaTexto = row.MonedaOC ? row.MonedaOC.trim() : '';
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // Valor por defecto si no hay moneda
+                    }
+
                     if (type === 'display' || type === 'filter') {
-                        return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                        return monedaSimbolo + parseFloat(data).toFixed(2);
                     }
                     return data; // Para otros tipos, devolver el dato sin cambios
                 }
@@ -360,9 +373,8 @@ $(document).ready(function () {
                     <td>${detalle.ItemCodeOCD}</td>
                     <td>${detalle.DescriptionOCD}</td>
                     <td style="text-align: center;">${detalle.QuantityOCD}</td>
-                    <td style="text-align: center;">S/. ${detalle.PrecioOCD}</td>
-                    <td style="text-align: center;">S/.${detalle.TotalOCD}</td>
-                    
+                    <td style="text-align: center;">${data.MonedaOC === 'SOL' ? 'S/. ' : data.MonedaOC === 'USD' ? '$ ' : data.MonedaOC === 'EUR' ? '€ ' : ''}${detalle.PrecioOCD}</td>                    
+                    <td style="text-align: center;">${data.MonedaOC === 'SOL' ? 'S/. ' : data.MonedaOC === 'USD' ? '$ ' : data.MonedaOC === 'EUR' ? '€ ' : ''}${detalle.TotalOCD}</td>
                 </tr>
             `;
         });
@@ -410,7 +422,16 @@ function tablaSolicitudDetalleProducto(docNum) {
             {
                 data: 'Precio',
                 render: function(data, type, row) {
-                    return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                    var monedaTexto = row.moneda ? row.moneda.trim() : '';
+                    var monedaSimbolo = '';
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    }
+                    return monedaSimbolo + parseFloat(data).toFixed(2);
                 }
             },
             { data: 'UnidadMedida__Name' },
@@ -418,7 +439,16 @@ function tablaSolicitudDetalleProducto(docNum) {
             {
                 data: 'total',
                 render: function(data, type, row) {
-                    return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                    var monedaTexto = row.moneda ? row.moneda.trim() : '';
+                    var monedaSimbolo = '';
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    }
+                    return monedaSimbolo + parseFloat(data).toFixed(2);
                 }
             },
             {
@@ -489,6 +519,8 @@ function tablaSolicitudDetalleProducto(docNum) {
     });
 }
 
+
+
 function tablaSolicitudDetalleServicio(docNum) {
     console.log('1. Iniciando carga de tabla servicios, DocNum:', docNum);
     
@@ -525,14 +557,32 @@ function tablaSolicitudDetalleServicio(docNum) {
             {
                 data: 'Precio',
                 render: function(data, type, row) {
-                    return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                    var monedaTexto = row.moneda ? row.moneda.trim() : '';
+                    var monedaSimbolo = '';
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    }
+                    return monedaSimbolo + parseFloat(data).toFixed(2);
                 }
             },
             { data: 'CuentaMayor__AcctName' },
             {
                 data: 'total',
                 render: function(data, type, row) {
-                    return 'S/. ' + parseFloat(data).toFixed(2); // Anteponer 'S/. ' y formatear a dos decimales
+                    var monedaTexto = row.moneda ? row.moneda.trim() : '';
+                    var monedaSimbolo = '';
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    }
+                    return monedaSimbolo + parseFloat(data).toFixed(2);
                 }
             },
             {

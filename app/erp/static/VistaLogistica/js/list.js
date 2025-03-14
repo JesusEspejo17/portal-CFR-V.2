@@ -70,20 +70,34 @@ function iniciarTabla() {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
+                    // Usar row.moneda directamente desde los datos de la fila
+                    var monedaTexto = row.moneda ? row.moneda.trim() : '';
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // Valor por defecto si no hay moneda
+                    }
+
                     if (row.DocStatus === 'P' || row.DocStatus === 'R') {
-                        return 'S/. ' + data;
+                        return monedaSimbolo + data;
                     } else if (row.DocStatus === 'A' || row.DocStatus === 'C' || row.DocStatus === 'CP') {
                         var totalImp = 0;
                         $.ajax({
-                            url: '/erp/getLineDetails/', // URL para obtener los detalles de las líneas
+                            url: '/erp/getLineDetails/',
                             type: 'POST',
                             data: {
                                 'docEntry': row.DocEntry,
-                                'lineStatus': 'L'
+                                'lineStatus': 'A,C,L'
                             },
-                            headers: { "X-CSRFToken": csrftoken },  // Incluir el token CSRF
-                            async: false, // Esto es importante para que la llamada sea síncrona
+                            headers: { "X-CSRFToken": csrftoken },
+                            async: false,
                             success: function (response) {
+                                console.log('Response from getLineDetails:', response);
                                 for (var i = 0; i < response.length; i++) {
                                     totalImp += response[i].totalimpdet;
                                 }
@@ -92,9 +106,9 @@ function iniciarTabla() {
                                 console.error('Error al obtener los detalles de las líneas:', error);
                             }
                         });
-                        return 'S/. ' + totalImp.toFixed(2);
+                        return monedaSimbolo + totalImp.toFixed(2);
                     }
-                    return 'S/. 0.00';
+                    return monedaSimbolo + '0.00';
                 },
             },
             {
@@ -171,6 +185,7 @@ function iniciarTabla() {
                                         // Agregamos cada producto como una nueva línea
                                         orden.add({
                                             ...response[j],
+                                            moneda: rowDataC.moneda, // Agregar moneda desde la fila de tblContabilizados
                                             LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
                                         });
                                         orden.list();
@@ -196,6 +211,7 @@ function iniciarTabla() {
                             },
                             dataSrc: "",
                             success: function (response) {
+                                console.log('rowDataC.moneda:', rowDataC.moneda);
                                 for (var j = 0; j < response.length; j++) {
                                     var index = checkedSv.findIndex(function (item) {
                                         return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
@@ -205,6 +221,7 @@ function iniciarTabla() {
                                         // Agregamos cada servicio como una nueva línea
                                         ordenServ.add({
                                             ...response[j],
+                                            moneda: rowDataC.moneda, // Agregar moneda desde la fila de tblContabilizados
                                             LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
                                         });
                                         ordenServ.list();
@@ -385,10 +402,22 @@ var orden = {
                 },
                 { 
                     "data": "total",
-                    render: function(data, type, row) {
-                        return `S/. ${(row.Quantity * row.Precio).toFixed(2)}`;
+                    render: function (data, type, row) {
+                        // Usar row.moneda directamente desde los datos de la fila
+                        var monedaTexto = row.moneda ? row.moneda.trim() : '';
+                        var monedaSimbolo;
+                        if (monedaTexto === 'SOL') {
+                            monedaSimbolo = 'S/. ';
+                        } else if (monedaTexto === 'USD') {
+                            monedaSimbolo = '$ ';
+                        } else if (monedaTexto === 'EUR') {
+                            monedaSimbolo = '€ ';
+                        } else {
+                            monedaSimbolo = ''; // Valor por defecto si no hay moneda
+                        }
+                        return `${monedaSimbolo}${(row.Quantity * row.Precio).toFixed(2)}`;
                     }
-                }
+                },
             ],
             columnDefs: [
                 {
@@ -500,8 +529,20 @@ var ordenServ = {
                 { "data": "Quantity" },
                 { 
                     "data": "total",
-                    render: function(data, type, row) {
-                        return `S/. ${(row.Quantity * row.Precio).toFixed(2)}`;
+                    render: function (data, type, row) {
+                        // Usar row.moneda directamente desde los datos de la fila
+                        var monedaTexto = row.moneda ? row.moneda.trim() : '';
+                        var monedaSimbolo;
+                        if (monedaTexto === 'SOL') {
+                            monedaSimbolo = 'S/. ';
+                        } else if (monedaTexto === 'USD') {
+                            monedaSimbolo = '$ ';
+                        } else if (monedaTexto === 'EUR') {
+                            monedaSimbolo = '€ ';
+                        } else {
+                            monedaSimbolo = ''; // Valor por defecto si no hay moneda
+                        }
+                        return `${monedaSimbolo}${(row.Quantity * row.Precio).toFixed(2)}`;
                     }
                 }
             ],
@@ -736,10 +777,24 @@ function tablaDetalleProducto(docNum) {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
-                    var value = parseFloat(row.total).toFixed(2);
+                    // Obtener el texto de la moneda desde el elemento HTML
+                    var monedaTexto = $('#detallesMoneda').text().trim(); // Asegúrate de eliminar espacios en blanco
 
-                    var sol = 'S/. ';
-                    return sol + value;
+                    // Definir el símbolo de la moneda basado en el texto obtenido
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // En caso de que no coincida con ninguna moneda conocida
+                    }
+
+                    var value = parseFloat(row.total).toFixed(2);
+                    //var sol = 'S/. ';
+                    return monedaSimbolo + value;
                 },
             },
             {
@@ -966,10 +1021,24 @@ function tablaDetalleServicio(docNum) {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
-                    var value = parseFloat(row.total).toFixed(2);
+                    // Obtener el texto de la moneda desde el elemento HTML
+                    var monedaTexto = $('#detallesMoneda').text().trim(); // Asegúrate de eliminar espacios en blanco
 
-                    var sol = 'S/. ';
-                    return sol + value;
+                    // Definir el símbolo de la moneda basado en el texto obtenido
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // En caso de que no coincida con ninguna moneda conocida
+                    }
+
+                    var value = parseFloat(row.total).toFixed(2);
+                    //var sol = 'S/. ';
+                    return monedaSimbolo + value;
                 },
             },
             {
@@ -1300,12 +1369,26 @@ function updateSubtotals(type) {
     let subtotal = items.reduce((sum, item) => sum + (item.Quantity * item.Precio), 0);
     let subtotalConImpuestos = subtotal * (1 + TAX_RATE);
 
-    // Log para verificar los cálculos
+    // Obtener la moneda desde el primer ítem (si existe)
+    let monedaTexto = items.length > 0 && items[0].moneda ? items[0].moneda.trim() : '';
+    let monedaSimbolo;
+    if (monedaTexto === 'SOL') {
+        monedaSimbolo = 'S/. ';
+    } else if (monedaTexto === 'USD') {
+        monedaSimbolo = '$ ';
+    } else if (monedaTexto === 'EUR') {
+        monedaSimbolo = '€ ';
+    } else {
+        monedaSimbolo = ''; // Valor por defecto si no hay moneda
+    }
+
+    // Log para verificar los cálculos y la moneda
     console.log(`Calculando subtotales para ${type}`);
     console.log(`Subtotal: ${subtotal.toFixed(2)}`);
     console.log(`Subtotal con impuestos (${TAX_RATE * 100}%): ${subtotalConImpuestos.toFixed(2)}`);
+    console.log(`Moneda detectada: ${monedaTexto}, Símbolo: ${monedaSimbolo}`);
 
-    // Actualizar elementos en el tfoot
-    subtotalElement.text(`S/. ${subtotal.toFixed(2)}`);
-    subtotalImpElement.text(`S/. ${subtotalConImpuestos.toFixed(2)}`);
+    // Actualizar elementos en el tfoot con símbolo dinámico
+    subtotalElement.text(`${monedaSimbolo}${subtotal.toFixed(2)}`);
+    subtotalImpElement.text(`${monedaSimbolo}${subtotalConImpuestos.toFixed(2)}`);
 }

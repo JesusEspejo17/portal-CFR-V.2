@@ -260,10 +260,10 @@
                                                                     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">
                                                                         <thead>
                                                                             <tr style="background-color: #f0f0f0;">
-                                                                                <th>Ítem</th>
-                                                                                <th>Code</th>
-                                                                                <th>Description</th>
-                                                                                <th>Quantity</th>
+                                                                                <th>N°</th>
+                                                                                <th>Código</th>
+                                                                                <th>Descripción</th>
+                                                                                <th>Cantidad</th>
                                                                                 <th>Precio</th>
                                                                                 <th>Total</th>
                                                                                 {% comment %} <th>Total con Impuestos</th> {% endcomment %}
@@ -277,7 +277,7 @@
                                                                                 <td>{{ detalle.description }}</td>
                                                                                 <td>{{ detalle.quantity }}</td>
                                                                                 <td>{{ detalle.precio }}</td>
-                                                                                <td>{{ detalle.total }}</td>
+                                                                                <td>{{ detalle.total|floatformat:2 }}</td>
                                                                                 {% comment %} <td>{{ detalle.totalimpdet }}</td> {% endcomment %}
                                                                             </tr>
                                                                             {% empty %}

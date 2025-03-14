@@ -267,10 +267,10 @@
                                                                     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">
                                                                         <thead>
                                                                             <tr style="background-color: #f0f0f0;">
-                                                                                <th>Ítem</th>
-                                                                                <th>Code</th>
-                                                                                <th>Description</th>
-                                                                                <th>Quantity</th>
+                                                                                <th>N°</th>
+                                                                                <th>Código</th>
+                                                                                <th>Descripción</th>
+                                                                                <th>Cantidad</th>
                                                                                 <th>Precio</th>
                                                                                 <th>Total</th>
                                                                                 <th>Total con Impuestos</th>
@@ -285,7 +285,7 @@
                                                                                 <td>{{ detalle.quantity }}</td>
                                                                                 <td>{{ detalle.precio }}</td>
                                                                                 <td>{{ detalle.total }}</td>
-                                                                                <td>{{ detalle.totalimpdet }}</td>
+                                                                                <td>{{ detalle.totalimpdet|floatformat:2 }}</td>
                                                                             </tr>
                                                                             {% empty %}
                                                                             <tr>
@@ -304,10 +304,10 @@
                                                                     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; margin-top: 10px;">
                                                                         <thead>
                                                                             <tr style="background-color: #f0f0f0;">
-                                                                                <th>Ítem</th>
-                                                                                <th>Code</th>
-                                                                                <th>Description</th>
-                                                                                <th>Quantity</th>
+                                                                                <th>N°</th>
+                                                                                <th>Código</th>
+                                                                                <th>Descripción</th>
+                                                                                <th>Cantidad</th>
                                                                                 <th>Precio</th>
                                                                                 <th>Total</th>
                                                                                 <th>Total con Impuestos</th>
@@ -322,7 +322,7 @@
                                                                                 <td>{{ detalle.quantity }}</td>
                                                                                 <td>{{ detalle.precio }}</td>
                                                                                 <td>{{ detalle.total }}</td>
-                                                                                <td>{{ detalle.totalimpdet }}</td>
+                                                                                <td>{{ detalle.totalimpdet|floatformat:2 }}</td>
                                                                             </tr>
                                                                             {% endfor %}
                                                                         </tbody>

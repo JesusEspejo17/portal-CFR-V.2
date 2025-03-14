@@ -1942,6 +1942,7 @@ def export_data_as_json(id):
             "ReqType": solicitud.ReqType,
             "DocType": "dDocument_Items" if solicitud.DocType == 'I' else ("dDocument_Service" if solicitud.DocType == 'S' else None),
             "DocDate": solicitud.DocDate,
+            "DocCurrency": "SOL", # SE AGREGO PARA QUE FUNCIONE LAS DEMAS MONEDAS
             "DocCurrency": solicitud.moneda.MonedaAbrev,
             "Comments": solicitud.Comments,
             "TaxDate": solicitud.DocDate,
@@ -1976,9 +1977,9 @@ def export_data_as_json(id):
                         "RequiredDate": solicitud.ReqDate,
                         "TaxCode": solicitud.TaxCode.Code,
                         'Quantity': det.Quantity,
-                        "Price": det.Precio,
+                        # "Price": det.Precio,  # SE COMENTÓ PARA QUE FUNCIONE LAS DEMAS MONEDAS
                         "UnitPrice": det.Precio,
-                        "DocTotalFC": det.Precio * det.Quantity,
+                        # "DocTotalFC": det.Precio * det.Quantity,  # SE COMENTÓ PARA QUE FUNCIONE LAS DEMAS MONEDAS
                         "AccountCode": det.CuentaMayor.AcctCode,
                         'CostingCode': det.idDimension.descripcion if det.idDimension else 'null',
                         'Currency': det.Currency.MonedaAbrev if det.Currency else 'null'
@@ -2799,7 +2800,7 @@ class OrdenCompraListView(ValidatePermissionRequiredMixin2, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.groups.filter(name='Jefe_de_Presupuestos').exists():
+        if user.groups.filter(name='Jefe_de_Presupuestos').exists() or user.is_superuser:
             # Jefe de Presupuestos ve todas las órdenes de compra
             return OCC.objects.prefetch_related(
                 'detalles_oc',
@@ -2911,7 +2912,13 @@ def get_solicitud_detalle_producto(request, doc_num):
             'Quantity_rest',
         )
         print(f"Detalles encontrados: {detalles.count()}")
-        return JsonResponse(list(detalles), safe=False)
+
+        # Convertir a lista y agregar 'moneda' desde OPRQ
+        detalles_data = list(detalles)
+        for detalle in detalles_data:
+            detalle['moneda'] = oprq.moneda.MonedaAbrev if oprq.moneda else ''
+
+        return JsonResponse(detalles_data, safe=False)
     except OPRQ.DoesNotExist:
         print(f"No se encontró OPRQ con DocNum: {doc_num}")
         return JsonResponse([], safe=False)
@@ -2921,6 +2928,39 @@ def get_solicitud_detalle_producto(request, doc_num):
     
 #DETALLES DE TABLA SERVICIO DENTRO DE OC
 @csrf_exempt
+# def get_solicitud_detalle_servicio(request, doc_num):
+#     try:
+#         print(f"Buscando DocEntry en OPRQ para DocNum: {doc_num}")
+#         # Get DocEntry from OPRQ
+#         oprq = OPRQ.objects.get(DocNum=doc_num)
+#         print(f"DocEntry encontrado: {oprq.DocEntry}")
+        
+#         # Query PRQ1 using DocEntry
+#         detalles = PRQ1.objects.filter(
+#             NumDoc_id=oprq.DocEntry
+#         ).select_related(
+#             'ItemCode',
+#             'LineVendor',
+#             'CuentaMayor'
+#         ).values(
+#             'ItemCode__ItemCode',
+#             'LineVendor__CardName',
+#             'Description',
+#             'Quantity',
+#             'Precio',
+#             'CuentaMayor__AcctName',
+#             'total',
+#             'LineStatus'
+#         )
+#         print(f"Servicios encontrados: {detalles.count()}")
+#         return JsonResponse(list(detalles), safe=False)
+#     except OPRQ.DoesNotExist:
+#         print(f"No se encontró OPRQ con DocNum: {doc_num}")
+#         return JsonResponse([], safe=False)
+#     except Exception as e:
+#         print(f"Error: {str(e)}")
+#         return JsonResponse({'error': str(e)}, status=500)
+
 def get_solicitud_detalle_servicio(request, doc_num):
     try:
         print(f"Buscando DocEntry en OPRQ para DocNum: {doc_num}")
@@ -2946,7 +2986,13 @@ def get_solicitud_detalle_servicio(request, doc_num):
             'LineStatus'
         )
         print(f"Servicios encontrados: {detalles.count()}")
-        return JsonResponse(list(detalles), safe=False)
+
+        # Convertir a lista y agregar 'moneda' desde OPRQ
+        detalles_data = list(detalles)
+        for detalle in detalles_data:
+            detalle['moneda'] = oprq.moneda.MonedaAbrev if oprq.moneda else ''
+
+        return JsonResponse(detalles_data, safe=False)
     except OPRQ.DoesNotExist:
         print(f"No se encontró OPRQ con DocNum: {doc_num}")
         return JsonResponse([], safe=False)

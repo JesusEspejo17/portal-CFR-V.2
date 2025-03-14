@@ -316,8 +316,21 @@ $(function initializeDataTable() {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
+                    // Usar row.moneda directamente desde los datos de la fila
+                    var monedaTexto = row.moneda ? row.moneda.trim() : '';
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // Valor por defecto si no hay moneda
+                    }
+            
                     if (row.DocStatus === 'P' || row.DocStatus === 'R') {
-                        return 'S/. ' + data;
+                        return monedaSimbolo + data;
                     } else if (row.DocStatus === 'A' || row.DocStatus === 'C' || row.DocStatus === 'CP') {
                         var totalImp = 0;
                         $.ajax({
@@ -330,9 +343,8 @@ $(function initializeDataTable() {
                             headers: { "X-CSRFToken": csrftoken },
                             async: false,
                             success: function (response) {
-                                //console.log('Response from getLineDetails:', response); // Verificar la respuesta del backend
+                                console.log('Response from getLineDetails:', response);
                                 for (var i = 0; i < response.length; i++) {
-                                    //console.log('Processing line item:', response[i]); // Verificar cada línea procesada
                                     totalImp += response[i].totalimpdet;
                                 }
                             },
@@ -340,10 +352,9 @@ $(function initializeDataTable() {
                                 console.error('Error al obtener los detalles de las líneas:', error);
                             }
                         });
-                        //console.log('Total Impuesto Calculado:', totalImp); // Verificar el total calculado
-                        return 'S/. ' + totalImp.toFixed(2);
+                        return monedaSimbolo + totalImp.toFixed(2);
                     }
-                    return 'S/. 0.00';
+                    return monedaSimbolo + '0.00';
                 },
             },
             {
@@ -585,59 +596,30 @@ function tablaDetalleServicio(docNum) {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
-                    var value = row.total;
-                    var sol = 'S/. ';
-                    return sol + value;
+                    // Obtener el texto de la moneda desde el elemento HTML
+                    var monedaTexto = $('#detallesMoneda').text().trim(); // Asegúrate de eliminar espacios en blanco
+
+                    // Definir el símbolo de la moneda basado en el texto obtenido
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // En caso de que no coincida con ninguna moneda conocida
+                    }
+
+                    var value = parseFloat(row.total).toFixed(2);
+                    //var sol = 'S/. ';
+                    return monedaSimbolo + value;
                 },
             },
             {
                 targets: [5,6],
                 class: "text-center",
             },
-            // {
-            //     targets: [-1],
-            //     class: "text-center",
-            //     orderable: false,
-            //     render: function (data, type, row) {
-            //         var checked = '';
-            //         if (row.LineStatus === 'P') {
-            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
-            //         } else {
-            //             return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
-            //         }
-            //         return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
-            //     }
-            // }
-
-
-
-
-            // {
-            //     targets: [-1],
-            //     class: "text-center",
-            //     orderable: false,
-            //     render: function (data, type, row) {
-            //         var checked = '';
-            //         var isHeadofBudget = userGroups.includes('Jefe_de_Presupuestos');
-
-            //         // Si es Jefe de Presupuestos, siempre puede marcar los checkboxes
-            //         if (isHeadofBudget) {
-            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
-            //             //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
-            //             return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
-            //         }
-
-            //         // Para otros roles, mantener la lógica existente
-            //         if (row.LineStatus === 'P') {
-            //             checked = checkedProd.some(item => item.Code === row.Code) ? 'checked' : '';
-            //         } else {
-            //             //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" disabled></input></div>';
-            //             return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
-            //         }
-            //         //return '<div class="form-check"> <input class="form-check-input" type="checkbox" value="' + row.Code + '" id="' + row.Code + '" ' + checked + '></input></div>';
-            //         return `<div class="form-check"> <input class="form-check-input" type="checkbox" name="chk-detalle" value="${row.Code}" id="chk-${row.Code}" ${checked}></div>`;
-            //     }
-            // },
             {
                 targets: [-1],
                 class: "text-center",
@@ -792,10 +774,24 @@ function tablaDetalleProducto(docNum) {
                 class: "text-center",
                 orderable: false,
                 render: function (data, type, row) {
-                    var value = parseFloat(row.total).toFixed(2);
+                    // Obtener el texto de la moneda desde el elemento HTML
+                    var monedaTexto = $('#detallesMoneda').text().trim(); // Asegúrate de eliminar espacios en blanco
 
-                    var sol = 'S/. ';
-                    return sol + value;
+                    // Definir el símbolo de la moneda basado en el texto obtenido
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // En caso de que no coincida con ninguna moneda conocida
+                    }
+
+                    var value = parseFloat(row.total).toFixed(2);
+                    //var sol = 'S/. ';
+                    return monedaSimbolo + value;
                 },
             },
             // {
