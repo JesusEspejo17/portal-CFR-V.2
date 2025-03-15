@@ -157,163 +157,371 @@ function iniciarTabla() {
                 },
             },
         ],
-        initComplete: function (settings, json) {
-            $('#tblContabilizados').on('change', 'input[type="checkbox"]', function () {
-                var $checkbox = $(this);
-                var table = $('#tblContabilizados').DataTable();
-                var rowDataC = table.row($checkbox.closest('tr')).data();
-                obtenerTaxRate(rowDataC.TaxCode); // Obtener la tasa de impuesto basada en el TaxCode de la solicitud
+//         initComplete: function (settings, json) {
+//             $('#tblContabilizados').on('change', 'input[type="checkbox"]', function () {
+//                 var $checkbox = $(this);
+//                 var table = $('#tblContabilizados').DataTable();
+//                 var rowDataC = table.row($checkbox.closest('tr')).data();
+//                 obtenerTaxRate(rowDataC.TaxCode); // Obtener la tasa de impuesto basada en el TaxCode de la solicitud
 
-                if ($checkbox.is(':checked')) {
-                    if (rowDataC.DocType === 'I') {
-                        $.ajax({
-                            url: window.location.pathname,
-                            type: 'POST',
-                            data: {
-                                'action': 'getDetails',
-                                'code': rowDataC.DocEntry
-                            },
-                            dataSrc: "",
-                            success: function (response) {
-                                for (var j = 0; j < response.length; j++) {
-                                    // Eliminamos la búsqueda de productos iguales
-                                    var index = checked.findIndex(function (item) {
-                                        return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
-                                    });
+//                 if ($checkbox.is(':checked')) {
+//                     if (rowDataC.DocType === 'I') {
+//                         $.ajax({
+//                             url: window.location.pathname,
+//                             type: 'POST',
+//                             data: {
+//                                 'action': 'getDetails',
+//                                 'code': rowDataC.DocEntry
+//                             },
+//                             dataSrc: "",
+//                             success: function (response) {
+//                                 for (var j = 0; j < response.length; j++) {
+//                                     // Eliminamos la búsqueda de productos iguales
+//                                     var index = checked.findIndex(function (item) {
+//                                         return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
+//                                     });
                                     
-                                    if (index === -1) {
-                                        // Agregamos cada producto como una nueva línea
-                                        orden.add({
-                                            ...response[j],
-                                            moneda: rowDataC.moneda, // Agregar moneda desde la fila de tblContabilizados
-                                            LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
-                                        });
-                                        orden.list();
-                                        checked.push({ 
-                                            Code: response[j].Code, 
-                                            ItemCode: response[j].ItemCode,
-                                            LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
-                                        });
-                                    }
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.error('Error en la solicitud:', status, error);
-                            }
-                        });
-                    } else if (rowDataC.DocType === 'S') {
-                        $.ajax({
-                            url: window.location.pathname,
-                            type: 'POST',
-                            data: {
-                                'action': 'getDetails',
-                                'code': rowDataC.DocEntry
-                            },
-                            dataSrc: "",
-                            success: function (response) {
-                                console.log('rowDataC.moneda:', rowDataC.moneda);
-                                for (var j = 0; j < response.length; j++) {
-                                    var index = checkedSv.findIndex(function (item) {
-                                        return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
-                                    });
+//                                     if (index === -1) {
+//                                         // Agregamos cada producto como una nueva línea
+//                                         orden.add({
+//                                             ...response[j],
+//                                             moneda: rowDataC.moneda, // Agregar moneda desde la fila de tblContabilizados
+//                                             LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
+//                                         });
+//                                         orden.list();
+//                                         checked.push({ 
+//                                             Code: response[j].Code, 
+//                                             ItemCode: response[j].ItemCode,
+//                                             LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
+//                                         });
+//                                     }
+//                                 }
+//                             },
+//                             error: function (xhr, status, error) {
+//                                 console.error('Error en la solicitud:', status, error);
+//                             }
+//                         });
+//                     } else if (rowDataC.DocType === 'S') {
+//                         $.ajax({
+//                             url: window.location.pathname,
+//                             type: 'POST',
+//                             data: {
+//                                 'action': 'getDetails',
+//                                 'code': rowDataC.DocEntry
+//                             },
+//                             dataSrc: "",
+//                             success: function (response) {
+//                                 console.log('rowDataC.moneda:', rowDataC.moneda);
+//                                 for (var j = 0; j < response.length; j++) {
+//                                     var index = checkedSv.findIndex(function (item) {
+//                                         return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
+//                                     });
                                     
-                                    if (index === -1) {
-                                        // Agregamos cada servicio como una nueva línea
-                                        ordenServ.add({
-                                            ...response[j],
-                                            moneda: rowDataC.moneda, // Agregar moneda desde la fila de tblContabilizados
-                                            LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
-                                        });
-                                        ordenServ.list();
-                                        checkedSv.push({ 
-                                            Code: response[j].Code, 
-                                            ItemCode: response[j].ItemCode,
-                                            LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
-                                        });
-                                    }
+//                                     if (index === -1) {
+//                                         // Agregamos cada servicio como una nueva línea
+//                                         ordenServ.add({
+//                                             ...response[j],
+//                                             moneda: rowDataC.moneda, // Agregar moneda desde la fila de tblContabilizados
+//                                             LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
+//                                         });
+//                                         ordenServ.list();
+//                                         checkedSv.push({ 
+//                                             Code: response[j].Code, 
+//                                             ItemCode: response[j].ItemCode,
+//                                             LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
+//                                         });
+//                                     }
+//                                 }
+//                             },
+//                             error: function (xhr, status, error) {
+//                                 console.error('Error en la solicitud:', status, error);
+//                             }
+//                         });
+//                     }
+//                 } else {
+//                     if (rowDataC.DocType === 'I') {
+//                         $.ajax({
+//                             url: window.location.pathname,
+//                             type: 'POST',
+//                             data: {
+//                                 'action': 'getDetails',
+//                                 'code': rowDataC.DocEntry
+//                             },
+//                             dataSrc: "",
+//                             success: function (response) {
+//                                 for (var j = 0; j < response.length; j++) {
+//                                     if (orden.items.item.length > 0) {
+//                                         // Eliminar todas las líneas que coincidan con el Code de la solicitud
+//                                         orden.items.item = orden.items.item.filter(function(item) {
+//                                             return item.Code !== response[j].Code;
+//                                         });
+//                                         orden.list();
+//                                     }
+                                    
+//                                     // Eliminar del array checked
+//                                     checked = checked.filter(function(item) {
+//                                         return item.Code !== response[j].Code;
+//                                     });
+//                                 }
+//                             },
+//                             error: function (xhr, status, error) {
+//                                 console.error('Error en la solicitud:', status, error);
+//                             }
+//                         });
+//                     } else if (rowDataC.DocType === 'S') {
+//                         $.ajax({
+//                             url: window.location.pathname,
+//                             type: 'POST',
+//                             data: {
+//                                 'action': 'getDetails',
+//                                 'code': rowDataC.DocEntry
+//                             },
+//                             dataSrc: "",
+//                             success: function (response) {
+//                                 for (var j = 0; j < response.length; j++) {
+//                                     if (ordenServ.items.item.length > 0) {
+//                                         for (var i = 0; i < ordenServ.items.item.length; i++) {
+//                                             if (ordenServ.items.item[i].ItemCode == response[j].ItemCode && ordenServ.items.item[i].Almacen == response[j].Almacen && ordenServ.items.item[i].LineVendor == response[j].LineVendor && ordenServ.items.item[i].UnidadMedida == response[j].UnidadMedida) {
+//                                                 ordenServ.items.item[i].Quantity = ordenServ.items.item[i].Quantity - response[j].Quantity;
+//                                                 ordenServ.items.item[i].total = ordenServ.items.item[i].total - response[j].total;
+//                                                 if (ordenServ.items.item[i].Quantity === 0 && ordenServ.items.item[i].total === 0) {
+//                                                     ordenServ.items.item.splice(i, 1);
+//                                                 }
+//                                                 ordenServ.list();
+//                                                 break;
+//                                             }
+//                                         }
+//                                     }
+//                                     var index = checkedSv.findIndex(function (item) {
+//                                         return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
+//                                     });
+//                                     if (index > -1) {
+//                                         checkedSv.splice(index, 1);
+//                                     }
+//                                 }
+//                             },
+//                             error: function (xhr, status, error) {
+//                                 // Maneja cualquier error aquí
+//                                 console.error('Error en la solicitud:', status, error);
+//                             }
+//                         });
+//                     }
+//                 }
+//                 updateSubtotals('productos');
+//                 updateSubtotals('servicios');
+//             });
+            
+//         }
+//     });
+// }
+
+initComplete: function (settings, json) {
+    $('#tblContabilizados').on('change', 'input[type="checkbox"]', function () {
+        var $checkbox = $(this);
+        var table = $('#tblContabilizados').DataTable();
+        var rowDataC = table.row($checkbox.closest('tr')).data();
+        
+        if ($checkbox.is(':checked')) {
+            // Obtener la moneda actual de las tablas
+            var currentCurrency = getCurrentTableCurrency();
+            
+            // Si hay una moneda actual y es diferente a la nueva
+            if (currentCurrency && currentCurrency !== rowDataC.moneda) {
+                $checkbox.prop('checked', false); // Desmarcar temporalmente el checkbox
+                
+                $.confirm({
+                    theme: 'modern',
+                    title: 'Advertencia de Moneda',
+                    columnClass: 'medium',
+                    icon: 'fas fa-exclamation-triangle',
+                    type: 'orange',
+                    content: `La solicitud seleccionada tiene una moneda diferente (${rowDataC.moneda}) a la actual (${currentCurrency}). ¿Desea vaciar la tabla y continuar?`,
+                    buttons: {
+                        confirm: {
+                            text: 'Confirmar',
+                            action: function () {
+                                // Limpiar las tablas existentes
+                                if (orden.items.item.length > 0) {
+                                    orden.delete();
+                                    checked = [];
                                 }
-                            },
-                            error: function (xhr, status, error) {
-                                console.error('Error en la solicitud:', status, error);
+                                if (ordenServ.items.item.length > 0) {
+                                    ordenServ.delete();
+                                    checkedSv = [];
+                                }
+                                
+                                // Desmarcar todos los checkboxes excepto el actual
+                                $('#tblContabilizados input[type="checkbox"]').prop('checked', false);
+                                $checkbox.prop('checked', true);
+                                
+                                // Proceder con la carga normal
+                                processCheckboxChange(rowDataC);
                             }
-                        });
+                        },
+                        cancel: {
+                            text: 'Cancelar',
+                            action: function () {
+                                $checkbox.prop('checked', false);
+                            }
+                        }
                     }
-                } else {
-                    if (rowDataC.DocType === 'I') {
-                        $.ajax({
-                            url: window.location.pathname,
-                            type: 'POST',
-                            data: {
-                                'action': 'getDetails',
-                                'code': rowDataC.DocEntry
-                            },
-                            dataSrc: "",
-                            success: function (response) {
-                                for (var j = 0; j < response.length; j++) {
-                                    if (orden.items.item.length > 0) {
-                                        // Eliminar todas las líneas que coincidan con el Code de la solicitud
-                                        orden.items.item = orden.items.item.filter(function(item) {
-                                            return item.Code !== response[j].Code;
-                                        });
-                                        orden.list();
-                                    }
-                                    
-                                    // Eliminar del array checked
-                                    checked = checked.filter(function(item) {
-                                        return item.Code !== response[j].Code;
-                                    });
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.error('Error en la solicitud:', status, error);
+                });
+            } else {
+                // Proceder normalmente si las monedas son iguales o no hay items previos
+                processCheckboxChange(rowDataC);
+            }
+        } else {
+            // Cuando se desmarca el checkbox
+            if (rowDataC.DocType === 'I') {
+                $.ajax({
+                    url: window.location.pathname,
+                    type: 'POST',
+                    data: {
+                        'action': 'getDetails',
+                        'code': rowDataC.DocEntry
+                    },
+                    dataSrc: "",
+                    success: function (response) {
+                        for (var j = 0; j < response.length; j++) {
+                            if (orden.items.item.length > 0) {
+                                orden.items.item = orden.items.item.filter(function(item) {
+                                    return item.Code !== response[j].Code;
+                                });
+                                orden.list();
                             }
+                            checked = checked.filter(function(item) {
+                                return item.Code !== response[j].Code;
+                            });
+                        }
+                        updateSubtotals('productos');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error en la solicitud:', status, error);
+                    }
+                });
+            } else if (rowDataC.DocType === 'S') {
+                $.ajax({
+                    url: window.location.pathname,
+                    type: 'POST',
+                    data: {
+                        'action': 'getDetails',
+                        'code': rowDataC.DocEntry
+                    },
+                    dataSrc: "",
+                    success: function (response) {
+                        for (var j = 0; j < response.length; j++) {
+                            if (ordenServ.items.item.length > 0) {
+                                ordenServ.items.item = ordenServ.items.item.filter(function(item) {
+                                    return item.Code !== response[j].Code;
+                                });
+                                ordenServ.list();
+                            }
+                            checkedSv = checkedSv.filter(function(item) {
+                                return item.Code !== response[j].Code;
+                            });
+                        }
+                        updateSubtotals('servicios');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error en la solicitud:', status, error);
+                    }
+                });
+            }
+        }
+    });
+}
+});
+}
+
+// Función auxiliar para obtener la moneda actual
+function getCurrentTableCurrency() {
+    if (orden.items.item.length > 0) {
+        return orden.items.item[0].moneda;
+    }
+    if (ordenServ.items.item.length > 0) {
+        return ordenServ.items.item[0].moneda;
+    }
+    return null;
+}
+
+// Función auxiliar para procesar el cambio del checkbox
+function processCheckboxChange(rowDataC) {
+    obtenerTaxRate(rowDataC.TaxCode);
+    
+    if (rowDataC.DocType === 'I') {
+        $.ajax({
+            url: window.location.pathname,
+            type: 'POST',
+            data: {
+                'action': 'getDetails',
+                'code': rowDataC.DocEntry
+            },
+            dataSrc: "",
+            success: function (response) {
+                for (var j = 0; j < response.length; j++) {
+                    var index = checked.findIndex(function (item) {
+                        return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
+                    });
+                    
+                    if (index === -1) {
+                        orden.add({
+                            ...response[j],
+                            moneda: rowDataC.moneda,
+                            LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
                         });
-                    } else if (rowDataC.DocType === 'S') {
-                        $.ajax({
-                            url: window.location.pathname,
-                            type: 'POST',
-                            data: {
-                                'action': 'getDetails',
-                                'code': rowDataC.DocEntry
-                            },
-                            dataSrc: "",
-                            success: function (response) {
-                                for (var j = 0; j < response.length; j++) {
-                                    if (ordenServ.items.item.length > 0) {
-                                        for (var i = 0; i < ordenServ.items.item.length; i++) {
-                                            if (ordenServ.items.item[i].ItemCode == response[j].ItemCode && ordenServ.items.item[i].Almacen == response[j].Almacen && ordenServ.items.item[i].LineVendor == response[j].LineVendor && ordenServ.items.item[i].UnidadMedida == response[j].UnidadMedida) {
-                                                ordenServ.items.item[i].Quantity = ordenServ.items.item[i].Quantity - response[j].Quantity;
-                                                ordenServ.items.item[i].total = ordenServ.items.item[i].total - response[j].total;
-                                                if (ordenServ.items.item[i].Quantity === 0 && ordenServ.items.item[i].total === 0) {
-                                                    ordenServ.items.item.splice(i, 1);
-                                                }
-                                                ordenServ.list();
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    var index = checkedSv.findIndex(function (item) {
-                                        return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
-                                    });
-                                    if (index > -1) {
-                                        checkedSv.splice(index, 1);
-                                    }
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                // Maneja cualquier error aquí
-                                console.error('Error en la solicitud:', status, error);
-                            }
+                        orden.list();
+                        checked.push({ 
+                            Code: response[j].Code, 
+                            ItemCode: response[j].ItemCode,
+                            LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
                         });
                     }
                 }
                 updateSubtotals('productos');
+            },
+            error: function (xhr, status, error) {
+                console.error('Error en la solicitud:', status, error);
+            }
+        });
+    } else if (rowDataC.DocType === 'S') {
+        $.ajax({
+            url: window.location.pathname,
+            type: 'POST',
+            data: {
+                'action': 'getDetails',
+                'code': rowDataC.DocEntry
+            },
+            dataSrc: "",
+            success: function (response) {
+                for (var j = 0; j < response.length; j++) {
+                    var index = checkedSv.findIndex(function (item) {
+                        return item.Code === response[j].Code && item.ItemCode === response[j].ItemCode;
+                    });
+                    
+                    if (index === -1) {
+                        ordenServ.add({
+                            ...response[j],
+                            moneda: rowDataC.moneda,
+                            LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
+                        });
+                        ordenServ.list();
+                        checkedSv.push({ 
+                            Code: response[j].Code, 
+                            ItemCode: response[j].ItemCode,
+                            LineUniqueId: response[j].Code + '_' + new Date().getTime() + '_' + j
+                        });
+                    }
+                }
                 updateSubtotals('servicios');
-            });
-            
-        }
-    });
+            },
+            error: function (xhr, status, error) {
+                console.error('Error en la solicitud:', status, error);
+            }
+        });
+    }
 }
+
+
 
 //Métodos para manejar las Tablas Productos y Servicios
 
@@ -911,59 +1119,172 @@ function tablaDetalleProducto(docNum) {
 
 
         //SEPARA LOS DE DIFERENTE SOLi E IGUAL SOLI PERO DESDE
-        initComplete: function (settings, json) {
-            // Primero, removemos cualquier event listener existente, que crea duplicidad cada que abrimos el modal
-            $('#tblDetallesProd').off('change', 'input[type="checkbox"]');
+//         initComplete: function (settings, json) {
+//             // Primero, removemos cualquier event listener existente, que crea duplicidad cada que abrimos el modal
+//             $('#tblDetallesProd').off('change', 'input[type="checkbox"]');
 
-            $('#tblDetallesProd').on('change', 'input[type="checkbox"]', function () {
-                var $checkbox = $(this);
-                var table = $('#tblDetallesProd').DataTable();
-                var rowData = table.row($checkbox.closest('tr')).data();
-                // Obtener el TaxCode directamente del modal
-                var taxCode = $('#detallesTaxCode').text();
+//             $('#tblDetallesProd').on('change', 'input[type="checkbox"]', function () {
+//                 var $checkbox = $(this);
+//                 var table = $('#tblDetallesProd').DataTable();
+//                 var rowData = table.row($checkbox.closest('tr')).data();
+//                 // Obtener el TaxCode directamente del modal
+//                 var taxCode = $('#detallesTaxCode').text();
                 
-                if ($checkbox.is(':checked')) {
+//                 if ($checkbox.is(':checked')) {
 
-                    obtenerTaxRate(taxCode);
-                    // Agregar la moneda al rowData
-                    rowData.moneda = $('#detallesMoneda').text().trim();
+//                     obtenerTaxRate(taxCode);
+//                     // Agregar la moneda al rowData
+//                     rowData.moneda = $('#detallesMoneda').text().trim();
 
-                    // Simplemente agregar el producto como una nueva línea
-                    orden.add({...rowData}); // Usamos spread operator para crear una copia nueva del objeto
-                    orden.list();
-                    checked.push({ 
-                        Code: rowData.Code, 
-                        ItemCode: rowData.ItemCode,
-                        LineUniqueId: rowData.Code + '_' + new Date().getTime() // Agregamos un identificador único
-                    });
-                    updateTableContabilizados(docNum, true);
-                } else {
-                    // Remover del array checked y de orden.items.item
-                    checked = checked.filter(item => 
-                        !(item.Code === rowData.Code && item.ItemCode === rowData.ItemCode)
-                    );
+//                     // Simplemente agregar el producto como una nueva línea
+//                     orden.add({...rowData}); // Usamos spread operator para crear una copia nueva del objeto
+//                     orden.list();
+//                     checked.push({ 
+//                         Code: rowData.Code, 
+//                         ItemCode: rowData.ItemCode,
+//                         LineUniqueId: rowData.Code + '_' + new Date().getTime() // Agregamos un identificador único
+//                     });
+//                     updateTableContabilizados(docNum, true);
+//                 } else {
+//                     // Remover del array checked y de orden.items.item
+//                     checked = checked.filter(item => 
+//                         !(item.Code === rowData.Code && item.ItemCode === rowData.ItemCode)
+//                     );
         
-                    var indexToRemove = orden.items.item.findIndex(item => 
-                        item.Code === rowData.Code && 
-                        item.ItemCode === rowData.ItemCode
-                    );
+//                     var indexToRemove = orden.items.item.findIndex(item => 
+//                         item.Code === rowData.Code && 
+//                         item.ItemCode === rowData.ItemCode
+//                     );
                     
-                    if (indexToRemove !== -1) {
-                        orden.items.item.splice(indexToRemove, 1);
-                        orden.list();
+//                     if (indexToRemove !== -1) {
+//                         orden.items.item.splice(indexToRemove, 1);
+//                         orden.list();
+//                     }
+        
+//                     // Verificar si quedan items marcados de esta solicitud
+//                     var hasRemainingItems = checked.some(item => 
+//                         item.Code.split('_')[0] === rowData.Code.split('_')[0]
+//                     );
+                    
+//                     updateTableContabilizados(docNum, hasRemainingItems);
+//                 }
+//             });
+//         }
+//     });
+// }
+
+initComplete: function (settings, json) {
+    // Primero, removemos cualquier event listener existente, que crea duplicidad cada que abrimos el modal
+    $('#tblDetallesProd').off('change', 'input[type="checkbox"]');
+
+    $('#tblDetallesProd').on('change', 'input[type="checkbox"]', function () {
+        var $checkbox = $(this);
+        var table = $('#tblDetallesProd').DataTable();
+        var rowData = table.row($checkbox.closest('tr')).data();
+        // Obtener el TaxCode directamente del modal
+        var taxCode = $('#detallesTaxCode').text();
+        // Obtener la moneda actual y la moneda del modal
+        var currentCurrency = getCurrentTableCurrency();
+        var modalMoneda = $('#detallesMoneda').text().trim();
+        
+        if ($checkbox.is(':checked')) {
+            // Validación de moneda
+            if (currentCurrency && currentCurrency !== modalMoneda) {
+                $checkbox.prop('checked', false);
+                
+                $.confirm({
+                    theme: 'modern',
+                    title: 'Advertencia de Moneda',
+                    columnClass: 'medium',
+                    icon: 'fas fa-exclamation-triangle',
+                    type: 'orange',
+                    content: `No se pueden mezclar productos con diferentes monedas. 
+                             La moneda actual es ${currentCurrency} y está intentando agregar un producto con moneda ${modalMoneda}.
+                             ¿Desea vaciar la tabla actual y continuar?`,
+                    buttons: {
+                        confirm: {
+                            text: 'Confirmar',
+                            action: function () {
+                                // Limpiar tabla de productos
+                                orden.delete();
+                                checked = [];
+                                
+                                // Desmarcar todos los checkboxes en la tabla principal
+                                $('#tblContabilizados input[type="checkbox"]').prop('checked', false);
+                                
+                                // Proceder con la lógica original de agregar producto
+                                obtenerTaxRate(taxCode);
+                                rowData.moneda = modalMoneda;
+                                
+                                orden.add({...rowData});
+                                orden.list();
+                                checked.push({ 
+                                    Code: rowData.Code, 
+                                    ItemCode: rowData.ItemCode,
+                                    LineUniqueId: rowData.Code + '_' + new Date().getTime()
+                                });
+                                updateTableContabilizados(docNum, true);
+                                
+                                // Marcar el checkbox y actualizar la vista
+                                $checkbox.prop('checked', true);
+                                table.draw(false);
+                            }
+                        },
+                        cancel: {
+                            text: 'Cancelar',
+                            action: function () {
+                                $checkbox.prop('checked', false);
+                                table.draw(false);
+                            }
+                        }
                     }
-        
-                    // Verificar si quedan items marcados de esta solicitud
-                    var hasRemainingItems = checked.some(item => 
-                        item.Code.split('_')[0] === rowData.Code.split('_')[0]
-                    );
-                    
-                    updateTableContabilizados(docNum, hasRemainingItems);
-                }
-            });
+                });
+            } else {
+                // Proceder con la lógica original cuando no hay conflicto de moneda
+                obtenerTaxRate(taxCode);
+                rowData.moneda = modalMoneda;
+
+                orden.add({...rowData});
+                orden.list();
+                checked.push({ 
+                    Code: rowData.Code, 
+                    ItemCode: rowData.ItemCode,
+                    LineUniqueId: rowData.Code + '_' + new Date().getTime()
+                });
+                updateTableContabilizados(docNum, true);
+            }
+        } else {
+            // Mantener la lógica original de desmarcar
+            checked = checked.filter(item => 
+                !(item.Code === rowData.Code && item.ItemCode === rowData.ItemCode)
+            );
+
+            var indexToRemove = orden.items.item.findIndex(item => 
+                item.Code === rowData.Code && 
+                item.ItemCode === rowData.ItemCode
+            );
+            
+            if (indexToRemove !== -1) {
+                orden.items.item.splice(indexToRemove, 1);
+                orden.list();
+            }
+
+            // Verificar si quedan items marcados de esta solicitud
+            var hasRemainingItems = checked.some(item => 
+                item.Code.split('_')[0] === rowData.Code.split('_')[0]
+            );
+            
+            updateTableContabilizados(docNum, hasRemainingItems);
+            
+            // Asegurar que el checkbox permanezca desmarcado
+            $checkbox.prop('checked', false);
+            table.draw(false);
         }
     });
 }
+});
+}
+
 
 //
 
@@ -1095,64 +1416,186 @@ function tablaDetalleServicio(docNum) {
                 },
             },
         ],
-        initComplete: function (settings, json) {
-            // Primero, removemos cualquier event listener existente, que crea duplicidad cada que abrimos el modal
-            $('#tblDetallesServ').off('change', 'input[type="checkbox"]');
+//         initComplete: function (settings, json) {
+//             // Primero, removemos cualquier event listener existente, que crea duplicidad cada que abrimos el modal
+//             $('#tblDetallesServ').off('change', 'input[type="checkbox"]');
 
-            $('#tblDetallesServ').on('change', 'input[type="checkbox"]', function () {
-                var $checkbox = $(this);
-                var table = $('#tblDetallesServ').DataTable();
-                var rowData = table.row($checkbox.closest('tr')).data();
+//             $('#tblDetallesServ').on('change', 'input[type="checkbox"]', function () {
+//                 var $checkbox = $(this);
+//                 var table = $('#tblDetallesServ').DataTable();
+//                 var rowData = table.row($checkbox.closest('tr')).data();
 
-                // Obtener el TaxCode directamente del modal
-                var taxCode = $('#detallesTaxCode').text();
+//                 // Obtener el TaxCode directamente del modal
+//                 var taxCode = $('#detallesTaxCode').text();
                 
-                if ($checkbox.is(':checked')) {
+//                 if ($checkbox.is(':checked')) {
 
-                    obtenerTaxRate(taxCode);
-                    // Agregar la moneda al rowData
-                    rowData.moneda = $('#detallesMoneda').text().trim();
+//                     obtenerTaxRate(taxCode);
+//                     // Agregar la moneda al rowData
+//                     rowData.moneda = $('#detallesMoneda').text().trim();
 
-                    // Simplemente agregar el servicio como una nueva línea
-                    ordenServ.add({
-                        ...rowData,
-                        moneda: rowData.moneda, // Mantener la moneda
-                        LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + ordenServ.items.item.length
-                    });
-                    ordenServ.list();
-                    checkedSv.push({ 
-                        Code: rowData.Code, 
-                        ItemCode: rowData.ItemCode,
-                        LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + (ordenServ.items.item.length - 1)
-                    });
-                    updateTableContabilizados(docNum, true);
-                } else {
-                    // Remover del array checkedSv y de ordenServ.items.item
-                    checkedSv = checkedSv.filter(item => 
-                        !(item.Code === rowData.Code && item.ItemCode === rowData.ItemCode)
-                    );
+//                     // Simplemente agregar el servicio como una nueva línea
+//                     ordenServ.add({
+//                         ...rowData,
+//                         moneda: rowData.moneda, // Mantener la moneda
+//                         LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + ordenServ.items.item.length
+//                     });
+//                     ordenServ.list();
+//                     checkedSv.push({ 
+//                         Code: rowData.Code, 
+//                         ItemCode: rowData.ItemCode,
+//                         LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + (ordenServ.items.item.length - 1)
+//                     });
+//                     updateTableContabilizados(docNum, true);
+//                 } else {
+//                     // Remover del array checkedSv y de ordenServ.items.item
+//                     checkedSv = checkedSv.filter(item => 
+//                         !(item.Code === rowData.Code && item.ItemCode === rowData.ItemCode)
+//                     );
         
-                    var indexToRemove = ordenServ.items.item.findIndex(item => 
-                        item.Code === rowData.Code && 
-                        item.ItemCode === rowData.ItemCode
-                    );
+//                     var indexToRemove = ordenServ.items.item.findIndex(item => 
+//                         item.Code === rowData.Code && 
+//                         item.ItemCode === rowData.ItemCode
+//                     );
                     
-                    if (indexToRemove !== -1) {
-                        ordenServ.items.item.splice(indexToRemove, 1);
-                        ordenServ.list();
+//                     if (indexToRemove !== -1) {
+//                         ordenServ.items.item.splice(indexToRemove, 1);
+//                         ordenServ.list();
+//                     }
+        
+//                     // Verificar si quedan servicios marcados de esta solicitud
+//                     var hasRemainingItems = checkedSv.some(item => 
+//                         item.Code.split('_')[0] === rowData.Code.split('_')[0]
+//                     );
+                    
+//                     updateTableContabilizados(docNum, hasRemainingItems);
+//                 }
+//             });
+//         }
+//     });
+// }
+
+initComplete: function (settings, json) {
+    // Primero, removemos cualquier event listener existente, que crea duplicidad cada que abrimos el modal
+    $('#tblDetallesServ').off('change', 'input[type="checkbox"]');
+
+    $('#tblDetallesServ').on('change', 'input[type="checkbox"]', function () {
+        var $checkbox = $(this);
+        var table = $('#tblDetallesServ').DataTable();
+        var rowData = table.row($checkbox.closest('tr')).data();
+        // Obtener el TaxCode directamente del modal
+        var taxCode = $('#detallesTaxCode').text();
+        // Obtener la moneda actual y la moneda del modal
+        var currentCurrency = getCurrentTableCurrency();
+        var modalMoneda = $('#detallesMoneda').text().trim();
+        
+        if ($checkbox.is(':checked')) {
+            // Validación de moneda
+            if (currentCurrency && currentCurrency !== modalMoneda) {
+                $checkbox.prop('checked', false);
+                
+                $.confirm({
+                    theme: 'modern',
+                    title: 'Advertencia de Moneda',
+                    columnClass: 'medium',
+                    icon: 'fas fa-exclamation-triangle',
+                    type: 'orange',
+                    content: `No se pueden mezclar servicios con diferentes monedas. 
+                             La moneda actual es ${currentCurrency} y está intentando agregar un servicio con moneda ${modalMoneda}.
+                             ¿Desea vaciar la tabla actual y continuar?`,
+                    buttons: {
+                        confirm: {
+                            text: 'Confirmar',
+                            action: function () {
+                                // Limpiar tabla de servicios
+                                ordenServ.delete();
+                                checkedSv = [];
+                                
+                                // Desmarcar todos los checkboxes en la tabla principal
+                                $('#tblContabilizados input[type="checkbox"]').prop('checked', false);
+                                
+                                // Proceder con la lógica original de agregar servicio
+                                obtenerTaxRate(taxCode);
+                                rowData.moneda = modalMoneda;
+
+                                ordenServ.add({
+                                    ...rowData,
+                                    moneda: modalMoneda,
+                                    LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + ordenServ.items.item.length
+                                });
+                                ordenServ.list();
+                                checkedSv.push({ 
+                                    Code: rowData.Code, 
+                                    ItemCode: rowData.ItemCode,
+                                    LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + (ordenServ.items.item.length - 1)
+                                });
+                                updateTableContabilizados(docNum, true);
+                                
+                                // Marcar el checkbox y actualizar la vista
+                                $checkbox.prop('checked', true);
+                                table.draw(false);
+                            }
+                        },
+                        cancel: {
+                            text: 'Cancelar',
+                            action: function () {
+                                $checkbox.prop('checked', false);
+                                table.draw(false);
+                            }
+                        }
                     }
-        
-                    // Verificar si quedan servicios marcados de esta solicitud
-                    var hasRemainingItems = checkedSv.some(item => 
-                        item.Code.split('_')[0] === rowData.Code.split('_')[0]
-                    );
-                    
-                    updateTableContabilizados(docNum, hasRemainingItems);
-                }
-            });
+                });
+            } else {
+                // Proceder con la lógica original cuando no hay conflicto de moneda
+                obtenerTaxRate(taxCode);
+                rowData.moneda = modalMoneda;
+
+                // Simplemente agregar el servicio como una nueva línea
+                ordenServ.add({
+                    ...rowData,
+                    moneda: rowData.moneda, // Mantener la moneda
+                    LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + ordenServ.items.item.length
+                });
+                ordenServ.list();
+                checkedSv.push({ 
+                    Code: rowData.Code, 
+                    ItemCode: rowData.ItemCode,
+                    LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + (ordenServ.items.item.length - 1)
+                });
+                updateTableContabilizados(docNum, true);
+            }
+        } else {
+            // Mantener la lógica original de desmarcar
+            checkedSv = checkedSv.filter(item => 
+                !(item.Code === rowData.Code && item.ItemCode === rowData.ItemCode)
+            );
+
+            var indexToRemove = ordenServ.items.item.findIndex(item => 
+                item.Code === rowData.Code && 
+                item.ItemCode === rowData.ItemCode
+            );
+            
+            if (indexToRemove !== -1) {
+                ordenServ.items.item.splice(indexToRemove, 1);
+                ordenServ.list();
+            }
+
+            // Verificar si quedan servicios marcados de esta solicitud
+            var hasRemainingItems = checkedSv.some(item => 
+                item.Code.split('_')[0] === rowData.Code.split('_')[0]
+            );
+            
+            updateTableContabilizados(docNum, hasRemainingItems);
+            
+            // Asegurar que el checkbox permanezca desmarcado
+            $checkbox.prop('checked', false);
+            table.draw(false);
         }
     });
 }
+});
+}
+
 
 // EVENTOS BOTONES GUARDAR LOGISTICA
 
