@@ -919,8 +919,15 @@ function tablaDetalleProducto(docNum) {
                 var $checkbox = $(this);
                 var table = $('#tblDetallesProd').DataTable();
                 var rowData = table.row($checkbox.closest('tr')).data();
+                // Obtener el TaxCode directamente del modal
+                var taxCode = $('#detallesTaxCode').text();
                 
                 if ($checkbox.is(':checked')) {
+
+                    obtenerTaxRate(taxCode);
+                    // Agregar la moneda al rowData
+                    rowData.moneda = $('#detallesMoneda').text().trim();
+
                     // Simplemente agregar el producto como una nueva línea
                     orden.add({...rowData}); // Usamos spread operator para crear una copia nueva del objeto
                     orden.list();
@@ -931,46 +938,27 @@ function tablaDetalleProducto(docNum) {
                     });
                     updateTableContabilizados(docNum, true);
                 } else {
-                    if (orden.items.item.length > 0) {
-                        // Buscar y eliminar exactamente el item que fue desmarcado
-                        var indexToRemove = orden.items.item.findIndex(function(item) {
-                            return item.Code === rowData.Code && 
-                                   item.ItemCode === rowData.ItemCode && 
-                                   item.LineVendor === rowData.LineVendor &&
-                                   item.Quantity === rowData.Quantity; // Comparamos todos los campos relevantes
-                        });
-                        
-                        if (indexToRemove !== -1) {
-                            orden.items.item.splice(indexToRemove, 1);
-                            orden.list();
-                        }
-                    }
+                    // Remover del array checked y de orden.items.item
+                    checked = checked.filter(item => 
+                        !(item.Code === rowData.Code && item.ItemCode === rowData.ItemCode)
+                    );
         
-                    // Eliminar el item de checked usando el Code exacto
-                    var index = checked.findIndex(function (item) {
-                        return item.Code === rowData.Code && 
-                               item.ItemCode === rowData.ItemCode &&
-                               item.LineVendor === rowData.LineVendor;
-                    });
+                    var indexToRemove = orden.items.item.findIndex(item => 
+                        item.Code === rowData.Code && 
+                        item.ItemCode === rowData.ItemCode
+                    );
                     
-                    if (index !== -1) {
-                        checked.splice(index, 1);
+                    if (indexToRemove !== -1) {
+                        orden.items.item.splice(indexToRemove, 1);
+                        orden.list();
                     }
         
-                    // Verificar si quedan items seleccionados de esta solicitud
-                    var atLeastOne = false;
-                    for (var k = 0; k < table.data().count(); k++) {
-                        var data = table.row(k).data();
-                        var index = checked.findIndex(function (item) {
-                            return item.Code === data.Code;
-                        });
-                        if (index !== -1) {
-                            atLeastOne = true;
-                            break;
-                        }
-                    }
-        
-                    updateTableContabilizados(docNum, atLeastOne);
+                    // Verificar si quedan items marcados de esta solicitud
+                    var hasRemainingItems = checked.some(item => 
+                        item.Code.split('_')[0] === rowData.Code.split('_')[0]
+                    );
+                    
+                    updateTableContabilizados(docNum, hasRemainingItems);
                 }
             });
         }
@@ -1115,8 +1103,16 @@ function tablaDetalleServicio(docNum) {
                 var $checkbox = $(this);
                 var table = $('#tblDetallesServ').DataTable();
                 var rowData = table.row($checkbox.closest('tr')).data();
+
+                // Obtener el TaxCode directamente del modal
+                var taxCode = $('#detallesTaxCode').text();
                 
                 if ($checkbox.is(':checked')) {
+
+                    obtenerTaxRate(taxCode);
+                    // Agregar la moneda al rowData
+                    rowData.moneda = $('#detallesMoneda').text().trim();
+
                     // Simplemente agregar el servicio como una nueva línea
                     ordenServ.add({
                         ...rowData,
@@ -1131,50 +1127,27 @@ function tablaDetalleServicio(docNum) {
                     });
                     updateTableContabilizados(docNum, true);
                 } else {
-                    if (ordenServ.items.item.length > 0) {
-                        // Buscar y eliminar exactamente el servicio que fue desmarcado
-                        var indexToRemove = ordenServ.items.item.findIndex(function(item) {
-                            return item.Code === rowData.Code && 
-                                   item.ItemCode === rowData.ItemCode && 
-                                   item.LineVendor === rowData.LineVendor &&
-                                   item.Quantity === rowData.Quantity;
-                        });
-                        
-                        if (indexToRemove !== -1) {
-                            ordenServ.items.item.splice(indexToRemove, 1);
-                            ordenServ.list();
-                        }
-                    }
+                    // Remover del array checkedSv y de ordenServ.items.item
+                    checkedSv = checkedSv.filter(item => 
+                        !(item.Code === rowData.Code && item.ItemCode === rowData.ItemCode)
+                    );
         
-                    // Eliminar del array checkedSv
-                    var index = checkedSv.findIndex(function (item) {
-                        return item.Code === rowData.Code && 
-                               item.ItemCode === rowData.ItemCode &&
-                               item.LineVendor === rowData.LineVendor;
-                    });
+                    var indexToRemove = ordenServ.items.item.findIndex(item => 
+                        item.Code === rowData.Code && 
+                        item.ItemCode === rowData.ItemCode
+                    );
                     
-                    if (index !== -1) {
-                        checkedSv.splice(index, 1);
+                    if (indexToRemove !== -1) {
+                        ordenServ.items.item.splice(indexToRemove, 1);
+                        ordenServ.list();
                     }
         
-                    // Verificar si quedan servicios seleccionados de esta solicitud
-                    var atLeastOne = false;
-                    for (var k = 0; k < table.data().count(); k++) {
-                        var data = table.row(k).data();
-                        var index = checkedSv.findIndex(function (item) {
-                            return item.Code === data.Code;
-                        });
-                        if (index !== -1) {
-                            atLeastOne = true;
-                            break;
-                        }
-                    }
-        
-                    if (!atLeastOne) {
-                        updateTableContabilizados(docNum, false);
-                    } else {
-                        updateTableContabilizados(docNum, true);
-                    }
+                    // Verificar si quedan servicios marcados de esta solicitud
+                    var hasRemainingItems = checkedSv.some(item => 
+                        item.Code.split('_')[0] === rowData.Code.split('_')[0]
+                    );
+                    
+                    updateTableContabilizados(docNum, hasRemainingItems);
                 }
             });
         }
@@ -1381,7 +1354,7 @@ function limpiarCheckboxesContabilizados() {
 // Función para obtener la tasa de impuesto desde el backend para LOGISTICA
 function obtenerTaxRate(taxCode) {
     console.log('Obteniendo tasa de impuesto para:', taxCode);
-    $.ajax({
+    return $.ajax({
         url: '/erp/obtener_impuesto_logistica/',
         type: 'GET',
         data: {
@@ -1391,6 +1364,7 @@ function obtenerTaxRate(taxCode) {
             if (response.rate) {
                 TAX_RATE = response.rate;
                 console.log('Tasa de impuesto obtenida:', TAX_RATE);
+                // Actualizar ambos subtotales
                 updateSubtotals('productos');
                 updateSubtotals('servicios');
             } else {
