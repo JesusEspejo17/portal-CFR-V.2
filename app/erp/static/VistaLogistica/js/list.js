@@ -569,39 +569,46 @@ var ordenServ = {
     }
 }
 
-// Listener para eliminar ítems
+//Listener para el botón remove en tabla Productos y tabla Servicios
+
 $(document).ready(function () {
     $('#tblOrdenProd tbody').on('click', 'a[rel="remove"]', function () {
         var trIndex = $('#tblOrdenProd').DataTable().cell($(this).closest('td')).index();
         var itemCodeToRemove = orden.items.item[trIndex.row].ItemCode;
+        var CodeToRemove = orden.items.item[trIndex.row].Code;
         orden.items.item.splice(trIndex.row, 1);
         orden.list();
         checked = checked.filter(function (item) {
             return item.ItemCode !== itemCodeToRemove;
         });
-        // ... (lógica existente para desmarcar checkboxes)
-        updateSubtotals('productos'); // Actualiza subtotales después de eliminar
-    });
-
-    $('#tblOrdenServ tbody').on('click', 'a[rel="remove"]', function () {
-        var trIndex = $('#tblOrdenServ').DataTable().cell($(this).closest('td')).index();
-        var itemCodeToRemove = ordenServ.items.item[trIndex.row].ItemCode;
-        ordenServ.items.item.splice(trIndex.row, 1);
-        ordenServ.list();
-        checkedSv = checkedSv.filter(function (item) {
-            return item.ItemCode !== itemCodeToRemove;
-        });
-        // ... (lógica existente para desmarcar checkboxes)
-        updateSubtotals('servicios'); // Actualiza subtotales después de eliminar
-    });
-
-    // Mantén tus eventos para guardar productos y servicios
-    $('#btnGuardarProductos').on('click', function () {
-        // ... (lógica existente)
-    });
-
-    $('#btnGuardarServicios').on('click', function () {
-        // ... (lógica existente)
+        var table = $('#tblContabilizados').DataTable();
+        for (var p = 0; p < table.data().count(); p++) {
+            (function (p) {
+                var data = table.row(p).data();
+                $.ajax({
+                    url: window.location.pathname,
+                    type: 'POST',
+                    data: {
+                        'action': 'getDetails',
+                        'code': data.DocEntry
+                    },
+                    success: function (response) {
+                        for (var l = 0; l < response.length; l++) {
+                            if (response[l].ItemCode == itemCodeToRemove) {
+                                var rowNode = table.row(p).node();
+                                if (rowNode) {
+                                    var $checkbox = $(rowNode).find('input[type="checkbox"]');
+                                    $checkbox.prop('checked', false);
+                                }
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error en la solicitud:', status, error);
+                    }
+                });
+            })(p);
+        }
     });
 });
 
@@ -765,7 +772,26 @@ function tablaDetalleProducto(docNum) {
             { "data": "LineVendor" },
             { "data": "Description" },
             { "data": "Quantity" },
-            { "data": "Precio" },
+            {
+                data: 'Precio',
+                render: function(data, type, row) {
+                    // Obtener el texto de la moneda desde el elemento HTML
+                    var monedaTexto = $('#detallesMoneda').text().trim(); // Asegúrate de eliminar espacios en blanco
+
+                    // Definir el símbolo de la moneda basado en el texto obtenido
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // En caso de que no coincida con ninguna moneda conocida
+                    }
+                    return monedaSimbolo + parseFloat(data).toFixed(2);
+                }
+            },
             { "data": "UnidadMedida" },
             { "data": "Almacen" },
             { "data": "total" },
@@ -886,6 +912,9 @@ function tablaDetalleProducto(docNum) {
 
         //SEPARA LOS DE DIFERENTE SOLi E IGUAL SOLI PERO DESDE
         initComplete: function (settings, json) {
+            // Primero, removemos cualquier event listener existente, que crea duplicidad cada que abrimos el modal
+            $('#tblDetallesProd').off('change', 'input[type="checkbox"]');
+
             $('#tblDetallesProd').on('change', 'input[type="checkbox"]', function () {
                 var $checkbox = $(this);
                 var table = $('#tblDetallesProd').DataTable();
@@ -1010,7 +1039,26 @@ function tablaDetalleServicio(docNum) {
             { "data": "LineVendor" },
             { "data": "Description" },
             { "data": "Quantity" },
-            { "data": "Precio" },
+            {
+                data: 'Precio',
+                render: function(data, type, row) {
+                    // Obtener el texto de la moneda desde el elemento HTML
+                    var monedaTexto = $('#detallesMoneda').text().trim(); // Asegúrate de eliminar espacios en blanco
+
+                    // Definir el símbolo de la moneda basado en el texto obtenido
+                    var monedaSimbolo;
+                    if (monedaTexto === 'SOL') {
+                        monedaSimbolo = 'S/. ';
+                    } else if (monedaTexto === 'USD') {
+                        monedaSimbolo = '$ ';
+                    } else if (monedaTexto === 'EUR') {
+                        monedaSimbolo = '€ ';
+                    } else {
+                        monedaSimbolo = ''; // En caso de que no coincida con ninguna moneda conocida
+                    }
+                    return monedaSimbolo + parseFloat(data).toFixed(2);
+                }
+            },
             { "data": "CuentaMayor" },
             { "data": "total" },
             { "data": null }
@@ -1060,64 +1108,68 @@ function tablaDetalleServicio(docNum) {
             },
         ],
         initComplete: function (settings, json) {
+            // Primero, removemos cualquier event listener existente, que crea duplicidad cada que abrimos el modal
+            $('#tblDetallesServ').off('change', 'input[type="checkbox"]');
+
             $('#tblDetallesServ').on('change', 'input[type="checkbox"]', function () {
-                var founded = false;
-                var atLeastOne = false;
                 var $checkbox = $(this);
                 var table = $('#tblDetallesServ').DataTable();
                 var rowData = table.row($checkbox.closest('tr')).data();
+                
                 if ($checkbox.is(':checked')) {
-                    if (ordenServ.items.item.length > 0) {
-                        for (var i = 0; i < ordenServ.items.item.length; i++) {
-                            if (ordenServ.items.item[i].ItemCode == rowData.ItemCode && ordenServ.items.item[i].Almacen == rowData.Almacen && ordenServ.items.item[i].LineVendor == rowData.LineVendor && ordenServ.items.item[i].UnidadMedida == rowData.UnidadMedida) {
-                                ordenServ.items.item[i].Quantity = ordenServ.items.item[i].Quantity + rowData.Quantity;
-                                ordenServ.items.item[i].total = ordenServ.items.item[i].total + rowData.total;
-                                founded = true;
-                                break;
-                            }
-                        }
-                        if (founded == false) {
-                            ordenServ.add(rowData);
-                            ordenServ.list();
-                        } else {
-                            ordenServ.list();
-                        }
-                    } else {
-                        ordenServ.add(rowData);
-                        ordenServ.list();
-                    }
-                    checkedSv.push({ Code: rowData.Code, ItemCode: rowData.ItemCode });
+                    // Simplemente agregar el servicio como una nueva línea
+                    ordenServ.add({
+                        ...rowData,
+                        moneda: rowData.moneda, // Mantener la moneda
+                        LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + ordenServ.items.item.length
+                    });
+                    ordenServ.list();
+                    checkedSv.push({ 
+                        Code: rowData.Code, 
+                        ItemCode: rowData.ItemCode,
+                        LineUniqueId: rowData.Code + '_' + new Date().getTime() + '_' + (ordenServ.items.item.length - 1)
+                    });
                     updateTableContabilizados(docNum, true);
-
                 } else {
                     if (ordenServ.items.item.length > 0) {
-                        for (var i = 0; i < ordenServ.items.item.length; i++) {
-                            if (ordenServ.items.item[i].ItemCode == rowData.ItemCode && ordenServ.items.item[i].Almacen == rowData.Almacen && ordenServ.items.item[i].LineVendor == rowData.LineVendor && ordenServ.items.item[i].UnidadMedida == rowData.UnidadMedida) {
-                                ordenServ.items.item[i].Quantity = ordenServ.items.item[i].Quantity - rowData.Quantity;
-                                ordenServ.items.item[i].total = ordenServ.items.item[i].total - rowData.total;
-                                if (ordenServ.items.item[i].Quantity === 0 && ordenServ.items.item[i].total === 0) {
-                                    ordenServ.items.item.splice(i, 1);
-                                }
-                                ordenServ.list();
-                                break;
-                            }
+                        // Buscar y eliminar exactamente el servicio que fue desmarcado
+                        var indexToRemove = ordenServ.items.item.findIndex(function(item) {
+                            return item.Code === rowData.Code && 
+                                   item.ItemCode === rowData.ItemCode && 
+                                   item.LineVendor === rowData.LineVendor &&
+                                   item.Quantity === rowData.Quantity;
+                        });
+                        
+                        if (indexToRemove !== -1) {
+                            ordenServ.items.item.splice(indexToRemove, 1);
+                            ordenServ.list();
                         }
                     }
+        
+                    // Eliminar del array checkedSv
                     var index = checkedSv.findIndex(function (item) {
-                        return item.Code === rowData.Code && item.ItemCode === rowData.ItemCode;
+                        return item.Code === rowData.Code && 
+                               item.ItemCode === rowData.ItemCode &&
+                               item.LineVendor === rowData.LineVendor;
                     });
+                    
                     if (index !== -1) {
                         checkedSv.splice(index, 1);
                     }
+        
+                    // Verificar si quedan servicios seleccionados de esta solicitud
+                    var atLeastOne = false;
                     for (var k = 0; k < table.data().count(); k++) {
-                        data = table.row(k).data();
+                        var data = table.row(k).data();
                         var index = checkedSv.findIndex(function (item) {
-                            return item.Code === data.Code && item.ItemCode === data.ItemCode;
+                            return item.Code === data.Code;
                         });
                         if (index !== -1) {
                             atLeastOne = true;
+                            break;
                         }
                     }
+        
                     if (!atLeastOne) {
                         updateTableContabilizados(docNum, false);
                     } else {
